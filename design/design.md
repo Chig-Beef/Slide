@@ -100,7 +100,7 @@ for x = 2; cond; x = 7 {
 }
 
 // Will figure out as an iterator
-for 7 {
+range 7 {
 
 }
 
@@ -137,7 +137,7 @@ forever {
 
 ## Calling functions
 ```
-println(6);
+call println(6);
 x int = add(2, 3);
 ```
 
@@ -155,3 +155,5 @@ z = 5 | 3
 
 z = 1 & 3
 ```
+
+Do everything

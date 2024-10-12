@@ -63,4 +63,7 @@ const (
 	T_RET
 	T_BREAK
 	T_CONT
+	T_REF
+	T_DEREF
+	T_XOR
 )

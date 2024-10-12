@@ -13,6 +13,25 @@ Complex data types will be:
 3. Map
 4. Structs
 
+## Arrays and slices
+```
+x []byte = [1, 2, 3+4];
+y [3]string = ["a", "b", "c"];
+z [2]^float = [`1.1, `2.2];
+
+// Prefixing with the index makes it easier to differentiate between other
+// cases, however, this might be changed in future
+[0]x = 7;
+
+```
+
+## Maps
+```
+// Creates and initialises a map
+y [string]int;
+["a"]y = 3;
+```
+
 ## Type inference
 Variables can be declared with the type, or just infered.
 This does not require the walrus operator.
@@ -139,6 +158,13 @@ struct Point {
 ```
 
 ## Pointers
+` is a reference (value prime)
+^ is a dereference (pull up the value)
+Using these symbols that aren't used for anythign else will increase
+speed as it avoids ambiguity
+```
+x ^int = `7;
+```
 
 ## Pattern matching
 

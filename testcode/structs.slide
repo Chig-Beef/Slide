@@ -1,3 +1,7 @@
+/*
+Structs hold ordered data of varying types
+*/
+
 struct Point {
 	x int;
 	y int;

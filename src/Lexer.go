@@ -38,6 +38,15 @@ func (l *Lexer) lex() []Token {
 		case ';':
 			token = Token{";", T_SEMICOLON}
 
+		case '~':
+			token = Token{"~", T_XOR}
+
+		case '`':
+			token = Token{"`", T_REF}
+
+		case '^':
+			token = Token{"^", T_DEREF}
+
 		case '{':
 			token = Token{"{", T_L_SQUIRLY}
 
@@ -80,6 +89,15 @@ func (l *Lexer) lex() []Token {
 			token = Token{"/", T_DIV}
 			if l.peekChar() == '/' {
 				for l.peekChar() != '\n' && l.peekChar() != 0 {
+					l.index++
+				}
+				continue
+			} else if l.peekChar() == '*' {
+				for l.peekChar() != 0 {
+					if l.peekChar() == '/' && l.source[l.index] == '*' {
+						l.index++
+						break
+					}
 					l.index++
 				}
 				continue
@@ -186,7 +204,7 @@ func (l *Lexer) lex() []Token {
 
 			// Keywords
 			// Other words
-		} else if l.source[l.index]-'a' <= 26 || l.source[l.index]-'A' <= 26 {
+		} else if l.source[l.index]-'a' < 26 || l.source[l.index]-'A' < 26 {
 			// Don't know specific type yet
 			token = Token{data: string(l.source[l.index])}
 

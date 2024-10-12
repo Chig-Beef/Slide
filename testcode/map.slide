@@ -1,0 +1,2 @@
+y [string]int;
+["a"]y = 3;

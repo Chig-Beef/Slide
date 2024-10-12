@@ -12,7 +12,7 @@ statement -> 'range' expression '{' {statement} '}'
 statement -> 'for' [assignment] ';' [condition] ';' assignment '{' {statement} '}'
 statement -> 'call' call ';'
 statement -> 'struct' IDENTIFIER '{' {IDENTIFIER TYPE ';'} '}'
-statement -> 'fun' IDENTIFIER '(' [IDENTIFIER TYPE] {',' IDENTIFIER TYPE} ')' [TYPE] '{' {statement} '}'
+statement -> 'fun' IDENTIFIER '(' [IDENTIFIER PTYPE] {',' IDENTIFIER PTYPE} ')' [PTYPE] '{' {statement} '}'
 statement -> 'return' [expression] ';'
 statement -> 'break' [VALUE] ';'
 statement -> 'continue' [VALUE] ';'
@@ -21,6 +21,7 @@ expression -> [UNARY] VALUE {OPERATOR [UNARY] VALUE}
 assignment -> IDENTIFIER [TYPE] '=' expression | 
 call -> IDENTIFIER '(' [ expression [{',' expression}]] ')'
 
+PTYPE is TYPE but that can include a dereference
 VALUE is an IDENTIFIER or a PRIMATIVE or a call
 IDENTIFIER is a word, such as a variable name, function name
 TYPE is any type that is primitive or created by the user

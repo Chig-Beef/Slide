@@ -50,6 +50,12 @@ func (l *Lexer) lex() []Token {
 		case ']':
 			token = Token{"]", T_R_BLOCK}
 
+		case '(':
+			token = Token{"(", T_L_PAREN}
+
+		case ')':
+			token = Token{")", T_R_PAREN}
+
 		case '=':
 			token = Token{"=", T_ASSIGN}
 			if l.peekChar() == '=' {
@@ -178,11 +184,12 @@ func (l *Lexer) lex() []Token {
 			// Don't know specific type yet
 			token = Token{data: string(l.source[l.index])}
 
-			for (l.source[l.index]-'a' <= 26 || l.source[l.index]-'A' <= 26 || l.source[l.index] == '_') && l.peekChar() != 0 {
+			for (l.peekChar()-'a' <= 26 || l.peekChar()-'A' <= 26 || l.peekChar() == '_') && l.peekChar() != 0 {
 				l.index++
 				token.data += string(l.source[l.index])
 			}
 
+			// Keywords
 			switch token.data {
 			case "for":
 				token.kind = T_FOR
@@ -198,8 +205,20 @@ func (l *Lexer) lex() []Token {
 				token.kind = T_ELSE
 			case "call":
 				token.kind = T_CALL
+			case "struct":
+				token.kind = T_STRUCT
+			case "fun":
+				token.kind = T_FUN
+			case "return":
+				token.kind = T_RET
+			case "break":
+				token.kind = T_BREAK
+			case "continue":
+				token.kind = T_CONT
 			case "true", "false":
 				token.kind = T_BOOL
+
+				// Types
 			case "byte", "word", "dword", "qword",
 				"uint8", "uint16", "uint32", "uint64",
 				"uint", "int8", "int16", "int32",
@@ -207,6 +226,8 @@ func (l *Lexer) lex() []Token {
 				"string", "float32", "float64", "double",
 				"float", "bool":
 				token.kind = T_TYPE
+
+				// Identifiers
 			default:
 				token.kind = T_IDENTIFIER
 			}

@@ -1,11 +1,17 @@
 package main
 
+import "strconv"
+
 type Token struct {
 	// What is looks like in the actual source
 	data string
 
 	// What the token is depicting
 	kind TokenType
+}
+
+func (t Token) String() string {
+	return "(" + t.data + " " + strconv.Itoa(int(t.kind)) + ")"
 }
 
 type TokenType byte
@@ -52,4 +58,9 @@ const (
 	T_NOT
 	T_NEQ
 	T_MOD
+	T_STRUCT
+	T_FUN
+	T_RET
+	T_BREAK
+	T_CONT
 )

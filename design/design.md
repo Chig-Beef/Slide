@@ -61,6 +61,11 @@ or conversion to make sure everythign works out
 `float64` or `double` is a 64-bit float
 
 ## Function definitions
+```
+fun sum(a int, b int) int {
+    return a + b;
+}
+```
 
 ## Errors as values
 Errors have a string and a code to make them easier to track.
@@ -82,6 +87,8 @@ Optimizaion is entirely completed before moving on.
 Emitting to Go? C? NASM?
 Maybe start with Go, however, since the logic of emission should entirely be in
 the emitter, this should be easy to replace with a different language.
+Correctly done, lexing could be done on another thread, multi-threaded
+compilation could be a huge time save.
 
 ## String manipulation
 Strings can be concatonated to each other using the + operator.
@@ -119,6 +126,13 @@ forever {
 ```
 
 ## Structs
+```
+struct Point {
+    x int;
+    y int;
+    id string;
+}
+```
 
 ## Pointers
 

@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"time"
 )
 
 func main() {
@@ -62,6 +63,9 @@ func help(args []string) {
 
 func compile(source []byte) {
 	fmt.Println("Compilation started")
+	fmt.Println()
+
+	t := time.Now()
 
 	lexer := Lexer{}
 	//parser := Parser{}
@@ -75,4 +79,7 @@ func compile(source []byte) {
 	//analysed := analyser.analyse(parsed)
 	//emitted := emitter.emit(analysed)
 	//emitter.dump(emitted)
+
+	fmt.Println()
+	fmt.Println("Compilation ended in", time.Now().Sub(t))
 }

@@ -1,2 +1,8 @@
-x byte = 0;
-y string = "hello";
+a int = 0;
+b string = "hello";
+c bool = true;
+d float = 3.14;
+e char = 'e';
+f int = a + 7;
+g int = 21 % 3;
+h bool = !c;

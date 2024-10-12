@@ -44,4 +44,12 @@ const (
 	T_STRING
 	T_CHAR
 	T_BOOL
+	T_EQ
+	T_LT
+	T_GT
+	T_LTEQ
+	T_GTEQ
+	T_NOT
+	T_NEQ
+	T_MOD
 )

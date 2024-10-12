@@ -14,7 +14,7 @@ func main() {
 		return
 	}
 
-	switch args[1] {
+	switch args[0] {
 	case "build":
 		// No file
 		if len(args) == 1 {
@@ -61,6 +61,8 @@ func help(args []string) {
 }
 
 func compile(source []byte) {
+	fmt.Println("Compilation started")
+
 	lexer := Lexer{}
 	//parser := Parser{}
 	//analyser := Analyser{}

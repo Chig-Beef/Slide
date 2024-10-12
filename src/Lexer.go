@@ -76,8 +76,14 @@ func (l *Lexer) lex() []Token {
 		case '*':
 			token = Token{"*", T_MUL}
 
-		case '/': // TODO: Implement comments
+		case '/':
 			token = Token{"/", T_DIV}
+			if l.peekChar() == '/' {
+				for l.peekChar() != '\n' && l.peekChar() != 0 {
+					l.index++
+				}
+				continue
+			}
 
 		case '|':
 			token = Token{"|", T_OR}

@@ -98,6 +98,10 @@ Strings can be multiplied by a non-negative integer? (however this could return 
 ```
 if cond {
 
+} elif cond {
+
+} else {
+
 }
 ```
 

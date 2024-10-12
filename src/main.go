@@ -20,7 +20,6 @@ func main() {
 		// No file
 		if len(args) == 1 {
 			fmt.Println("No source files given")
-			return
 
 		} else if len(args) == 2 { // Single file
 

@@ -1,0 +1,2 @@
+// Alias is now an int
+typedef Alias int;

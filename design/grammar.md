@@ -16,6 +16,7 @@ statement -> 'fun' IDENTIFIER '(' [IDENTIFIER PTYPE] {',' IDENTIFIER PTYPE} ')' 
 statement -> 'return' [expression] ';'
 statement -> 'break' [VALUE] ';'
 statement -> 'continue' [VALUE] ';'
+statement -> 'enum' IDENTIFIER '{' {IDENTIFIER ','} '}'
 condition -> expression that must return a yes or noable value
 expression -> [UNARY] VALUE {OPERATOR [UNARY] VALUE}
 assignment -> IDENTIFIER [TYPE] '=' expression | 

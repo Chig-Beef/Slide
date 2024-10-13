@@ -38,6 +38,9 @@ func (l *Lexer) lex() []Token {
 		case ';':
 			token = Token{";", T_SEMICOLON}
 
+		case '.':
+			token = Token{".", T_ACCESS}
+
 		case '~':
 			token = Token{"~", T_XOR}
 
@@ -65,6 +68,21 @@ func (l *Lexer) lex() []Token {
 		case ')':
 			token = Token{")", T_R_PAREN}
 
+		case '|':
+			token = Token{"|", T_OR}
+
+		case '&':
+			token = Token{"&", T_AND}
+
+		case ',':
+			token = Token{",", T_SEP}
+
+		case '%':
+			token = Token{"%", T_MUL}
+
+		case '*':
+			token = Token{"*", T_MUL}
+
 		case '=':
 			token = Token{"=", T_ASSIGN}
 			if l.peekChar() == '=' {
@@ -78,39 +96,6 @@ func (l *Lexer) lex() []Token {
 				token = Token{"!=", T_NEQ}
 				l.index++
 			}
-
-		case '%':
-			token = Token{"%", T_MUL}
-
-		case '*':
-			token = Token{"*", T_MUL}
-
-		case '/':
-			token = Token{"/", T_DIV}
-			if l.peekChar() == '/' {
-				for l.peekChar() != '\n' && l.peekChar() != 0 {
-					l.index++
-				}
-				continue
-			} else if l.peekChar() == '*' {
-				for l.peekChar() != 0 {
-					if l.peekChar() == '/' && l.source[l.index] == '*' {
-						l.index++
-						break
-					}
-					l.index++
-				}
-				continue
-			}
-
-		case '|':
-			token = Token{"|", T_OR}
-
-		case '&':
-			token = Token{"&", T_AND}
-
-		case ',':
-			token = Token{",", T_SEP}
 
 		case '<':
 			token = Token{"<", T_LT}
@@ -138,6 +123,24 @@ func (l *Lexer) lex() []Token {
 			if l.peekChar() == '-' {
 				token = Token{"--", T_SUB}
 				l.index++
+			}
+
+		case '/':
+			token = Token{"/", T_DIV}
+			if l.peekChar() == '/' {
+				for l.peekChar() != '\n' && l.peekChar() != 0 {
+					l.index++
+				}
+				continue
+			} else if l.peekChar() == '*' {
+				for l.peekChar() != 0 {
+					if l.peekChar() == '/' && l.source[l.index] == '*' {
+						l.index++
+						break
+					}
+					l.index++
+				}
+				continue
 			}
 
 		case '\'': // Characters
@@ -239,6 +242,12 @@ func (l *Lexer) lex() []Token {
 				token.kind = T_BREAK
 			case "continue":
 				token.kind = T_CONT
+			case "enum":
+				token.kind = T_ENUM
+			case "nil":
+				token.kind = T_NIL
+			case "typedef":
+				token.kind = T_TYPEDEF
 			case "true", "false":
 				token.kind = T_BOOL
 

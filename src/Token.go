@@ -66,4 +66,8 @@ const (
 	T_REF
 	T_DEREF
 	T_XOR
+	T_ENUM
+	T_ACCESS
+	T_NIL
+	T_TYPEDEF
 )

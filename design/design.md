@@ -38,6 +38,12 @@ This does not require the walrus operator.
 Start off without inference for the time being
 Logically search through operations to understand a type?
 
+Sometimes it is also necessary to create a type alias.
+```
+// Alias is now an int
+typedef Alias int;
+```
+
 ## Variable definitions
 ```
 x = 0; // Will set x to the generic int type
@@ -90,8 +96,22 @@ fun sum(a int, b int) int {
 Errors have a string and a code to make them easier to track.
 The code will contain flags, such as whether the giver of the error thinks it
 is recoverable, and so forth.
+Actually I think we should do error wrapping?
+This is probably a better way to maintain a single return value system.
+There's probably extra syntax or so on needed, but we can leave that for now.
 
 ## Enums
+```
+enum Days {
+    monday,
+    tuesday,
+    wednesday,
+    thursday,
+    friday,
+    saturday,
+    sunday,
+}
+```
 
 ## Type conversions
 Type conversions are single functions
@@ -173,6 +193,11 @@ x ^int = `7;
 ## Nil
 
 ## Multiple files
+Since functions, structs, types, and methods are hoisted, there is no need to
+worry about importing files like python. Order doesn't matter, as as there is a
+single main function.
+On another note, no regular statements are usable outside of the main function.
+Struct definitions, function definitions, enum definitions, typedefs, can be outside main only.
 
 ## Packages
 

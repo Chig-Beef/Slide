@@ -13,7 +13,7 @@ type Node struct {
 type NodeType int
 
 const (
-	N_ILLEGAL TokenType = iota
+	N_ILLEGAL NodeType = iota
 
 	// Higher level structures
 	N_PROGRAM         // Top level structure, holds everything

@@ -42,6 +42,7 @@ func main() {
 					fmt.Println("Error while trying to read " + args[i])
 					panic(err)
 				}
+				data = append(data, '\n')
 				data = append(data, newData...)
 			}
 
@@ -67,16 +68,20 @@ func compile(source []byte) {
 	t := time.Now()
 
 	lexer := Lexer{}
-	//parser := Parser{}
+	parser := Parser{}
 	//analyser := Analyser{}
 	//emitter := GoEmitter{}
 
 	lexer.source = source
 	lexed := lexer.lex()
 	fmt.Println(lexed)
-	//parsed := parser.parse(lexed)
-	//analysed := analyser.analyse(parsed)
-	//emitted := emitter.emit(analysed)
+
+	parser.source = lexed
+	parsed := parser.parse()
+	fmt.Println(parsed)
+
+	//analysed := analyser.analyse()
+	//emitted := emitter.emit()
 	//emitter.dump(emitted)
 
 	fmt.Println()

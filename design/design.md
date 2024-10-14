@@ -227,3 +227,18 @@ z = 1 & 3
 ```
 
 Do everything
+
+## Standard Library
+The standard library is an interesting problem considering the ability to slide
+in different emitters.
+Because of this, there's almost a need for multiple implementations of it.
+This isn't fully true, as there are parts of the standard that can be fully
+implemented in slide.
+For example, some basic mathematics can be implemented in slide, also array manipulation.
+However, for example, accessing the network will need access to the emitters own standard.
+
+Slide standard:
+1. [ ] math
+2. [ ] slices
+3. [ ] strconv
+4. [ ] strings

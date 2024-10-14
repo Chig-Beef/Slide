@@ -17,23 +17,30 @@ func (t Token) String() string {
 type TokenType byte
 
 const (
-	// Keywords
 	T_ILLEGAL TokenType = iota
+
+	// Keywords
 	T_FOR
 	T_RANGE
 	T_FOREVER
 	T_IF
 	T_ELIF
 	T_ELSE
-	T_SEMICOLON
-	T_L_SQUIRLY
-	T_R_SQUIRLY
-	T_L_BLOCK
-	T_R_BLOCK
-	T_L_PAREN
-	T_R_PAREN
 	T_CALL
+	T_STRUCT
+	T_FUN
+	T_RET
+	T_BREAK
+	T_CONT
+	T_ENUM
+	T_TYPEDEF
+
+	// Various symbols
+	T_SEMICOLON
 	T_ASSIGN
+	T_SEP
+
+	// Operators
 	T_ADD
 	T_SUB
 	T_MUL
@@ -42,14 +49,6 @@ const (
 	T_AND
 	T_INC
 	T_DINC
-	T_TYPE
-	T_SEP
-	T_IDENTIFIER
-	T_INT
-	T_FLOAT
-	T_STRING
-	T_CHAR
-	T_BOOL
 	T_EQ
 	T_LT
 	T_GT
@@ -58,16 +57,26 @@ const (
 	T_NOT
 	T_NEQ
 	T_MOD
-	T_STRUCT
-	T_FUN
-	T_RET
-	T_BREAK
-	T_CONT
 	T_REF
 	T_DEREF
 	T_XOR
-	T_ENUM
 	T_ACCESS
+
+	// Paired symbols
+	T_L_SQUIRLY
+	T_R_SQUIRLY
+	T_L_BLOCK
+	T_R_BLOCK
+	T_L_PAREN
+	T_R_PAREN
+
+	// Values
+	T_TYPE
+	T_IDENTIFIER
+	T_INT
+	T_FLOAT
+	T_STRING
+	T_CHAR
+	T_BOOL
 	T_NIL
-	T_TYPEDEF
 )

@@ -5,22 +5,23 @@
 [construct] means that construct is optional
 
 program -> {statement}
-statement -> assignment ';'
-statement -> 'if' condition '{' {statement} '}'
-statement -> 'forever' '{' {statement} '}'
-statement -> 'range' expression '{' {statement} '}'
-statement -> 'for' [assignment] ';' [condition] ';' assignment '{' {statement} '}'
-statement -> 'call' call ';'
-statement -> 'struct' IDENTIFIER '{' {IDENTIFIER TYPE ';'} '}'
-statement -> 'fun' IDENTIFIER '(' [IDENTIFIER PTYPE] {',' IDENTIFIER PTYPE} ')' [PTYPE] '{' {statement} '}'
-statement -> 'return' [expression] ';'
-statement -> 'break' [VALUE] ';'
-statement -> 'continue' [VALUE] ';'
-statement -> 'enum' IDENTIFIER '{' {IDENTIFIER ','} '}'
+variableDeclaration -> assignment ';'
+ifBlock -> 'if' condition block ['elif' condition block] ['else' block]
+foreverLoop -> 'forever' block 
+rangeLoop -> 'range' expression block
+forLoop -> 'for' [assignment] ';' [condition] ';' assignment block
+callStatement -> 'call' call ';'
+structDef -> 'struct' IDENTIFIER '{' {IDENTIFIER TYPE ';'} '}'
+funcDef -> 'fun' IDENTIFIER '(' [IDENTIFIER PTYPE] {',' IDENTIFIER PTYPE} ')' [PTYPE] block
+retStatement -> 'return' [expression] ';'
+breakStatement -> 'break' [VALUE] ';'
+contStatement -> 'continue' [VALUE] ';'
+enumDef -> 'enum' IDENTIFIER '{' {IDENTIFIER ','} '}'
 condition -> expression that must return a yes or noable value
 expression -> [UNARY] VALUE {OPERATOR [UNARY] VALUE}
 assignment -> IDENTIFIER [TYPE] '=' expression | 
-call -> IDENTIFIER '(' [ expression [{',' expression}]] ')'
+funcCall -> IDENTIFIER '(' [ expression [{',' expression}]] ')'
+block -> '{' {statement} '}'
 
 PTYPE is TYPE but that can include a dereference
 VALUE is an IDENTIFIER or a PRIMATIVE or a call

@@ -41,6 +41,8 @@ func (p *Parser) parse() *Node {
 	case T_CONT: // Continue statement
 	case T_ENUM: // Enum definition
 	case T_TYPEDEF: // Type definition
+		n = p.typeDef()
+		program.children = append(program.children, n)
 
 	default:
 		panic(fmt.Sprint("Bad start to statement:", t.kind))
@@ -159,5 +161,40 @@ func (p *Parser) funcCall() *Node {
 }
 
 func (p *Parser) block() *Node {
+	return nil
+}
+
+func (p *Parser) typeDef() *Node {
+	n := Node{kind: N_NEW_TYPE}
+
+	var t Token
+
+	t = p.curToken()
+	if t.kind != T_TYPEDEF {
+		panic("Expected typedef")
+	}
+	n.children = append(n.children, &Node{kind: N_TYPEDEF})
+	p.index++
+
+	t = p.curToken()
+	if t.kind != T_IDENTIFIER {
+		panic("Expected identifier")
+	}
+	n.children = append(n.children, &Node{kind: N_IDENTIFIER})
+	p.index++
+
+	t = p.curToken()
+	if t.kind != T_TYPE {
+		panic("Expected type")
+	}
+	n.children = append(n.children, &Node{kind: N_TYPE})
+	p.index++
+
+	t = p.curToken()
+	if t.kind != T_SEMICOLON {
+		panic("Expected semicolon")
+	}
+	n.children = append(n.children, &Node{kind: N_SEMICOLON})
+
 	return nil
 }

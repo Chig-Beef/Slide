@@ -33,6 +33,7 @@ const (
 	N_ASSIGNMENT      // An identifier being assigned a value
 	N_FUNC_CALL       // Calling a functions
 	N_BLOCK           // A bunch of statements
+	N_NEW_TYPE
 
 	// Keywords
 	N_FOR

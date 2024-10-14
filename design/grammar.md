@@ -6,7 +6,7 @@
 
 program -> {statement}
 variableDeclaration -> assignment ';'
-newType -> 'typedef' IDENTIFIER TYPE
+newType -> 'typedef' IDENTIFIER TYPE ';'
 ifBlock -> 'if' condition block ['elif' condition block] ['else' block]
 foreverLoop -> 'forever' block 
 rangeLoop -> 'range' expression block

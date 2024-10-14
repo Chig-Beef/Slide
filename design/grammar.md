@@ -10,7 +10,7 @@ newType -> 'typedef' IDENTIFIER TYPE ';'
 ifBlock -> 'if' condition block ['elif' condition block] ['else' block]
 foreverLoop -> 'forever' block 
 rangeLoop -> 'range' expression block
-forLoop -> 'for' [assignment] ';' [condition] ';' assignment block
+forLoop -> 'for' [assignment] ';' [condition] ';' [assignment] block
 funcCall -> 'call' IDENTIFIER '(' [ expression [{',' expression}]] ')' ';'
 structDef -> 'struct' IDENTIFIER '{' {IDENTIFIER TYPE ';'} '}'
 funcDef -> 'fun' IDENTIFIER '(' [IDENTIFIER PTYPE] {',' IDENTIFIER PTYPE} ')' [PTYPE] block

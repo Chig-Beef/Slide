@@ -24,28 +24,75 @@ func (p *Parser) parse() *Node {
 
 	t := p.curToken()
 
-	switch t.kind {
-	case T_IDENTIFIER: // Variable declaration
-		n = p.variableDeclaration()
-		program.children = append(program.children, n)
+	// TODO: When calling these fucntions,
+	// we already assert that the first
+	// token is correct, so it might be
+	// alright to change the code and
+	// make that assumption in the
+	// functions
 
-	case T_IF: // If block
-	case T_FOREVER: // Forever loop
-	case T_RANGE: // Range loop
-	case T_FOR: // For loop
-	case T_CALL: // Empty call
-	case T_STRUCT: // Struct definition
-	case T_FUN: // Function definition
-	case T_RET: // Return statement
-	case T_BREAK: // Break statement
-	case T_CONT: // Continue statement
-	case T_ENUM: // Enum definition
-	case T_TYPEDEF: // Type definition
-		n = p.typeDef()
-		program.children = append(program.children, n)
+	for t.kind != 0 {
 
-	default:
-		panic(fmt.Sprint("Bad start to statement:", t.kind))
+		switch t.kind {
+		case T_IDENTIFIER: // Variable declaration
+			n = p.variableDeclaration()
+			program.children = append(program.children, n)
+
+		case T_IF: // If block
+			n = p.ifBlock()
+			program.children = append(program.children, n)
+
+		case T_FOREVER: // Forever loop
+			n = p.foreverLoop()
+			program.children = append(program.children, n)
+
+		case T_RANGE: // Range loop
+			n = p.rangeLoop()
+			program.children = append(program.children, n)
+
+		case T_FOR: // For loop
+			n = p.forLoop()
+			program.children = append(program.children, n)
+
+		case T_CALL: // Empty call
+			n = p.funcCall()
+			program.children = append(program.children, n)
+
+		case T_STRUCT: // Struct definition
+			n = p.structDef()
+			program.children = append(program.children, n)
+
+		case T_FUN: // Function definition
+			n = p.funcDef()
+			program.children = append(program.children, n)
+
+		case T_RET: // Return statement
+			n = p.retStatement()
+			program.children = append(program.children, n)
+
+		case T_BREAK: // Break statement
+			n = p.breakStatement()
+			program.children = append(program.children, n)
+
+		case T_CONT: // Continue statement
+			n = p.contStatement()
+			program.children = append(program.children, n)
+
+		case T_ENUM: // Enum definition
+			n = p.enumDef()
+			program.children = append(program.children, n)
+
+		case T_TYPEDEF: // Type definition
+			n = p.typeDef()
+			program.children = append(program.children, n)
+
+		default:
+			panic(fmt.Sprint("Bad start to statement:", t.kind))
+		}
+
+		p.index++
+
+		t = p.curToken()
 	}
 
 	return &program
@@ -73,19 +120,83 @@ func (p *Parser) ifBlock() *Node {
 }
 
 func (p *Parser) foreverLoop() *Node {
-	return nil
+	n := Node{kind: N_FOREVER_LOOP}
+
+	var t Token
+
+	t = p.curToken()
+	if t.kind != T_FOREVER {
+		panic("Expected forever")
+	}
+	n.children = append(n.children, &Node{kind: N_FOREVER})
+	p.index++
+
+	n.children = append(n.children, p.block())
+
+	return &n
 }
 
 func (p *Parser) rangeLoop() *Node {
-	return nil
+	n := Node{kind: N_RANGE_LOOP}
+
+	var t Token
+
+	t = p.curToken()
+	if t.kind != T_RANGE {
+		panic("Expected range")
+	}
+	n.children = append(n.children, &Node{kind: N_RANGE})
+	p.index++
+
+	n.children = append(n.children, p.expression())
+	p.index++
+
+	n.children = append(n.children, p.block())
+
+	return &n
 }
 
 func (p *Parser) forLoop() *Node {
-	return nil
-}
+	n := Node{kind: N_FOR_LOOP}
 
-func (p *Parser) callStatement() *Node {
-	return nil
+	var t Token
+
+	t = p.curToken()
+	if t.kind != T_RANGE {
+		panic("Expected for")
+	}
+	n.children = append(n.children, &Node{kind: N_FOR})
+	p.index++
+
+	// TODO: Try skipping assignment
+	n.children = append(n.children, p.assignment())
+	p.index++
+
+	t = p.curToken()
+	if t.kind != T_SEMICOLON {
+		panic("Expected semicolon")
+	}
+	n.children = append(n.children, &Node{kind: N_SEMICOLON})
+	p.index++
+
+	// TODO: Try skipping expression
+	n.children = append(n.children, p.expression())
+	p.index++
+
+	t = p.curToken()
+	if t.kind != T_SEMICOLON {
+		panic("Expected semicolon")
+	}
+	n.children = append(n.children, &Node{kind: N_SEMICOLON})
+	p.index++
+
+	// TODO: Try skipping assignment
+	n.children = append(n.children, p.assignment())
+	p.index++
+
+	n.children = append(n.children, p.block())
+
+	return &n
 }
 
 func (p *Parser) structDef() *Node {

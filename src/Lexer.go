@@ -145,6 +145,7 @@ func (l *Lexer) lex() []Token {
 
 		case '\'': // Characters
 			token = Token{"'", T_CHAR}
+			// TODO: Deal with the case when you have escaped characters, such as newline?
 
 			l.index += 2
 			if l.index == len(l.source) {

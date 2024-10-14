@@ -76,6 +76,8 @@ func compile(source []byte) {
 	lexed := lexer.lex()
 	fmt.Println(lexed)
 
+	fmt.Println()
+
 	parser.source = lexed
 	parsed := parser.parse()
 	fmt.Println(parsed)

@@ -6,11 +6,12 @@
 
 program -> {statement}
 variableDeclaration -> assignment ';'
+newType -> 'typedef' IDENTIFIER TYPE
 ifBlock -> 'if' condition block ['elif' condition block] ['else' block]
 foreverLoop -> 'forever' block 
 rangeLoop -> 'range' expression block
 forLoop -> 'for' [assignment] ';' [condition] ';' assignment block
-callStatement -> 'call' call ';'
+funcCall -> 'call' IDENTIFIER '(' [ expression [{',' expression}]] ')' ';'
 structDef -> 'struct' IDENTIFIER '{' {IDENTIFIER TYPE ';'} '}'
 funcDef -> 'fun' IDENTIFIER '(' [IDENTIFIER PTYPE] {',' IDENTIFIER PTYPE} ')' [PTYPE] block
 retStatement -> 'return' [expression] ';'
@@ -20,7 +21,6 @@ enumDef -> 'enum' IDENTIFIER '{' {IDENTIFIER ','} '}'
 condition -> expression that must return a yes or noable value
 expression -> [UNARY] VALUE {OPERATOR [UNARY] VALUE}
 assignment -> IDENTIFIER [TYPE] '=' expression | 
-funcCall -> IDENTIFIER '(' [ expression [{',' expression}]] ')'
 block -> '{' {statement} '}'
 
 PTYPE is TYPE but that can include a dereference

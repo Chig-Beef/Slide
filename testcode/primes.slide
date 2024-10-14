@@ -1,0 +1,12 @@
+for i int = 0; i < 100; ++i {
+	prime bool = true;
+	for j int = 0; j < i; ++j {
+		if i%j == 0 {
+			prime = false;
+		}
+	}
+	if prime {
+		call print(i);
+		call print("\n")
+	}
+}

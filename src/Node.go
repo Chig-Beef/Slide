@@ -22,7 +22,6 @@ const (
 	N_FOREVER_LOOP    // Loop with no end
 	N_RANGE_LOOP      // Loop with fixed end
 	N_FOR_LOOP        // Boomer loop
-	N_CALL_STATE      // Statement that is just a call to a function
 	N_STRUCT_DEF      // Definition of a struct
 	N_FUNC_DEF        // Definition of a function
 	N_RET_STATE       // Return

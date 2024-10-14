@@ -103,7 +103,7 @@ func (p *Parser) variableDeclaration() *Node {
 
 	n := Node{kind: N_VAR_DECLARATION}
 
-	p.assignment()
+	n.children = append(n.children, p.assignment())
 	p.index++
 
 	t = p.curToken()
@@ -116,7 +116,45 @@ func (p *Parser) variableDeclaration() *Node {
 }
 
 func (p *Parser) ifBlock() *Node {
-	return nil
+	var t Token
+
+	n := Node{kind: N_VAR_DECLARATION}
+
+	t = p.curToken()
+	if t.kind != T_IF {
+		panic("Expected if")
+	}
+	n.children = append(n.children, &Node{kind: N_IF, data: t.data})
+	p.index++
+
+	n.children = append(n.children, p.condition())
+	p.index++
+
+	n.children = append(n.children, p.block())
+	p.index++
+
+	t = p.curToken()
+	for t.kind == T_ELIF {
+		n.children = append(n.children, &Node{kind: N_ELIF, data: t.data})
+		p.index++
+
+		n.children = append(n.children, p.condition())
+		p.index++
+
+		n.children = append(n.children, p.block())
+		p.index++
+
+		t = p.curToken()
+	}
+
+	if t.kind == T_ELSE {
+		n.children = append(n.children, &Node{kind: N_ELSE, data: t.data})
+		p.index++
+
+		n.children = append(n.children, p.block())
+	}
+
+	return &n
 }
 
 func (p *Parser) foreverLoop() *Node {
@@ -200,7 +238,20 @@ func (p *Parser) forLoop() *Node {
 }
 
 func (p *Parser) structDef() *Node {
-	return nil
+	var t Token
+
+	n := Node{kind: N_STRUCT_DEF}
+
+	p.assignment()
+	p.index++
+
+	t = p.curToken()
+	if t.kind != T_SEMICOLON {
+		panic("Expected semicolon")
+	}
+	n.children = append(n.children, &Node{kind: N_SEMICOLON, data: t.data})
+
+	return &n
 }
 
 func (p *Parser) funcDef() *Node {

@@ -85,11 +85,11 @@ func compile(source []byte) {
 
 	hoister.ast = parsed
 	types, funcs, ast := hoister.hoist()
-	fmt.Println(types)
+	fmt.Println("types: ", types)
 	fmt.Println()
-	fmt.Println(funcs)
+	fmt.Println("funcs: ", funcs)
 	fmt.Println()
-	fmt.Println(ast)
+	fmt.Println("ast: ", ast)
 	fmt.Println()
 
 	//analysed := analyser.analyse()

@@ -67,7 +67,7 @@ func compile(source []byte) {
 
 	t := time.Now()
 
-	lexer := Lexer{}
+	lexer := Lexer{line: 1}
 	parser := Parser{}
 	//analyser := Analyser{}
 	//emitter := GoEmitter{}

@@ -1,10 +1,8 @@
-/*
-x []byte = [1, 2, 3+4];
-y [3]string = ["a", "b", "c"];
-z [2]^float = [`1.1, `2.2];
-*/
+x byte[] = make [1, 2, 3+4];
+y string[3] = make ["a", "b", "c"];
+z float^[2] = make [`1.1, `2.2];
 
 // Prefixing with the index makes it easier to differentiate between other
 // cases, however, this might be changed in future
-// [0]x = 7;
+[0]x = 7;
 

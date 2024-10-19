@@ -171,9 +171,9 @@ forever {
 ## Structs
 ```
 struct Point {
-    x int;
-    y int;
-    id string;
+    x int
+    y int
+    id string
 }
 ```
 
@@ -183,7 +183,7 @@ struct Point {
 Using these symbols that aren't used for anythign else will increase
 speed as it avoids ambiguity
 ```
-x ^int = `7;
+x int^ = `7;
 ```
 
 ## Pattern matching

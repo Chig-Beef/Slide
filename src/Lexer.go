@@ -2,9 +2,12 @@ package main
 
 import "fmt"
 
+const JOB_LEXER = "Lexer"
+
 type Lexer struct {
 	source []byte
 	index  int
+	line   int
 }
 
 func (l *Lexer) peekChar() byte {
@@ -31,109 +34,126 @@ func (l *Lexer) lex() []Token {
 		case '\t':
 			continue
 		case '\n':
+			l.line++
 			continue
 		case '\r':
 			continue
 
 		case ';':
-			token = Token{";", T_SEMICOLON}
+			token = Token{";", T_SEMICOLON, l.line}
 
 		case '.':
-			token = Token{".", T_ACCESS}
+			token = Token{".", T_ACCESS, l.line}
 
 		case '~':
-			token = Token{"~", T_XOR}
+			token = Token{"~", T_XOR, l.line}
 
 		case '`':
-			token = Token{"`", T_REF}
+			token = Token{"`", T_REF, l.line}
 
 		case '^':
-			token = Token{"^", T_DEREF}
+			token = Token{"^", T_DEREF, l.line}
 
 		case '{':
-			token = Token{"{", T_L_SQUIRLY}
+			token = Token{"{", T_L_SQUIRLY, l.line}
 
 		case '}':
-			token = Token{"}", T_R_SQUIRLY}
+			token = Token{"}", T_R_SQUIRLY, l.line}
 
 		case '[':
-			token = Token{"[", T_L_BLOCK}
+			token = Token{"[", T_L_BLOCK, l.line}
 
 		case ']':
-			token = Token{"]", T_R_BLOCK}
+			token = Token{"]", T_R_BLOCK, l.line}
 
 		case '(':
-			token = Token{"(", T_L_PAREN}
+			token = Token{"(", T_L_PAREN, l.line}
 
 		case ')':
-			token = Token{")", T_R_PAREN}
+			token = Token{")", T_R_PAREN, l.line}
 
 		case '|':
-			token = Token{"|", T_OR}
+			token = Token{"|", T_OR, l.line}
 
 		case '&':
-			token = Token{"&", T_AND}
+			token = Token{"&", T_AND, l.line}
 
 		case ',':
-			token = Token{",", T_SEP}
+			token = Token{",", T_SEP, l.line}
 
 		case '%':
-			token = Token{"%", T_MUL}
+			token = Token{"%", T_MUL, l.line}
 
 		case '*':
-			token = Token{"*", T_MUL}
+			token = Token{"*", T_MUL, l.line}
 
 		case '=':
-			token = Token{"=", T_ASSIGN}
+			token = Token{"=", T_ASSIGN, l.line}
 			if l.peekChar() == '=' {
-				token = Token{"==", T_EQ}
+				token = Token{"==", T_EQ, l.line}
 				l.index++
 			}
 
 		case '!':
-			token = Token{"!", T_NOT}
+			token = Token{"!", T_NOT, l.line}
 			if l.peekChar() == '=' {
-				token = Token{"!=", T_NEQ}
+				token = Token{"!=", T_NEQ, l.line}
 				l.index++
 			}
 
 		case '<':
-			token = Token{"<", T_LT}
+			token = Token{"<", T_LT, l.line}
 			if l.peekChar() == '=' {
-				token = Token{"<=", T_LTEQ}
+				token = Token{"<=", T_LTEQ, l.line}
 				l.index++
 			}
 
 		case '>':
-			token = Token{">", T_GT}
+			token = Token{">", T_GT, l.line}
 			if l.peekChar() == '=' {
-				token = Token{">=", T_GTEQ}
+				token = Token{">=", T_GTEQ, l.line}
 				l.index++
 			}
 
 		case '+':
-			token = Token{"+", T_ADD}
+			token = Token{"+", T_ADD, l.line}
 			if l.peekChar() == '+' {
-				token = Token{"++", T_INC}
+				token = Token{"++", T_INC, l.line}
 				l.index++
 			}
 
 		case '-':
-			token = Token{"-", T_SUB}
+			token = Token{"-", T_SUB, l.line}
 			if l.peekChar() == '-' {
-				token = Token{"--", T_SUB}
+				token = Token{"--", T_SUB, l.line}
 				l.index++
 			}
 
 		case '/':
-			token = Token{"/", T_DIV}
+			token = Token{"/", T_DIV, l.line}
+
+			// single-line comment
 			if l.peekChar() == '/' {
 				for l.peekChar() != '\n' && l.peekChar() != 0 {
+
+					// Make sure line numbers make sense
+					if l.peekChar() == '\n' {
+						l.line++
+					}
+
 					l.index++
 				}
 				continue
-			} else if l.peekChar() == '*' {
+			}
+
+			// multi-line comment
+			if l.peekChar() == '*' {
 				for l.peekChar() != 0 {
+
+					// Make sure line numbers make sense
+					if l.peekChar() == '\n' {
+						l.line++
+					}
 					if l.peekChar() == '/' && l.source[l.index] == '*' {
 						l.index++
 						break
@@ -144,7 +164,7 @@ func (l *Lexer) lex() []Token {
 			}
 
 		case '\'': // Characters
-			token = Token{"'", T_CHAR}
+			token = Token{"'", T_CHAR, l.line}
 			// TODO: Deal with the case when you have escaped characters, such as newline?
 
 			l.index += 2
@@ -163,7 +183,7 @@ func (l *Lexer) lex() []Token {
 
 			// TODO: Have to deal with comments in string (maybe)
 
-			token = Token{"\"", T_STRING}
+			token = Token{"\"", T_STRING, l.line}
 
 			for l.peekChar() != '"' && l.peekChar() != 0 {
 				l.index++
@@ -184,7 +204,7 @@ func (l *Lexer) lex() []Token {
 			// yet, but we'll figure it out later.
 			// At least we know it can only be
 			// either integer, float, or illegal
-			token = Token{data: string(l.source[l.index])}
+			token = Token{data: string(l.source[l.index]), line: l.line}
 
 			isFloat := false
 
@@ -210,9 +230,9 @@ func (l *Lexer) lex() []Token {
 			// Other words
 		} else if l.source[l.index]-'a' < 26 || l.source[l.index]-'A' < 26 {
 			// Don't know specific type yet
-			token = Token{data: string(l.source[l.index])}
+			token = Token{data: string(l.source[l.index]), line: l.line}
 
-			for (l.peekChar()-'a' <= 26 || l.peekChar()-'A' <= 26 || l.peekChar() == '_') && l.peekChar() != 0 {
+			for (l.peekChar()-'a' < 26 || l.peekChar()-'A' < 26 || l.peekChar() == '_') && l.peekChar() != 0 {
 				l.index++
 				token.data += string(l.source[l.index])
 			}
@@ -249,6 +269,12 @@ func (l *Lexer) lex() []Token {
 				token.kind = T_NIL
 			case "typedef":
 				token.kind = T_TYPEDEF
+			case "new":
+				token.kind = T_NEW
+			case "make":
+				token.kind = T_MAKE
+			case "map":
+				token.kind = T_MAP
 			case "true", "false":
 				token.kind = T_BOOL
 
@@ -258,12 +284,42 @@ func (l *Lexer) lex() []Token {
 				"uint", "int8", "int16", "int32",
 				"int64", "sint", "int", "char",
 				"string", "float32", "float64", "double",
-				"float", "bool":
+				"float", "bool", "anyp":
 				token.kind = T_TYPE
 
 				// Identifiers
 			default:
-				token.kind = T_IDENTIFIER
+				// HOWEVER, the programmer is allowed
+				// to create new types, and the 2 cases
+				// that this occurs is in struct and
+				// typdefs. It could also be a type if
+				// the previous token is new, but the
+				// programmer could be lying, so this
+				// will be up to semantic analysis. The
+				// last case is an identifier after
+				// an identifier, which is usually
+				// where a type is, so we will also add
+				// this case
+
+				// First token in the file (therefore
+				// can't be preceeded with the relevant
+				// tokens)
+				if len(tokens) == 0 {
+					token.kind = T_IDENTIFIER
+					break
+				}
+
+				// Could possibly be a type
+				prevToken := tokens[len(tokens)-1]
+				if prevToken.kind == T_STRUCT ||
+					prevToken.kind == T_TYPEDEF ||
+					prevToken.kind == T_NEW ||
+					prevToken.kind == T_IDENTIFIER ||
+					prevToken.kind == T_MAP {
+					token.kind = T_TYPE
+				} else {
+					token.kind = T_IDENTIFIER
+				}
 			}
 		}
 

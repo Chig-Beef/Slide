@@ -1,0 +1,12 @@
+// Sort an array the worst way possible
+fun bubbleSort(arr int[]) {
+	for i int = 0; i < arr.len; i = i + 1 {
+		for j int = 0; j < arr.len-1-j; j = j + 1 {
+			if [j]arr > [j+1]arr {
+				tmp int = [j]arr;
+				[j]arr = [j+1]arr;
+				[j+1]arr = tmp;
+			}
+		}
+	}
+}

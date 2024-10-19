@@ -122,9 +122,6 @@ func (p *Parser) variableDeclaration() *Node {
 
 	var t Token
 
-	t = p.curToken()
-	fmt.Println(t)
-
 	n := Node{kind: N_VAR_DECLARATION}
 
 	n.children = append(n.children, p.assignment())

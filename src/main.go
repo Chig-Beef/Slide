@@ -69,18 +69,28 @@ func compile(source []byte) {
 
 	lexer := Lexer{line: 1}
 	parser := Parser{}
+	hoister := Hoister{}
 	//analyser := Analyser{}
 	//emitter := GoEmitter{}
 
 	lexer.source = source
 	lexed := lexer.lex()
 	fmt.Println(lexed)
-
 	fmt.Println()
 
 	parser.source = lexed
 	parsed := parser.parse()
 	fmt.Println(parsed)
+	fmt.Println()
+
+	hoister.ast = parsed
+	types, funcs, ast := hoister.hoist()
+	fmt.Println(types)
+	fmt.Println()
+	fmt.Println(funcs)
+	fmt.Println()
+	fmt.Println(ast)
+	fmt.Println()
 
 	//analysed := analyser.analyse()
 	//emitted := emitter.emit()

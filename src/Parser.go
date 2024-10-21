@@ -332,13 +332,8 @@ func (p *Parser) structDef() *Node {
 		n.children = append(n.children, &Node{kind: N_IDENTIFIER, data: t.data})
 		p.index++
 
-		t = p.curToken()
-		if t.kind != T_TYPE {
-			throwError(JOB_PARSER, FUNC_NAME, t.line, "type", t)
-		}
-		n.children = append(n.children, &Node{kind: N_TYPE, data: t.data})
+		n.children = append(n.children, p.complexType())
 		p.index++
-
 		t = p.curToken()
 	}
 
@@ -363,8 +358,32 @@ func (p *Parser) funcDef() *Node {
 	}
 	n.children = append(n.children, &Node{kind: N_FUN, data: t.data})
 	p.index++
-
 	t = p.curToken()
+
+	// Method on struct
+	if t.kind == T_L_PAREN {
+		n.children = append(n.children, &Node{kind: N_L_PAREN, data: t.data})
+		p.index++
+
+		t = p.curToken()
+		if t.kind != T_IDENTIFIER {
+			throwError(JOB_PARSER, FUNC_NAME, t.line, "identifier", t)
+		}
+		n.children = append(n.children, &Node{kind: N_IDENTIFIER, data: t.data})
+		p.index++
+
+		n.children = append(n.children, p.complexType())
+		p.index++
+
+		t = p.curToken()
+		if t.kind != T_R_PAREN {
+			throwError(JOB_PARSER, FUNC_NAME, t.line, "right paren", t)
+		}
+		n.children = append(n.children, &Node{kind: N_R_PAREN, data: t.data})
+		p.index++
+		t = p.curToken()
+	}
+
 	if t.kind != T_IDENTIFIER {
 		throwError(JOB_PARSER, FUNC_NAME, t.line, "identifier", t)
 	}
@@ -634,6 +653,20 @@ func (p *Parser) assignment() *Node {
 	p.index++
 
 	t = p.curToken()
+
+	// Access
+	if t.kind == T_ACCESS {
+		n.children = append(n.children, &Node{kind: N_ACCESS, data: t.data})
+		p.index++
+		t = p.curToken()
+
+		if t.kind != T_IDENTIFIER {
+			throwError(JOB_PARSER, FUNC_NAME, t.line, "identifier", t)
+		}
+		n.children = append(n.children, &Node{kind: N_IDENTIFIER, data: t.data})
+		p.index++
+		t = p.curToken()
+	}
 
 	// We have a type?
 	if t.kind != T_ASSIGN {

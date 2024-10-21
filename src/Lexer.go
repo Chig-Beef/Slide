@@ -1,7 +1,5 @@
 package main
 
-import "fmt"
-
 const JOB_LEXER = "Lexer"
 
 type Lexer struct {
@@ -325,8 +323,7 @@ func (l *Lexer) lex() []Token {
 
 		if token.kind == T_ILLEGAL {
 			// TODO: Better error messages
-			fmt.Println(l.source[l.index], string(l.source[l.index]))
-			panic("ILLEGAL token found")
+			throwError(JOB_LEXER, "lexing", l.line, "anything else", "ILLEGAL ("+string(l.source[l.index])+")")
 		}
 
 		tokens = append(tokens, token)

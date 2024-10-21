@@ -36,8 +36,8 @@ Semantic Analysis
 
 Tests
 - [ ] Create proper tests
-- [ ] Linked lists
-- [ ] Pointer to structs
+- [x] Linked lists
+- [x] Pointer to structs
 - [ ] Map of structs
 - [ ] Array of structs
 - [ ] Struct with array, arraylist, map, and pointer properties

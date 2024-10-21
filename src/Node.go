@@ -121,6 +121,8 @@ const (
 	N_MOD
 	N_ACCESS
 	N_XOR
+	N_L_SHIFT
+	N_R_SHIFT
 
 	// Unary
 	N_INC
@@ -196,7 +198,7 @@ func (n NodeType) String() string {
 	case N_COMPLEX_TYPE:
 		return "COMPLEX_TYPE"
 
-		// Keywords
+	// Keywords
 	case N_FOR:
 		return "FOR"
 	case N_RANGE:
@@ -232,20 +234,7 @@ func (n NodeType) String() string {
 	case N_MAP:
 		return "MAP"
 
-	case N_SEMICOLON:
-		return "SEMICOLON"
-	case N_ASSIGN:
-		return "ASSIGN"
-	case N_SEP:
-		return "SEP"
-	case N_REF:
-		return "REF"
-	case N_DEREF:
-		return "DEREF"
-	case N_INDEX:
-		return "INDEX"
-	case N_XOR:
-		return "XOR"
+	// Paired symbols
 	case N_L_SQUIRLY:
 		return "L_SQUIRLY"
 	case N_R_SQUIRLY:
@@ -258,6 +247,18 @@ func (n NodeType) String() string {
 		return "L_PAREN"
 	case N_R_PAREN:
 		return "R_PAREN"
+
+	// Various symbols
+	case N_SEMICOLON:
+		return "SEMICOLON"
+	case N_ASSIGN:
+		return "ASSIGN"
+	case N_SEP:
+		return "SEP"
+
+	// Operator
+	case N_XOR:
+		return "XOR"
 	case N_ADD:
 		return "ADD"
 	case N_SUB:
@@ -270,10 +271,6 @@ func (n NodeType) String() string {
 		return "OR"
 	case N_AND:
 		return "AND"
-	case N_INC:
-		return "INC"
-	case N_DINC:
-		return "DINC"
 	case N_EQ:
 		return "EQ"
 	case N_LT:
@@ -284,14 +281,31 @@ func (n NodeType) String() string {
 		return "LTEQ"
 	case N_GTEQ:
 		return "GTEQ"
-	case N_NOT:
-		return "NOT"
+	case N_L_SHIFT:
+		return "N_L_SHIFT"
+	case N_R_SHIFT:
+		return "N_R_SHIFT"
 	case N_NEQ:
 		return "NEQ"
 	case N_MOD:
 		return "MOD"
 	case N_ACCESS:
 		return "ACCESS"
+
+	// Unary
+	case N_REF:
+		return "REF"
+	case N_DEREF:
+		return "DEREF"
+	case N_INDEX:
+		return "INDEX"
+	case N_NOT:
+		return "NOT"
+	case N_INC:
+		return "INC"
+	case N_DINC:
+		return "DINC"
+
 	case N_TYPE:
 		return "TYPE"
 	case N_IDENTIFIER:

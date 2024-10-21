@@ -65,6 +65,8 @@ const (
 	T_DINC
 	T_REF
 	T_DEREF
+	T_L_SHIFT
+	T_R_SHIFT
 
 	// Paired symbols
 	T_L_SQUIRLY
@@ -90,7 +92,7 @@ func (t TokenType) String() string {
 	case T_ILLEGAL:
 		return "ILLEGAL"
 
-		// Keywords
+	// Keywords
 	case T_FOR:
 		return "FOR"
 	case T_RANGE:
@@ -126,12 +128,19 @@ func (t TokenType) String() string {
 	case T_MAP:
 		return "MAP"
 
+	// Various symbols
 	case T_SEMICOLON:
 		return "SEMICOLON"
 	case T_ASSIGN:
 		return "ASSIGN"
 	case T_SEP:
 		return "SEP"
+
+	// Operators
+	case T_L_SHIFT:
+		return "T_L_SHIFT"
+	case T_R_SHIFT:
+		return "T_R_SHIFT"
 	case T_ADD:
 		return "ADD"
 	case T_SUB:
@@ -162,6 +171,8 @@ func (t TokenType) String() string {
 		return "XOR"
 	case T_ACCESS:
 		return "ACCESS"
+
+	// Unary
 	case T_NOT:
 		return "NOT"
 	case T_INC:
@@ -172,6 +183,8 @@ func (t TokenType) String() string {
 		return "REF"
 	case T_DEREF:
 		return "DEREF"
+
+	// Paired symbols
 	case T_L_SQUIRLY:
 		return "L_SQUIRLY"
 	case T_R_SQUIRLY:
@@ -184,6 +197,7 @@ func (t TokenType) String() string {
 		return "L_PAREN"
 	case T_R_PAREN:
 		return "R_PAREN"
+
 	case T_TYPE:
 		return "TYPE"
 	case T_IDENTIFIER:

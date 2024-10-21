@@ -104,12 +104,18 @@ func (l *Lexer) lex() []Token {
 			if l.peekChar() == '=' {
 				token = Token{"<=", T_LTEQ, l.line}
 				l.index++
+			} else if l.peekChar() == '<' {
+				token = Token{"<<", T_L_SHIFT, l.line}
+				l.index++
 			}
 
 		case '>':
 			token = Token{">", T_GT, l.line}
 			if l.peekChar() == '=' {
 				token = Token{">=", T_GTEQ, l.line}
+				l.index++
+			} else if l.peekChar() == '>' {
+				token = Token{">>", T_R_SHIFT, l.line}
 				l.index++
 			}
 

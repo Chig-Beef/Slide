@@ -5,13 +5,13 @@ other technologies.
 
 ## Todo
 Lexer
-- [ ] Leftshift operator
-- [ ] Rightshift operator
+- [x] Leftshift operator
+- [x] Rightshift operator
 - [ ] Map init
 
 Parse
-- [ ] Leftshift operator
-- [ ] Rightshift operator
+- [x] Leftshift operator
+- [x] Rightshift operator
 - [ ] Map init
 
 Semantic Analysis

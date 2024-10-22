@@ -242,9 +242,10 @@ func (p *Parser) forLoop() *Node {
 	n.children = append(n.children, &Node{kind: N_FOR})
 	p.nextToken()
 
-	// TODO: Try skipping assignment
-	n.children = append(n.children, p.assignment())
-	p.nextToken()
+	if p.tok.kind != T_SEMICOLON {
+		n.children = append(n.children, p.assignment())
+		p.nextToken()
+	}
 
 	if p.tok.kind != T_SEMICOLON {
 		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "semicolon", p.tok)
@@ -252,9 +253,10 @@ func (p *Parser) forLoop() *Node {
 	n.children = append(n.children, &Node{kind: N_SEMICOLON})
 	p.nextToken()
 
-	// TODO: Try skipping expression
-	n.children = append(n.children, p.expression())
-	p.nextToken()
+	if p.tok.kind != T_SEMICOLON {
+		n.children = append(n.children, p.expression())
+		p.nextToken()
+	}
 
 	if p.tok.kind != T_SEMICOLON {
 		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "semicolon", p.tok)
@@ -262,9 +264,10 @@ func (p *Parser) forLoop() *Node {
 	n.children = append(n.children, &Node{kind: N_SEMICOLON})
 	p.nextToken()
 
-	// TODO: Try skipping assignment
-	n.children = append(n.children, p.assignment())
-	p.nextToken()
+	if p.tok.kind != T_SEMICOLON {
+		n.children = append(n.children, p.assignment())
+		p.nextToken()
+	}
 
 	n.children = append(n.children, p.block())
 
@@ -606,7 +609,13 @@ func (p *Parser) assignment() *Node {
 
 	// Now we MUST have an assign
 	if p.tok.kind != T_ASSIGN {
-		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "assign", p.tok)
+		if p.tok.kind != T_SEMICOLON {
+			throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "assign or semicolon", p.tok)
+		}
+
+		p.index--
+
+		return &n
 	}
 
 	n.children = append(n.children, &Node{kind: N_ASSIGN, data: p.tok.data})
@@ -1099,7 +1108,7 @@ func (p *Parser) complexType() *Node {
 		return &n
 
 		// Otherwise we might have a more normal type
-	} else if p.tok.kind == T_TYPE {
+	} else if p.tok.kind == T_TYPE || p.tok.kind == T_IDENTIFIER {
 		n.children = append(n.children, &Node{kind: N_TYPE, data: p.tok.data})
 
 		pt := p.peekToken()

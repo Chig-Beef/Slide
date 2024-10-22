@@ -1,5 +1,10 @@
 package main
 
+import (
+	"fmt"
+	"strconv"
+)
+
 const JOB_LEXER = "Lexer"
 
 type Lexer struct {
@@ -174,17 +179,30 @@ func (l *Lexer) lex() []Token {
 			token = Token{"'", T_CHAR, l.line}
 			// TODO: Deal with the case when you have escaped characters, such as newline?
 
-			l.index += 2
-			if l.index == len(l.source) {
-				// TODO: Better error messages
-				panic("Expected more source")
-			}
+			if l.peekChar() == '\\' {
+				l.index += 3
+				if l.index >= len(l.source) {
+					// TODO: Better error messages
+					panic("Expected more source")
+				}
 
-			if l.source[l.index] != '\'' {
-				panic("Expected '")
-			}
+				if l.source[l.index] != '\'' {
+					fmt.Println(tokens)
+					panic("Expected ' (line " + strconv.Itoa(l.line) + ") got " + string(l.source[l.index]))
+				}
+				token.data += string(l.source[l.index-2]) + string(l.source[l.index-1]) + string(l.source[l.index])
+			} else {
+				l.index += 2
+				if l.index >= len(l.source) {
+					// TODO: Better error messages
+					panic("Expected more source")
+				}
 
-			token.data += string(l.source[l.index-1]) + string(l.source[l.index])
+				if l.source[l.index] != '\'' {
+					panic("Expected ' (line " + strconv.Itoa(l.line) + ") got " + string(l.source[l.index]))
+				}
+				token.data += string(l.source[l.index-1]) + string(l.source[l.index])
+			}
 
 		case '"': // Strings
 
@@ -192,9 +210,15 @@ func (l *Lexer) lex() []Token {
 
 			token = Token{"\"", T_STRING, l.line}
 
-			for l.peekChar() != '"' && l.peekChar() != 0 {
+			escaped := false
+			for !(l.peekChar() == '"' && !escaped) && l.peekChar() != 0 {
 				l.index++
 				token.data += string(l.source[l.index])
+				if l.source[l.index] == '\\' {
+					escaped = true
+				} else {
+					escaped = false
+				}
 			}
 
 			if l.peekChar() != '"' {

@@ -288,7 +288,7 @@ func (l *Lexer) lex() []Token {
 				"uint", "int8", "int16", "int32",
 				"int64", "sint", "int", "char",
 				"string", "float32", "float64", "double",
-				"float", "bool", "anyp":
+				"float", "bool", "any":
 				token.kind = T_TYPE
 
 				// Identifiers

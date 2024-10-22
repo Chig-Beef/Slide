@@ -1,7 +1,7 @@
 package main
 
 type VarFrame struct {
-	value *Node
+	value *Var
 	prev  *VarFrame
 }
 
@@ -10,7 +10,7 @@ type VarStack struct {
 	length int
 }
 
-func (vs *VarStack) push(n *Node) {
+func (vs *VarStack) push(n *Var) {
 	vf := &VarFrame{n, nil}
 
 	vs.length++
@@ -24,7 +24,7 @@ func (vs *VarStack) push(n *Node) {
 	vs.tail = vf
 }
 
-func (vs *VarStack) pop() *Node {
+func (vs *VarStack) pop() *Var {
 	if vs.length == 0 {
 		return nil
 	}
@@ -42,7 +42,7 @@ func (vs *VarStack) pop() *Node {
 	return tail.value
 }
 
-func (vs *VarStack) peek() *Node {
+func (vs *VarStack) peek() *Var {
 	// Length == 0
 	if vs.tail == nil {
 		return nil

@@ -1,0 +1,337 @@
+JOB_LEXER string = "Lexer";
+
+struct Lexer {
+	source byte[]
+	index int
+	line int
+}
+
+fun (l Lexer^) peekChar() byte {
+	if l.index >= l.source.len-1 {
+		return 0;
+	}
+
+	return [l.index+1]l.source;
+}
+
+fun (l Lexer^) lex() Token[] {
+	tokens Token[];
+	token Token;
+
+	for ; l.index < l.source.len; l.index = l.index+1 {
+		// Automatically sets it to ILLEGAL
+		token = new Token();
+
+		switch [l.index]l.source {
+
+		// Unnecessary to compute
+		case ' ':
+			continue;
+		case '\t':
+			continue;
+		case '\n':
+			l.line = l.line + 1;
+			continue;
+		case '\r':
+			continue;
+
+		case ';':
+			token = new Token(";", T_SEMICOLON, l.line);
+
+		case '.':
+			token = new Token(".", T_ACCESS, l.line);
+
+		case '~':
+			token = new Token("~", T_XOR, l.line);
+
+		case '`':
+			token = new Token("`", T_REF, l.line);
+
+		case '^':
+			token = new Token("^", T_DEREF, l.line);
+
+		case '{':
+			token = new Token("{", T_L_SQUIRLY, l.line);
+
+		case '}':
+			token = new Token("}", T_R_SQUIRLY, l.line);
+
+		case '[':
+			token = new Token("[", T_L_BLOCK, l.line);
+
+		case ']':
+			token = new Token("]", T_R_BLOCK, l.line);
+
+		case '(':
+			token = new Token("(", T_L_PAREN, l.line);
+
+		case ')':
+			token = new Token(")", T_R_PAREN, l.line);
+
+		case '|':
+			token = new Token("|", T_OR, l.line);
+
+		case '&':
+			token = new Token("&", T_AND, l.line);
+
+		case ',':
+			token = new Token(",", T_SEP, l.line);
+
+		case '%':
+			token = new Token("%", T_MUL, l.line);
+
+		case '*':
+			token = new Token("*", T_MUL, l.line);
+
+		case '=':
+			token = new Token("=", T_ASSIGN, l.line);
+			if call l.peekChar() == '=' {
+				token = new Token("==", T_EQ, l.line);
+				l.index = l.index + 1;
+			}
+
+		case '!':
+			token = new Token("!", T_NOT, l.line);
+			if call l.peekChar() == '=' {
+				token = new Token("!=", T_NEQ, l.line);
+				l.index = l.index + 1;
+			}
+
+		case '<':
+			token = new Token("<", T_LT, l.line);
+			if call l.peekChar() == '=' {
+				token = new Token("<=", T_LTEQ, l.line);
+				l.index = l.index + 1;
+			} else if call l.peekChar() == '<' {
+				token = new Token("<<", T_L_SHIFT, l.line);
+				l.index = l.index + 1;
+			}
+
+		case '>':
+			token = new Token(">", T_GT, l.line);
+			if call l.peekChar() == '=' {
+				token = new Token(">=", T_GTEQ, l.line);
+				l.index = l.index + 1;
+			} else if call l.peekChar() == '>' {
+				token = new Token(">>", T_R_SHIFT, l.line);
+				l.index = l.index + 1;
+			}
+
+		case '+':
+			token = new Token("+", T_ADD, l.line);
+			if call l.peekChar() == '+' {
+				token = new Token("++", T_INC, l.line);
+				l.index = l.index + 1;
+			}
+
+		case '-':
+			token = new Token("-", T_SUB, l.line);
+			if call l.peekChar() == '-' {
+				token = new Token("--", T_SUB, l.line);
+				l.index = l.index + 1;
+			}
+
+		case '/':
+			token = new Token("/", T_DIV, l.line);
+
+			// single-line comment
+			if call l.peekChar() == '/' {
+				for call l.peekChar() != '\n' && call l.peekChar() != 0 {
+
+					// Make sure line numbers make sense
+					if call l.peekChar() == '\n' {
+						l.line = l.line + 1;
+					}
+
+					l.index = l.index + 1;
+				}
+				continue;
+			}
+
+			// multi-line comment
+			if call l.peekChar() == '*' {
+				for call l.peekChar() != 0 {
+
+					// Make sure line numbers make sense
+					if call l.peekChar() == '\n' {
+						l.line = l.line + 1;
+					}
+					if call l.peekChar() == '/' && [l.index]l.source == '*' {
+						l.index = l.index + 1;
+						break;
+					}
+					l.index = l.index + 1;
+				}
+				continue;
+			}
+
+		case '\'': // Characters
+			token = new Token("'", T_CHAR, l.line);
+			// TODO: Deal with the case when you have escaped characters, such as newline?
+
+			l.index = l.index + 1;
+			if l.index == l.source.len {
+				// TODO: Better error messages
+				call panic("Expected more source");
+			}
+
+			if [l.index]l.source != '\'' {
+				call panic("Expected '");
+			}
+
+			token.data = token.data + string([l.index-1]l.source) + string([l.index]l.source)
+
+		case '"': // Strings
+
+			// TODO: Have to deal with comments in string (maybe)
+
+			token = new Token("\"", T_STRING, l.line);
+
+			for call l.peekChar() != '"' && call l.peekChar() != 0 {
+				l.index = l.index + 1;
+				token.data = token.data + call string([l.index]l.source);
+			}
+
+			if call l.peekChar() != '"' {
+				call panic("Couldn't find end of string");
+			}
+
+			l.index = l.index + 1;
+			token.data = token.data + call string([l.index]l.source);
+		}
+
+		// Numbers
+		if [l.index]l.source-'0' <= 9 {
+			// We don't know what type of number
+			// yet, but we'll figure it out later.
+			// At least we know it can only be
+			// either integer, float, or illegal
+			token = new Token(call string([l.index]l.source), T_ILLEGAL, l.line);
+
+			isFloat bool = false;
+
+			for ; (call l.peekChar()-'0' <= 9 || call l.peekChar() == '.') && call l.peekChar() != 0; {
+				l.index = l.index + 1;
+				token.data = token.data + call string([l.index]l.source);
+
+				if [l.index]l.source == '.' {
+					isFloat = true;
+				}
+			}
+
+			if isFloat {
+				if [token.data.len-1]token.data == '.' {
+					call panic("Floats cannot end with '.'");
+				}
+				token.kind = T_FLOAT;
+			} else {
+				token.kind = T_INT;
+			}
+
+			// Keywords
+			// Other words
+		} else if [l.index]l.source-'a' < 26 || [l.index]l.source-'A' < 26 {
+			// Don't know specific type yet
+			token = new Token(call string([l.index]l.source), T_ILLEGAL, l.line);
+
+			for (call l.peekChar()-'a' < 26 || call l.peekChar()-'A' < 26 || call l.peekChar() == '_') && call l.peekChar() != 0 {
+				l.index = l.index + 1;
+				token.data = token.data + call string([l.index]l.source);
+			}
+
+			// Keywords
+			switch token.data {
+			case "for":
+				token.kind = T_FOR;
+			case "range":
+				token.kind = T_RANGE;
+			case "forever":
+				token.kind = T_FOREVER;
+			case "if":
+				token.kind = T_IF;
+			case "elif":
+				token.kind = T_ELIF;
+			case "else":
+				token.kind = T_ELSE;
+			case "call":
+				token.kind = T_CALL;
+			case "struct":
+				token.kind = T_STRUCT;
+			case "fun":
+				token.kind = T_FUN;
+			case "return":
+				token.kind = T_RET;
+			case "break":
+				token.kind = T_BREAK;
+			case "continue":
+				token.kind = T_CONT;
+			case "enum":
+				token.kind = T_ENUM;
+			case "nil":
+				token.kind = T_NIL;
+			case "typedef":
+				token.kind = T_TYPEDEF;
+			case "new":
+				token.kind = T_NEW;
+			case "make":
+				token.kind = T_MAKE;
+			case "map":
+				token.kind = T_MAP;
+			case "true", "false":
+				token.kind = T_BOOL;
+
+				// Types
+			case "byte", "word", "dword", "qword",
+				"uint8", "uint16", "uint32", "uint64",
+				"uint", "int8", "int16", "int32",
+				"int64", "sint", "int", "char",
+				"string", "float32", "float64", "double",
+				"float", "bool", "any":
+				token.kind = T_TYPE;
+
+				// Identifiers
+			default:
+				// HOWEVER, the programmer is allowed
+				// to create new types, and the 2 cases
+				// that this occurs is in struct and
+				// typdefs. It could also be a type if
+				// the previous token is new, but the
+				// programmer could be lying, so this
+				// will be up to semantic analysis. The
+				// last case is an identifier after
+				// an identifier, which is usually
+				// where a type is, so we will also add
+				// this case
+
+				// First token in the file (therefore
+				// can't be preceeded with the relevant
+				// tokens)
+				if tokens.len == 0 {
+					token.kind = T_IDENTIFIER;
+					break;
+				}
+
+				// Could possibly be a type
+				prevToken Token = [tokens.len-1]tokens;
+				if prevToken.kind == T_STRUCT ||
+					prevToken.kind == T_TYPEDEF ||
+					prevToken.kind == T_NEW ||
+					prevToken.kind == T_IDENTIFIER ||
+					prevToken.kind == T_MAP {
+					token.kind = T_TYPE;
+				} else {
+					token.kind = T_IDENTIFIER;
+				}
+			}
+		}
+
+		if token.kind == T_ILLEGAL {
+			// TODO: Better error messages
+			call throwError(JOB_LEXER, "lexing", l.line, "anything else", "ILLEGAL ("+call string([l.index]l.source)+")");
+		}
+
+		call tokens.append(token);
+	}
+
+	return tokens;
+}

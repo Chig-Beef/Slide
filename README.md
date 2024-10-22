@@ -8,11 +8,16 @@ Lexer
 - [x] Leftshift operator
 - [x] Rightshift operator
 - [ ] Map init
+- [ ] Switches
+- [ ] +=, -=, etc
 
 Parse
 - [x] Leftshift operator
 - [x] Rightshift operator
 - [ ] Map init
+- [ ] Switches
+- [ ] Increment and decrement can be entire assignment
+- [ ] +=, -=, etc
 
 Semantic Analysis
 - [ ] Identifier exists
@@ -33,6 +38,8 @@ Semantic Analysis
 - [ ] Check for out-of-bound on array
 - [ ] Type inference
 - [ ] Only nils for pointers
+- [ ] Exhaustive switches
+- [ ] Switches on same time
 
 Tests
 - [ ] Create proper tests
@@ -42,6 +49,8 @@ Tests
 - [ ] Array of structs
 - [ ] Struct with array, arraylist, map, and pointer properties
 - [ ] Map init
+- [ ] Complete compiler test
+- [ ] Switch test
 
 Emitter
 - [ ] Golang emitter

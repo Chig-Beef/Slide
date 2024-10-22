@@ -70,7 +70,7 @@ func compile(source []byte) {
 	lexer := Lexer{line: 1}
 	parser := Parser{}
 	hoister := Hoister{}
-	//analyser := Analyser{}
+	analyser := Analyser{}
 	//emitter := GoEmitter{}
 
 	lexer.source = source
@@ -92,7 +92,11 @@ func compile(source []byte) {
 	fmt.Println("ast: ", ast)
 	fmt.Println()
 
-	//analysed := analyser.analyse()
+	analyser.types = types
+	analyser.funcs = funcs
+	analyser.ast = ast
+	analyser.analyse()
+
 	//emitted := emitter.emit()
 	//emitter.dump(emitted)
 

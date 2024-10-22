@@ -41,6 +41,9 @@ fun (l Lexer^) lex() Token[] {
 		case '.':
 			token = new Token(".", T_ACCESS, l.line);
 
+		case ':':
+			token = new Token(":", T_COLON, l.line);
+
 		case '~':
 			token = new Token("~", T_XOR, l.line);
 

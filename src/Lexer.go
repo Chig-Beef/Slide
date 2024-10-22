@@ -43,6 +43,9 @@ func (l *Lexer) lex() []Token {
 		case '.':
 			token = Token{".", T_ACCESS, l.line}
 
+		case ':':
+			token = Token{":", T_COLON, l.line}
+
 		case '~':
 			token = Token{"~", T_XOR, l.line}
 

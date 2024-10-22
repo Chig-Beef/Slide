@@ -43,6 +43,7 @@ const (
 	T_SEMICOLON
 	T_ASSIGN
 	T_SEP
+	T_COLON
 
 	// Operators
 	T_ADD
@@ -135,6 +136,8 @@ func (t TokenType) String() string {
 		return "ASSIGN"
 	case T_SEP:
 		return "SEP"
+	case T_COLON:
+		return "COLON"
 
 	// Operators
 	case T_L_SHIFT:

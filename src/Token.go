@@ -38,6 +38,9 @@ const (
 	T_NEW
 	T_MAKE
 	T_MAP
+	T_SWITCH
+	T_CASE
+	T_DEFAULT
 
 	// Various symbols
 	T_SEMICOLON
@@ -128,6 +131,12 @@ func (t TokenType) String() string {
 		return "MAKE"
 	case T_MAP:
 		return "MAP"
+	case T_SWITCH:
+		return "SWITCH"
+	case T_CASE:
+		return "CASE"
+	case T_DEFAULT:
+		return "DEFAULT"
 
 	// Various symbols
 	case T_SEMICOLON:

@@ -91,6 +91,9 @@ const (
 	N_NEW
 	N_MAKE
 	N_MAP
+	N_SWITCH
+	N_CASE
+	N_DEFAULT
 
 	// Various symbols
 	N_SEMICOLON
@@ -233,6 +236,12 @@ func (n NodeType) String() string {
 		return "MAKE"
 	case N_MAP:
 		return "MAP"
+	case N_SWITCH:
+		return "SWITCH"
+	case N_CASE:
+		return "CASE"
+	case N_DEFAULT:
+		return "DEFAULT"
 
 	// Paired symbols
 	case N_L_SQUIRLY:

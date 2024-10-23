@@ -306,6 +306,12 @@ func (l *Lexer) lex() []Token {
 				token.kind = T_MAKE
 			case "map":
 				token.kind = T_MAP
+			case "switch":
+				token.kind = T_SWITCH
+			case "case":
+				token.kind = T_CASE
+			case "default":
+				token.kind = T_DEFAULT
 			case "true", "false":
 				token.kind = T_BOOL
 

@@ -154,7 +154,7 @@ fun (l Lexer^) lex() Token[] {
 
 			// multi-line comment
 			if call l.peekChar() == '*' {
-				for call l.peekChar() != 0 {
+				for ; call l.peekChar() != 0 ; {
 
 					// Make sure line numbers make sense
 					if call l.peekChar() == '\n' {
@@ -183,7 +183,7 @@ fun (l Lexer^) lex() Token[] {
 				call panic("Expected '");
 			}
 
-			token.data = token.data + string([l.index-1]l.source) + string([l.index]l.source)
+			token.data = token.data + call tostring([l.index-1]l.source) + call tostring([l.index]l.source);
 
 		case '"': // Strings
 
@@ -191,9 +191,9 @@ fun (l Lexer^) lex() Token[] {
 
 			token = new Token("\"", T_STRING, l.line);
 
-			for call l.peekChar() != '"' && call l.peekChar() != 0 {
+			for ; call l.peekChar() != '"' && call l.peekChar() != 0;  {
 				l.index = l.index + 1;
-				token.data = token.data + call string([l.index]l.source);
+				token.data = token.data + call tostring([l.index]l.source);
 			}
 
 			if call l.peekChar() != '"' {
@@ -201,7 +201,7 @@ fun (l Lexer^) lex() Token[] {
 			}
 
 			l.index = l.index + 1;
-			token.data = token.data + call string([l.index]l.source);
+			token.data = token.data + call tostring([l.index]l.source);
 		}
 
 		// Numbers
@@ -210,13 +210,13 @@ fun (l Lexer^) lex() Token[] {
 			// yet, but we'll figure it out later.
 			// At least we know it can only be
 			// either integer, float, or illegal
-			token = new Token(call string([l.index]l.source), T_ILLEGAL, l.line);
+			token = new Token(call tostring([l.index]l.source), T_ILLEGAL, l.line);
 
 			isFloat bool = false;
 
 			for ; (call l.peekChar()-'0' <= 9 || call l.peekChar() == '.') && call l.peekChar() != 0; {
 				l.index = l.index + 1;
-				token.data = token.data + call string([l.index]l.source);
+				token.data = token.data + call tostring([l.index]l.source);
 
 				if [l.index]l.source == '.' {
 					isFloat = true;
@@ -234,13 +234,13 @@ fun (l Lexer^) lex() Token[] {
 
 			// Keywords
 			// Other words
-		} else if [l.index]l.source-'a' < 26 || [l.index]l.source-'A' < 26 {
+		} elif [l.index]l.source-'a' < 26 || [l.index]l.source-'A' < 26 {
 			// Don't know specific type yet
-			token = new Token(call string([l.index]l.source), T_ILLEGAL, l.line);
+			token = new Token(call tostring([l.index]l.source), T_ILLEGAL, l.line);
 
-			for (call l.peekChar()-'a' < 26 || call l.peekChar()-'A' < 26 || call l.peekChar() == '_') && call l.peekChar() != 0 {
+			for ; (call l.peekChar()-'a' < 26 || call l.peekChar()-'A' < 26 || call l.peekChar() == '_') && call l.peekChar() != 0 ; {
 				l.index = l.index + 1;
-				token.data = token.data + call string([l.index]l.source);
+				token.data = token.data + call tostring([l.index]l.source);
 			}
 
 			// Keywords
@@ -331,7 +331,7 @@ fun (l Lexer^) lex() Token[] {
 
 		if token.kind == T_ILLEGAL {
 			// TODO: Better error messages
-			call throwError(JOB_LEXER, "lexing", l.line, "anything else", "ILLEGAL ("+call string([l.index]l.source)+")");
+			call throwError(JOB_LEXER, "lexing", l.line, "anything else", "ILLEGAL ("+call tostring([l.index]l.source)+")");
 		}
 
 		call tokens.append(token);

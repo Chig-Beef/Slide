@@ -178,7 +178,6 @@ func (p *Parser) switchStatement() *Node {
 		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "right squirly", p.tok)
 	}
 	n.children = append(n.children, &Node{kind: N_R_SQUIRLY, data: p.tok.data})
-	p.nextToken()
 
 	return &n
 }
@@ -196,6 +195,14 @@ func (p *Parser) caseStatement() *Node {
 
 	n.children = append(n.children, p.expression())
 	p.nextToken()
+
+	for p.tok.kind == T_SEP {
+		n.children = append(n.children, &Node{kind: N_SEP, data: p.tok.data})
+		p.nextToken()
+
+		n.children = append(n.children, p.expression())
+		p.nextToken()
+	}
 
 	if p.tok.kind != T_COLON {
 		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "colon", p.tok)
@@ -417,39 +424,46 @@ func (p *Parser) forLoop() *Node {
 
 	n := Node{kind: N_FOR_LOOP}
 
+	// for
 	if p.tok.kind != T_FOR {
 		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "for", p.tok)
 	}
 	n.children = append(n.children, &Node{kind: N_FOR})
 	p.nextToken()
 
+	// for i int = 0
 	if p.tok.kind != T_SEMICOLON {
 		n.children = append(n.children, p.assignment())
 		p.nextToken()
 	}
 
+	// for i int = 0;
 	if p.tok.kind != T_SEMICOLON {
 		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "semicolon", p.tok)
 	}
 	n.children = append(n.children, &Node{kind: N_SEMICOLON})
 	p.nextToken()
 
+	// for i int = 0; i < 10
 	if p.tok.kind != T_SEMICOLON {
 		n.children = append(n.children, p.expression())
 		p.nextToken()
 	}
 
+	// for i int = 0; i < 10;
 	if p.tok.kind != T_SEMICOLON {
 		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "semicolon", p.tok)
 	}
 	n.children = append(n.children, &Node{kind: N_SEMICOLON})
 	p.nextToken()
 
-	if p.tok.kind != T_SEMICOLON {
+	// for i int = 0; i < 10; i = i + 1
+	if p.tok.kind != T_L_SQUIRLY {
 		n.children = append(n.children, p.assignment())
 		p.nextToken()
 	}
 
+	// for i int = 0; i < 10; i = i + 1 {}
 	n.children = append(n.children, p.block())
 
 	return &n
@@ -861,14 +875,26 @@ func (p *Parser) funcCall() *Node {
 	p.nextToken()
 
 	if p.tok.kind != T_R_PAREN {
-		n.children = append(n.children, p.value())
+		n.children = append(n.children, p.expression())
 		p.nextToken()
+
+		// TODO: Call in loop or whatever
+		if p.tok.kind == T_ACCESS {
+			n.children = append(n.children, &Node{kind: N_ACCESS, data: p.tok.data})
+			p.nextToken()
+
+			if p.tok.kind != T_IDENTIFIER {
+				throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "identifier", p.tok)
+			}
+			n.children = append(n.children, &Node{kind: N_IDENTIFIER, data: p.tok.data})
+			p.nextToken()
+		}
 
 		for p.tok.kind == T_SEP {
 			n.children = append(n.children, &Node{kind: N_SEP, data: p.tok.data})
 			p.nextToken()
 
-			n.children = append(n.children, p.value())
+			n.children = append(n.children, p.expression())
 			p.nextToken()
 		}
 	}

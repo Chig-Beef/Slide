@@ -8,16 +8,18 @@ Lexer
 - [x] Leftshift operator
 - [x] Rightshift operator
 - [ ] Map init
-- [ ] Switches
+- [x] Switches
 - [ ] +=, -=, etc
+- [ ] While
 
 Parse
 - [x] Leftshift operator
 - [x] Rightshift operator
 - [ ] Map init
-- [ ] Switches
+- [x] Switches
 - [ ] Increment and decrement can be entire assignment
 - [ ] +=, -=, etc
+- [ ] While
 
 Semantic Analysis
 - [ ] Identifier exists

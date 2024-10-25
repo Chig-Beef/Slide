@@ -117,6 +117,7 @@ enum Days {
 Type conversions are single functions
 May be easier to have as methods, then the creator of types and structs can
 write their own.
+For primitives, each type is prefixed with "to", so it would be tostring.
 
 ## Compilation
 Lexing is entirely completed before moving on.

@@ -72,6 +72,10 @@ const (
 	N_BRACKETED_VALUE    // An expression in parens (for bedmas purposes)
 	N_MAKE_ARRAY         // The syntax of creating an array
 	N_COMPLEX_TYPE       // A node that can encompass any type
+	N_SWITCH_STATE       // A whole switch statement
+	N_CASE_STATE         // The case line in a switch
+	N_DEFAULT_STATE      // The default line in a switch
+	N_CASE_BLOCK         // The block that is contained within a switch statement
 
 	// Keywords
 	N_FOR
@@ -99,6 +103,7 @@ const (
 	N_SEMICOLON
 	N_ASSIGN
 	N_SEP
+	N_COLON
 
 	// Paired symbols
 	N_L_SQUIRLY
@@ -200,6 +205,14 @@ func (n NodeType) String() string {
 		return "MAKE_ARRAY"
 	case N_COMPLEX_TYPE:
 		return "COMPLEX_TYPE"
+	case N_SWITCH_STATE:
+		return "SWITCH_STATE"
+	case N_CASE_STATE:
+		return "CASE_STATE"
+	case N_DEFAULT_STATE:
+		return "DEFAULT_STATE"
+	case N_CASE_BLOCK:
+		return "CASE_BLOCK"
 
 	// Keywords
 	case N_FOR:
@@ -264,6 +277,8 @@ func (n NodeType) String() string {
 		return "ASSIGN"
 	case N_SEP:
 		return "SEP"
+	case N_COLON:
+		return "COLON"
 
 	// Operator
 	case N_XOR:

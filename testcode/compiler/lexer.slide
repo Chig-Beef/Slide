@@ -106,7 +106,7 @@ fun (l Lexer^) lex() Token[] {
 			if call l.peekChar() == '=' {
 				token = new Token("<=", T_LTEQ, l.line);
 				l.index = l.index + 1;
-			} else if call l.peekChar() == '<' {
+			} elif call l.peekChar() == '<' {
 				token = new Token("<<", T_L_SHIFT, l.line);
 				l.index = l.index + 1;
 			}
@@ -116,7 +116,7 @@ fun (l Lexer^) lex() Token[] {
 			if call l.peekChar() == '=' {
 				token = new Token(">=", T_GTEQ, l.line);
 				l.index = l.index + 1;
-			} else if call l.peekChar() == '>' {
+			} elif call l.peekChar() == '>' {
 				token = new Token(">>", T_R_SHIFT, l.line);
 				l.index = l.index + 1;
 			}
@@ -140,7 +140,7 @@ fun (l Lexer^) lex() Token[] {
 
 			// single-line comment
 			if call l.peekChar() == '/' {
-				for call l.peekChar() != '\n' && call l.peekChar() != 0 {
+				for ; call l.peekChar() != '\n' && call l.peekChar() != 0 ; {
 
 					// Make sure line numbers make sense
 					if call l.peekChar() == '\n' {

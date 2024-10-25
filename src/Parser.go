@@ -6,6 +6,10 @@ import (
 
 const JOB_PARSER = "Parser"
 
+// TODO: Turn the function last called
+// in the compiler into a stack so that
+// recursion debuggins isn't do bad
+
 type Parser struct {
 	source []Token
 	tok    Token
@@ -109,6 +113,10 @@ func (p *Parser) parse() *Node {
 			n = p.elementAssignment()
 			program.children = append(program.children, n)
 
+		case T_SWITCH: // Switch statement
+			n = p.switchStatement()
+			program.children = append(program.children, n)
+
 		default:
 			panic(fmt.Sprint("Bad start to statement: ", p.tok.kind, "on line", p.tok.line))
 		}
@@ -133,6 +141,179 @@ func (p *Parser) variableDeclaration() *Node {
 	n.children = append(n.children, &Node{kind: N_SEMICOLON, data: p.tok.data})
 
 	return &n
+}
+
+func (p *Parser) switchStatement() *Node {
+	const FUNC_NAME = "switch statement"
+
+	n := Node{kind: N_SWITCH_STATE}
+
+	if p.tok.kind != T_SWITCH {
+		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "switch", p.tok)
+	}
+	n.children = append(n.children, &Node{kind: N_SWITCH, data: p.tok.data})
+	p.nextToken()
+
+	n.children = append(n.children, p.expression())
+	p.nextToken()
+
+	if p.tok.kind != T_L_SQUIRLY {
+		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "left squirly", p.tok)
+	}
+	n.children = append(n.children, &Node{kind: N_L_SQUIRLY, data: p.tok.data})
+	p.nextToken()
+
+	// Cases here
+	for p.tok.kind == T_CASE {
+		n.children = append(n.children, p.caseStatement())
+		p.nextToken()
+	}
+
+	if p.tok.kind == T_DEFAULT {
+		n.children = append(n.children, p.defaultStatement())
+		p.nextToken()
+	}
+
+	if p.tok.kind != T_R_SQUIRLY {
+		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "right squirly", p.tok)
+	}
+	n.children = append(n.children, &Node{kind: N_R_SQUIRLY, data: p.tok.data})
+	p.nextToken()
+
+	return &n
+}
+
+func (p *Parser) caseStatement() *Node {
+	const FUNC_NAME = "case statement"
+
+	n := Node{kind: N_CASE_STATE}
+
+	if p.tok.kind != T_CASE {
+		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "case", p.tok)
+	}
+	n.children = append(n.children, &Node{kind: N_CASE, data: p.tok.data})
+	p.nextToken()
+
+	n.children = append(n.children, p.expression())
+	p.nextToken()
+
+	if p.tok.kind != T_COLON {
+		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "colon", p.tok)
+	}
+	n.children = append(n.children, &Node{kind: N_COLON, data: p.tok.data})
+	p.nextToken()
+
+	n.children = append(n.children, p.caseBlock())
+
+	return &n
+}
+
+func (p *Parser) defaultStatement() *Node {
+	const FUNC_NAME = "default statement"
+
+	n := Node{kind: N_DEFAULT_STATE}
+
+	if p.tok.kind != T_DEFAULT {
+		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "default", p.tok)
+	}
+	n.children = append(n.children, &Node{kind: N_DEFAULT, data: p.tok.data})
+	p.nextToken()
+
+	if p.tok.kind != T_COLON {
+		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "colon", p.tok)
+	}
+	n.children = append(n.children, &Node{kind: N_COLON, data: p.tok.data})
+	p.nextToken()
+
+	n.children = append(n.children, p.caseBlock())
+
+	return &n
+}
+
+// NOTE: Is also used for default
+func (p *Parser) caseBlock() *Node {
+	const FUNC_NAME = "case block"
+
+	block := Node{kind: N_CASE_BLOCK}
+
+	var n *Node
+
+	for p.tok.kind != T_ILLEGAL && p.tok.kind != T_CASE && p.tok.kind != T_DEFAULT && p.tok.kind != T_R_SQUIRLY {
+		switch p.tok.kind {
+		case T_IDENTIFIER: // Variable declaration
+			n = p.variableDeclaration()
+			block.children = append(block.children, n)
+
+		case T_IF: // If block
+			n = p.ifBlock()
+			block.children = append(block.children, n)
+
+		case T_FOREVER: // Forever loop
+			n = p.foreverLoop()
+			block.children = append(block.children, n)
+
+		case T_RANGE: // Range loop
+			n = p.rangeLoop()
+			block.children = append(block.children, n)
+
+		case T_FOR: // For loop
+			n = p.forLoop()
+			block.children = append(block.children, n)
+
+		case T_CALL: // Empty call
+			n = p.loneCall()
+			block.children = append(block.children, n)
+
+		case T_STRUCT: // Struct definition
+			n = p.structDef()
+			block.children = append(block.children, n)
+
+		case T_FUN: // Function definition
+			n = p.funcDef()
+			block.children = append(block.children, n)
+
+		case T_RET: // Return statement
+			n = p.retStatement()
+			block.children = append(block.children, n)
+
+		case T_BREAK: // Break statement
+			n = p.breakStatement()
+			block.children = append(block.children, n)
+
+		case T_CONT: // Continue statement
+			n = p.contStatement()
+			block.children = append(block.children, n)
+
+		case T_ENUM: // Enum definition
+			n = p.enumDef()
+			block.children = append(block.children, n)
+
+		case T_TYPEDEF: // Type definition
+			n = p.typeDef()
+			block.children = append(block.children, n)
+
+		case T_L_BLOCK: // Assigning to an element in an array (or map?)
+			n = p.elementAssignment()
+			block.children = append(block.children, n)
+
+		case T_SWITCH: // Switch statement
+			n = p.switchStatement()
+			block.children = append(block.children, n)
+
+		default:
+			panic(fmt.Sprint("Bad start to statement: ", p.tok.kind, " on line ", p.tok.line))
+		}
+
+		p.nextToken()
+	}
+
+	// We end on a case, default, or
+	// whatever, we want to move back one
+	// so that the outer function can
+	// discover it themselves
+	p.index--
+
+	return &block
 }
 
 func (p *Parser) elementAssignment() *Node {
@@ -660,6 +841,19 @@ func (p *Parser) funcCall() *Node {
 	n.children = append(n.children, &Node{kind: N_IDENTIFIER, data: p.tok.data})
 	p.nextToken()
 
+	// Calling a method
+	// TODO: Call in loop or whatever
+	if p.tok.kind == T_ACCESS {
+		n.children = append(n.children, &Node{kind: N_ACCESS, data: p.tok.data})
+		p.nextToken()
+
+		if p.tok.kind != T_IDENTIFIER {
+			throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "identifier", p.tok)
+		}
+		n.children = append(n.children, &Node{kind: N_IDENTIFIER, data: p.tok.data})
+		p.nextToken()
+	}
+
 	if p.tok.kind != T_L_PAREN {
 		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "left paren", p.tok)
 	}
@@ -718,7 +912,7 @@ func (p *Parser) structNew() *Node {
 			n.children = append(n.children, &Node{kind: N_SEP, data: p.tok.data})
 			p.nextToken()
 
-			n.children = append(n.children, p.value())
+			n.children = append(n.children, p.expression())
 			p.nextToken()
 		}
 	}
@@ -800,6 +994,10 @@ func (p *Parser) block() *Node {
 
 		case T_L_BLOCK: // Assigning to an element in an array (or map?)
 			n = p.elementAssignment()
+			block.children = append(block.children, n)
+
+		case T_SWITCH: // Switch statement
+			n = p.switchStatement()
 			block.children = append(block.children, n)
 
 		default:
@@ -942,7 +1140,7 @@ func (p *Parser) value() *Node {
 
 		// Calling a function to use as a value
 	case T_CALL:
-		panic("Not implemented")
+		return p.funcCall()
 
 		// Creating a new struct
 	case T_NEW:

@@ -24,6 +24,7 @@ const (
 	T_FOR
 	T_RANGE
 	T_FOREVER
+	T_WHILE
 	T_IF
 	T_ELIF
 	T_ELSE
@@ -105,6 +106,8 @@ func (t TokenType) String() string {
 		return "RANGE"
 	case T_FOREVER:
 		return "FOREVER"
+	case T_WHILE:
+		return "WHILE"
 	case T_IF:
 		return "IF"
 	case T_ELIF:

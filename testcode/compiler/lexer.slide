@@ -140,7 +140,7 @@ fun (l Lexer^) lex() Token[] {
 
 			// single-line comment
 			if call l.peekChar() == '/' {
-				for ; call l.peekChar() != '\n' && call l.peekChar() != 0 ; {
+				while call l.peekChar() != '\n' && call l.peekChar() != 0 {
 
 					// Make sure line numbers make sense
 					if call l.peekChar() == '\n' {
@@ -154,7 +154,7 @@ fun (l Lexer^) lex() Token[] {
 
 			// multi-line comment
 			if call l.peekChar() == '*' {
-				for ; call l.peekChar() != 0 ; {
+				while call l.peekChar() != 0 {
 
 					// Make sure line numbers make sense
 					if call l.peekChar() == '\n' {
@@ -191,7 +191,7 @@ fun (l Lexer^) lex() Token[] {
 
 			token = new Token("\"", T_STRING, l.line);
 
-			for ; call l.peekChar() != '"' && call l.peekChar() != 0;  {
+			while call l.peekChar() != '"' && call l.peekChar() != 0 {
 				l.index = l.index + 1;
 				token.data = token.data + call tostring([l.index]l.source);
 			}
@@ -214,7 +214,7 @@ fun (l Lexer^) lex() Token[] {
 
 			isFloat bool = false;
 
-			for ; (call l.peekChar()-'0' <= 9 || call l.peekChar() == '.') && call l.peekChar() != 0; {
+			while (call l.peekChar()-'0' <= 9 || call l.peekChar() == '.') && call l.peekChar() != 0 {
 				l.index = l.index + 1;
 				token.data = token.data + call tostring([l.index]l.source);
 
@@ -238,7 +238,7 @@ fun (l Lexer^) lex() Token[] {
 			// Don't know specific type yet
 			token = new Token(call tostring([l.index]l.source), T_ILLEGAL, l.line);
 
-			for ; (call l.peekChar()-'a' < 26 || call l.peekChar()-'A' < 26 || call l.peekChar() == '_') && call l.peekChar() != 0 ; {
+			while (call l.peekChar()-'a' < 26 || call l.peekChar()-'A' < 26 || call l.peekChar() == '_') && call l.peekChar() != 0 {
 				l.index = l.index + 1;
 				token.data = token.data + call tostring([l.index]l.source);
 			}

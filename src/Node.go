@@ -54,6 +54,7 @@ const (
 	N_FOREVER_LOOP       // Loop with no end
 	N_RANGE_LOOP         // Loop with fixed end
 	N_FOR_LOOP           // Boomer loop
+	N_WHILE_LOOP         // Loop with only a condition (can be recreated with for loops)
 	N_STRUCT_DEF         // Definition of a struct
 	N_FUNC_DEF           // Definition of a function
 	N_RET_STATE          // Return
@@ -81,6 +82,7 @@ const (
 	N_FOR
 	N_RANGE
 	N_FOREVER
+	N_WHILE
 	N_IF
 	N_ELIF
 	N_ELSE
@@ -171,6 +173,8 @@ func (n NodeType) String() string {
 		return "RANGE_LOOP"
 	case N_FOR_LOOP:
 		return "FOR_LOOP"
+	case N_WHILE_LOOP:
+		return "WHILE_LOOP"
 	case N_STRUCT_DEF:
 		return "STRUCT_DEF"
 	case N_FUNC_DEF:
@@ -223,6 +227,8 @@ func (n NodeType) String() string {
 		return "RANGE"
 	case N_FOREVER:
 		return "FOREVER"
+	case N_WHILE:
+		return "WHILE"
 	case N_IF:
 		return "IF"
 	case N_ELIF:

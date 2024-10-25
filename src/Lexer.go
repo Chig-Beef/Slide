@@ -284,6 +284,8 @@ func (l *Lexer) lex() []Token {
 				token.kind = T_RANGE
 			case "forever":
 				token.kind = T_FOREVER
+			case "while":
+				token.kind = T_WHILE
 			case "if":
 				token.kind = T_IF
 			case "elif":

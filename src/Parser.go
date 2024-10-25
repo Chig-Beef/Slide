@@ -77,6 +77,10 @@ func (p *Parser) parse() *Node {
 			n = p.forLoop()
 			program.children = append(program.children, n)
 
+		case T_WHILE: // While loop
+			n = p.whileLoop()
+			program.children = append(program.children, n)
+
 		case T_CALL: // Empty call
 			n = p.loneCall()
 			program.children = append(program.children, n)
@@ -118,7 +122,7 @@ func (p *Parser) parse() *Node {
 			program.children = append(program.children, n)
 
 		default:
-			panic(fmt.Sprint("Bad start to statement: ", p.tok.kind, "on line", p.tok.line))
+			panic(fmt.Sprint("Bad start to statement: ", p.tok.kind, " on line ", p.tok.line))
 		}
 
 		p.nextToken()
@@ -265,6 +269,10 @@ func (p *Parser) caseBlock() *Node {
 
 		case T_FOR: // For loop
 			n = p.forLoop()
+			block.children = append(block.children, n)
+
+		case T_WHILE: // While loop
+			n = p.whileLoop()
 			block.children = append(block.children, n)
 
 		case T_CALL: // Empty call
@@ -464,6 +472,28 @@ func (p *Parser) forLoop() *Node {
 	}
 
 	// for i int = 0; i < 10; i = i + 1 {}
+	n.children = append(n.children, p.block())
+
+	return &n
+}
+
+func (p *Parser) whileLoop() *Node {
+	const FUNC_NAME = "while loop"
+
+	n := Node{kind: N_WHILE_LOOP}
+
+	// while
+	if p.tok.kind != T_WHILE {
+		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "while", p.tok)
+	}
+	n.children = append(n.children, &Node{kind: N_WHILE})
+	p.nextToken()
+
+	// while i < 10
+	n.children = append(n.children, p.condition())
+	p.nextToken()
+
+	// while i < 10 {}
 	n.children = append(n.children, p.block())
 
 	return &n
@@ -984,6 +1014,10 @@ func (p *Parser) block() *Node {
 
 		case T_FOR: // For loop
 			n = p.forLoop()
+			block.children = append(block.children, n)
+
+		case T_WHILE: // While loop
+			n = p.whileLoop()
 			block.children = append(block.children, n)
 
 		case T_CALL: // Empty call

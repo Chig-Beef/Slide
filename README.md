@@ -10,7 +10,7 @@ Lexer
 - [ ] Map init
 - [x] Switches
 - [ ] +=, -=, etc
-- [ ] While
+- [x] While
 
 Parse
 - [x] Leftshift operator
@@ -19,7 +19,7 @@ Parse
 - [x] Switches
 - [ ] Increment and decrement can be entire assignment
 - [ ] +=, -=, etc
-- [ ] While
+- [x] While
 
 Semantic Analysis
 - [ ] Identifier exists

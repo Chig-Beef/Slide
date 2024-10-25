@@ -78,12 +78,6 @@ func (l *Lexer) lex() []Token {
 		case ')':
 			token = Token{")", T_R_PAREN, l.line}
 
-		case '|':
-			token = Token{"|", T_OR, l.line}
-
-		case '&':
-			token = Token{"&", T_AND, l.line}
-
 		case ',':
 			token = Token{",", T_SEP, l.line}
 
@@ -92,6 +86,20 @@ func (l *Lexer) lex() []Token {
 
 		case '*':
 			token = Token{"*", T_MUL, l.line}
+
+		case '|':
+			token = Token{"|", T_OR, l.line}
+			if l.peekChar() == '|' {
+				token = Token{"||", T_OROR, l.line}
+				l.index++
+			}
+
+		case '&':
+			token = Token{"&", T_AND, l.line}
+			if l.peekChar() == '&' {
+				token = Token{"&&", T_ANDAND, l.line}
+				l.index++
+			}
 
 		case '=':
 			token = Token{"=", T_ASSIGN, l.line}

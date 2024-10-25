@@ -1194,6 +1194,10 @@ func (p *Parser) operator() *Node {
 		return &Node{kind: N_OR, data: p.tok.data}
 	case T_AND:
 		return &Node{kind: N_AND, data: p.tok.data}
+	case T_OROR:
+		return &Node{kind: N_OROR, data: p.tok.data}
+	case T_ANDAND:
+		return &Node{kind: N_ANDAND, data: p.tok.data}
 	case T_L_SHIFT:
 		return &Node{kind: N_L_SHIFT, data: p.tok.data}
 	case T_R_SHIFT:

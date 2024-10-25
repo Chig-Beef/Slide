@@ -120,6 +120,8 @@ const (
 	N_DIV
 	N_OR
 	N_AND
+	N_OROR
+	N_ANDAND
 	N_EQ
 	N_LT
 	N_GT
@@ -295,6 +297,10 @@ func (n NodeType) String() string {
 		return "OR"
 	case N_AND:
 		return "AND"
+	case N_OROR:
+		return "OROR"
+	case N_ANDAND:
+		return "ANDAND"
 	case N_EQ:
 		return "EQ"
 	case N_LT:

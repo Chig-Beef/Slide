@@ -55,6 +55,8 @@ const (
 	T_DIV
 	T_OR
 	T_AND
+	T_OROR
+	T_ANDAND
 	T_EQ
 	T_LT
 	T_GT
@@ -165,6 +167,10 @@ func (t TokenType) String() string {
 		return "OR"
 	case T_AND:
 		return "AND"
+	case T_OROR:
+		return "OROR"
+	case T_ANDAND:
+		return "ANDAND"
 	case T_EQ:
 		return "EQ"
 	case T_LT:

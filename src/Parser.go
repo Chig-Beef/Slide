@@ -625,23 +625,26 @@ func (p *Parser) funcDef() *Node {
 
 	// Method on struct
 	if p.tok.kind == T_L_PAREN {
-		n.children = append(n.children, &Node{kind: N_L_PAREN, data: p.tok.data})
+		methodReceiver := Node{kind: N_METHOD_RECEIVER}
+		methodReceiver.children = append(methodReceiver.children, &Node{kind: N_L_PAREN, data: p.tok.data})
 		p.nextToken()
 
 		if p.tok.kind != T_IDENTIFIER {
 			throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "identifier", p.tok)
 		}
-		n.children = append(n.children, &Node{kind: N_IDENTIFIER, data: p.tok.data})
+		methodReceiver.children = append(methodReceiver.children, &Node{kind: N_IDENTIFIER, data: p.tok.data})
 		p.nextToken()
 
-		n.children = append(n.children, p.complexType())
+		methodReceiver.children = append(methodReceiver.children, p.complexType())
 		p.nextToken()
 
 		if p.tok.kind != T_R_PAREN {
 			throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "right paren", p.tok)
 		}
-		n.children = append(n.children, &Node{kind: N_R_PAREN, data: p.tok.data})
+		methodReceiver.children = append(methodReceiver.children, &Node{kind: N_R_PAREN, data: p.tok.data})
 		p.nextToken()
+
+		n.children = append(n.children, &methodReceiver)
 	}
 
 	if p.tok.kind != T_IDENTIFIER {

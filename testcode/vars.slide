@@ -6,4 +6,4 @@ e char = 'e';
 f int = a + 7;
 g int = 21 % 3;
 h bool = !c;
-i int = (8 + 7) / 5;
+i wah = (8 + 7) / 5;

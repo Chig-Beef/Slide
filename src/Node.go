@@ -78,6 +78,7 @@ const (
 	N_DEFAULT_STATE      // The default line in a switch
 	N_CASE_BLOCK         // The block that is contained within a switch statement
 	N_LONE_INC           // Can also be a lone decrement
+	N_METHOD_RECEIVER    // Brackets before a function name that shows that it's a method
 
 	// Keywords
 	N_FOR
@@ -222,6 +223,8 @@ func (n NodeType) String() string {
 		return "CASE_BLOCK"
 	case N_LONE_INC:
 		return "LONE_INC"
+	case N_METHOD_RECEIVER:
+		return "METHOD_RECEIVER"
 
 	// Keywords
 	case N_FOR:

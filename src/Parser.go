@@ -61,6 +61,10 @@ func (p *Parser) parse() *Node {
 			n = p.variableDeclaration()
 			program.children = append(program.children, n)
 
+		case T_INC, T_DINC: // Lone increment
+			n = p.loneIncrement()
+			program.children = append(program.children, n)
+
 		case T_IF: // If block
 			n = p.ifBlock()
 			program.children = append(program.children, n)
@@ -129,6 +133,46 @@ func (p *Parser) parse() *Node {
 	}
 
 	return &program
+}
+
+func (p *Parser) loneIncrement() *Node {
+	const FUNC_NAME = "lone increment"
+
+	n := Node{kind: N_LONE_INC}
+
+	if p.tok.kind == T_INC {
+		n.children = append(n.children, &Node{kind: N_INC, data: p.tok.data})
+	} else if p.tok.kind == T_DINC {
+		n.children = append(n.children, &Node{kind: N_DINC, data: p.tok.data})
+	} else {
+		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "inc or dinc", p.tok)
+	}
+	p.nextToken()
+
+	if p.tok.kind != T_IDENTIFIER {
+		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "identifier", p.tok)
+	}
+	n.children = append(n.children, &Node{kind: N_IDENTIFIER, data: p.tok.data})
+	p.nextToken()
+
+	// TODO: Loop through
+	if p.tok.kind == T_ACCESS {
+		n.children = append(n.children, &Node{kind: N_ACCESS, data: p.tok.data})
+		p.nextToken()
+
+		if p.tok.kind != T_IDENTIFIER {
+			throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "identifier", p.tok)
+		}
+		n.children = append(n.children, &Node{kind: N_IDENTIFIER, data: p.tok.data})
+		p.nextToken()
+	}
+
+	if p.tok.kind != T_SEMICOLON {
+		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "semicolon", p.tok)
+	}
+	n.children = append(n.children, &Node{kind: N_SEMICOLON, data: p.tok.data})
+
+	return &n
 }
 
 func (p *Parser) variableDeclaration() *Node {
@@ -253,6 +297,10 @@ func (p *Parser) caseBlock() *Node {
 		switch p.tok.kind {
 		case T_IDENTIFIER: // Variable declaration
 			n = p.variableDeclaration()
+			block.children = append(block.children, n)
+
+		case T_INC, T_DINC: // Lone increment
+			n = p.loneIncrement()
 			block.children = append(block.children, n)
 
 		case T_IF: // If block
@@ -467,7 +515,26 @@ func (p *Parser) forLoop() *Node {
 
 	// for i int = 0; i < 10; i = i + 1
 	if p.tok.kind != T_L_SQUIRLY {
-		n.children = append(n.children, p.assignment())
+		if p.tok.kind == T_INC || p.tok.kind == T_DINC {
+			inc := Node{kind: N_UNARY_OPERATION}
+
+			if p.tok.kind == T_INC {
+				inc.children = append(inc.children, &Node{kind: N_INC, data: p.tok.data})
+			} else if p.tok.kind == T_DINC {
+				inc.children = append(inc.children, &Node{kind: N_DINC, data: p.tok.data})
+			} else {
+				throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "inc or dinc", p.tok)
+			}
+			p.nextToken()
+
+			if p.tok.kind != T_IDENTIFIER {
+				throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "identifier", p.tok)
+			}
+			inc.children = append(inc.children, &Node{kind: N_IDENTIFIER, data: p.tok.data})
+			n.children = append(n.children, &inc)
+		} else {
+			n.children = append(n.children, p.assignment())
+		}
 		p.nextToken()
 	}
 
@@ -998,6 +1065,10 @@ func (p *Parser) block() *Node {
 		switch p.tok.kind {
 		case T_IDENTIFIER: // Variable declaration
 			n = p.variableDeclaration()
+			block.children = append(block.children, n)
+
+		case T_INC, T_DINC: // Lone increment
+			n = p.loneIncrement()
 			block.children = append(block.children, n)
 
 		case T_IF: // If block

@@ -1,18 +1,15 @@
 package main
 
-import (
-	"fmt"
-	"strconv"
-)
-
 const JOB_LEXER = "Lexer"
 
 type Lexer struct {
-	source []byte
-	index  int
-	line   int
+	source      []byte
+	index, line int
 }
 
+// Returns the character that is next
+// in line, is useful when you have a
+// duo of characters to create a token
 func (l *Lexer) peekChar() byte {
 	if l.index >= len(l.source)-1 {
 		return 0
@@ -42,6 +39,7 @@ func (l *Lexer) lex() []Token {
 		case '\r':
 			continue
 
+		// Actual symbols
 		case ';':
 			token = Token{";", T_SEMICOLON, l.line}
 
@@ -87,6 +85,7 @@ func (l *Lexer) lex() []Token {
 		case '*':
 			token = Token{"*", T_MUL, l.line}
 
+		// Doubles
 		case '|':
 			token = Token{"|", T_OR, l.line}
 			if l.peekChar() == '|' {
@@ -115,6 +114,21 @@ func (l *Lexer) lex() []Token {
 				l.index++
 			}
 
+		case '+':
+			token = Token{"+", T_ADD, l.line}
+			if l.peekChar() == '+' {
+				token = Token{"++", T_INC, l.line}
+				l.index++
+			}
+
+		case '-':
+			token = Token{"-", T_SUB, l.line}
+			if l.peekChar() == '-' {
+				token = Token{"--", T_DINC, l.line}
+				l.index++
+			}
+
+		// Complicated doubles
 		case '<':
 			token = Token{"<", T_LT, l.line}
 			if l.peekChar() == '=' {
@@ -132,20 +146,6 @@ func (l *Lexer) lex() []Token {
 				l.index++
 			} else if l.peekChar() == '>' {
 				token = Token{">>", T_R_SHIFT, l.line}
-				l.index++
-			}
-
-		case '+':
-			token = Token{"+", T_ADD, l.line}
-			if l.peekChar() == '+' {
-				token = Token{"++", T_INC, l.line}
-				l.index++
-			}
-
-		case '-':
-			token = Token{"-", T_SUB, l.line}
-			if l.peekChar() == '-' {
-				token = Token{"--", T_SUB, l.line}
 				l.index++
 			}
 
@@ -185,37 +185,30 @@ func (l *Lexer) lex() []Token {
 
 		case '\'': // Characters
 			token = Token{"'", T_CHAR, l.line}
-			// TODO: Deal with the case when you have escaped characters, such as newline?
 
 			if l.peekChar() == '\\' {
 				l.index += 3
 				if l.index >= len(l.source) {
-					// TODO: Better error messages
-					panic("Expected more source")
+					throwError(JOB_LEXER, "character", l.line, "more source", "end of source")
 				}
 
 				if l.source[l.index] != '\'' {
-					fmt.Println(tokens)
-					panic("Expected ' (line " + strconv.Itoa(l.line) + ") got " + string(l.source[l.index]))
+					throwError(JOB_LEXER, "character", l.line, "' (single quote)", string(l.source[l.index]))
 				}
 				token.data += string(l.source[l.index-2]) + string(l.source[l.index-1]) + string(l.source[l.index])
 			} else {
 				l.index += 2
 				if l.index >= len(l.source) {
-					// TODO: Better error messages
-					panic("Expected more source")
+					throwError(JOB_LEXER, "character", l.line, "more source", "end of source")
 				}
 
 				if l.source[l.index] != '\'' {
-					panic("Expected ' (line " + strconv.Itoa(l.line) + ") got " + string(l.source[l.index]))
+					throwError(JOB_LEXER, "character", l.line, "' (single quote)", string(l.source[l.index]))
 				}
 				token.data += string(l.source[l.index-1]) + string(l.source[l.index])
 			}
 
 		case '"': // Strings
-
-			// TODO: Have to deal with comments in string (maybe)
-
 			token = Token{"\"", T_STRING, l.line}
 
 			escaped := false
@@ -230,7 +223,7 @@ func (l *Lexer) lex() []Token {
 			}
 
 			if l.peekChar() != '"' {
-				panic("Couldn't find end of string")
+				throwError(JOB_LEXER, "string", l.line, "\" (end of string)", "end of source")
 			}
 
 			l.index++
@@ -336,6 +329,9 @@ func (l *Lexer) lex() []Token {
 
 				// Identifiers
 			default:
+				// TODO: I think types and identifiers
+				// should be considered the same thing
+
 				// HOWEVER, the programmer is allowed
 				// to create new types, and the 2 cases
 				// that this occurs is in struct and
@@ -371,7 +367,6 @@ func (l *Lexer) lex() []Token {
 		}
 
 		if token.kind == T_ILLEGAL {
-			// TODO: Better error messages
 			throwError(JOB_LEXER, "lexing", l.line, "anything else", "ILLEGAL ("+string(l.source[l.index])+")")
 		}
 

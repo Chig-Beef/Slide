@@ -11,7 +11,7 @@ struct Stack {
 fun (s Stack^) push(value any) {
 	n StackNode^ = ^new StackNode(value, nil);
 
-	s.length = s.length + 1;
+	++s.length;
 
 	if s.length == 1 {
 		s.tail = n;
@@ -27,7 +27,7 @@ fun (s Stack^) pop() any {
 		return nil;
 	}
 
-	s.length = s.length - 1;
+	--s.length;
 
 	if s.length == 0 {
 		tail StackNode^ = s.tail;

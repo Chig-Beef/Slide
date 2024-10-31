@@ -77,6 +77,7 @@ const (
 	N_CASE_STATE         // The case line in a switch
 	N_DEFAULT_STATE      // The default line in a switch
 	N_CASE_BLOCK         // The block that is contained within a switch statement
+	N_LONE_INC           // Can also be a lone decrement
 
 	// Keywords
 	N_FOR
@@ -219,6 +220,8 @@ func (n NodeType) String() string {
 		return "DEFAULT_STATE"
 	case N_CASE_BLOCK:
 		return "CASE_BLOCK"
+	case N_LONE_INC:
+		return "LONE_INC"
 
 	// Keywords
 	case N_FOR:

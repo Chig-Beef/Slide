@@ -7,26 +7,30 @@ import (
 )
 
 func main() {
-	args := os.Args[1:]
+	args := os.Args
 
 	// Empty
-	if len(args) == 0 {
+	if len(args) == 1 {
 		fmt.Println("No arguments given, try 'slide help' to view commands'")
 		return
 	}
 
-	switch args[0] {
+	cmd := args[1]
+	args = args[2:]
+
+	switch cmd {
 	case "build":
 		// No file
-		if len(args) == 1 {
+		if len(args) == 0 {
 			fmt.Println("No source files given")
 
-		} else if len(args) == 2 { // Single file
+			// TODO: What if they gave us a directory? Deal with as such
+		} else if len(args) == 1 { // Single file
 
 			// Read the file
-			data, err := os.ReadFile(args[1])
+			data, err := os.ReadFile(args[0])
 			if err != nil {
-				fmt.Println("Error while trying to read " + args[1])
+				fmt.Println("Error while trying to read " + args[0])
 				panic(err)
 			}
 
@@ -36,7 +40,7 @@ func main() {
 			var data []byte
 
 			// Read the files
-			for i := 1; i < len(args); i++ {
+			for i := 0; i < len(args); i++ {
 				newData, err := os.ReadFile(args[i])
 				if err != nil {
 					fmt.Println("Error while trying to read " + args[i])
@@ -50,7 +54,7 @@ func main() {
 		}
 
 	case "help":
-		help(args[1:])
+		help(args)
 	}
 }
 
@@ -58,6 +62,21 @@ func help(args []string) {
 	if len(args) == 0 {
 		fmt.Println("Possible args are build, or help")
 		return
+	}
+
+	if len(args) > 1 {
+		fmt.Println("Only one command at a time")
+		return
+	}
+
+	cmd := args[0]
+
+	switch cmd {
+	case "help":
+		fmt.Println("\"slide help\" takes in any slide command and gives a hint to how it works")
+	case "build":
+		fmt.Println("\"slide build\" take in a file name and compiles the contents of the file")
+		fmt.Println("\"slide build\" can also take in multiple files at once, each as another argument")
 	}
 }
 

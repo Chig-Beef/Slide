@@ -56,6 +56,30 @@ func (a *Analyser) initVarStack() {
 	a.varStack.push(&Var{kind: V_TYPE, data: "float"})
 	a.varStack.push(&Var{kind: V_TYPE, data: "bool"})
 	a.varStack.push(&Var{kind: V_TYPE, data: "any"})
+
+	// Conversion functions
+	a.varStack.push(&Var{kind: V_FUNC, data: "tobyte"})
+	a.varStack.push(&Var{kind: V_FUNC, data: "toword"})
+	a.varStack.push(&Var{kind: V_FUNC, data: "todword"})
+	a.varStack.push(&Var{kind: V_FUNC, data: "toqword"})
+	a.varStack.push(&Var{kind: V_FUNC, data: "touint8"})
+	a.varStack.push(&Var{kind: V_FUNC, data: "touint16"})
+	a.varStack.push(&Var{kind: V_FUNC, data: "touint32"})
+	a.varStack.push(&Var{kind: V_FUNC, data: "touint64"})
+	a.varStack.push(&Var{kind: V_FUNC, data: "touint"})
+	a.varStack.push(&Var{kind: V_FUNC, data: "toint8"})
+	a.varStack.push(&Var{kind: V_FUNC, data: "toint16"})
+	a.varStack.push(&Var{kind: V_FUNC, data: "toint32"})
+	a.varStack.push(&Var{kind: V_FUNC, data: "toint64"})
+	a.varStack.push(&Var{kind: V_FUNC, data: "tosint"})
+	a.varStack.push(&Var{kind: V_FUNC, data: "toint"})
+	a.varStack.push(&Var{kind: V_FUNC, data: "tochar"})
+	a.varStack.push(&Var{kind: V_FUNC, data: "tostring"})
+	a.varStack.push(&Var{kind: V_FUNC, data: "tofloat32"})
+	a.varStack.push(&Var{kind: V_FUNC, data: "tofloat64"})
+	a.varStack.push(&Var{kind: V_FUNC, data: "todouble"})
+	a.varStack.push(&Var{kind: V_FUNC, data: "tofloat"})
+	a.varStack.push(&Var{kind: V_FUNC, data: "tobool"})
 }
 
 // Searches the stack until a match for

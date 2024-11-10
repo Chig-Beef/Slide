@@ -17,7 +17,7 @@ Parse
 - [x] Rightshift operator
 - [ ] Map init
 - [x] Switches
-- [ ] Increment and decrement can be entire assignment
+- [x] Increment and decrement can be entire assignment
 - [ ] +=, -=, etc
 - [x] While
 
@@ -42,6 +42,7 @@ Semantic Analysis
 - [ ] Only nils for pointers
 - [ ] Exhaustive switches
 - [ ] Switches on same time
+- [ ] No Illegals
 
 Tests
 - [ ] Create proper tests

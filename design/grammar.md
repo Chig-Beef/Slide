@@ -6,25 +6,31 @@
 
 program -> {statement}
 variableDeclaration -> assignment ';'
-newType -> 'typedef' IDENTIFIER TYPE ';'
+elementAssignment -> indexUnary assignment ';'
 ifBlock -> 'if' condition block ['elif' condition block] ['else' block]
+newType -> 'typedef' IDENTIFIER TYPE ';'
 foreverLoop -> 'forever' block 
 rangeLoop -> 'range' expression block
-forLoop -> 'for' [assignment] ';' [condition] ';' [assignment] block
-funcCall -> 'call' IDENTIFIER '(' [ expression [{',' expression}]] ')' ';'
+forLoop -> 'for' [assignment] ';' [condition] ';' [assignment | (('++' | '--' IDENTIFIER))] block
+funcDef -> 'fun' [methodReceiver] IDENTIFIER '(' [IDENTIFIER complexType] {',' IDENTIFIER complexType} ')' complexType block
+methodReceiver -> '(' IDENTIFIER complexType ')'
+block -> '{' {statement} '}'
+expression -> value {OPERATOR value}
+value -> VALUE | (UNARY value) | makeArray | bracketedValue | funcCall | structNew
+loneIncrement -> ('++' | '--') IDENTIFIER {'.' IDENTIFIER} ';'
+switchStatement
+
+funcCall -> 'call'  IDENTIFIER '(' [expression [{',' expression}]] ')' ';'
 structDef -> 'struct' IDENTIFIER '{' {IDENTIFIER TYPE ';'} '}'
-funcDef -> 'fun' IDENTIFIER '(' [IDENTIFIER PTYPE] {',' IDENTIFIER PTYPE} ')' [PTYPE] block
 retStatement -> 'return' [expression] ';'
 breakStatement -> 'break' [VALUE] ';'
 contStatement -> 'continue' [VALUE] ';'
 enumDef -> 'enum' IDENTIFIER '{' {IDENTIFIER ','} '}'
 condition -> expression that must return a yes or noable value
-expression -> [UNARY] VALUE {OPERATOR [UNARY] VALUE}
 assignment -> IDENTIFIER [TYPE] '=' expression | 
-block -> '{' {statement} '}'
 
 PTYPE is TYPE but that can include a dereference
-VALUE is an IDENTIFIER or a PRIMATIVE or a call
+VALUE is an IDENTIFIER or a PRIMATIVE
 IDENTIFIER is a word, such as a variable name, function name
 TYPE is any type that is primitive or created by the user
 UNARY is an operator such as + or - that can be used in front of a value, it can also mean a pointer reference or dereference

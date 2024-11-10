@@ -625,26 +625,8 @@ func (p *Parser) funcDef() *Node {
 
 	// Method on struct
 	if p.tok.kind == T_L_PAREN {
-		methodReceiver := Node{kind: N_METHOD_RECEIVER}
-		methodReceiver.children = append(methodReceiver.children, &Node{kind: N_L_PAREN, data: p.tok.data})
+		n.children = append(n.children, p.methodReceiver())
 		p.nextToken()
-
-		if p.tok.kind != T_IDENTIFIER {
-			throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "identifier", p.tok)
-		}
-		methodReceiver.children = append(methodReceiver.children, &Node{kind: N_IDENTIFIER, data: p.tok.data})
-		p.nextToken()
-
-		methodReceiver.children = append(methodReceiver.children, p.complexType())
-		p.nextToken()
-
-		if p.tok.kind != T_R_PAREN {
-			throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "right paren", p.tok)
-		}
-		methodReceiver.children = append(methodReceiver.children, &Node{kind: N_R_PAREN, data: p.tok.data})
-		p.nextToken()
-
-		n.children = append(n.children, &methodReceiver)
 	}
 
 	if p.tok.kind != T_IDENTIFIER {
@@ -676,10 +658,7 @@ func (p *Parser) funcDef() *Node {
 			n.children = append(n.children, &Node{kind: N_IDENTIFIER, data: p.tok.data})
 			p.nextToken()
 
-			if p.tok.kind != T_TYPE {
-				throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "type", p.tok)
-			}
-			n.children = append(n.children, &Node{kind: N_TYPE, data: p.tok.data})
+			n.children = append(n.children, p.complexType())
 			p.nextToken()
 		}
 	}
@@ -690,13 +669,41 @@ func (p *Parser) funcDef() *Node {
 	n.children = append(n.children, &Node{kind: N_R_PAREN, data: p.tok.data})
 	p.nextToken()
 
-	// Return rype?
+	// Return type?
 	if p.tok.kind != T_L_SQUIRLY {
 		n.children = append(n.children, p.complexType())
 		p.nextToken()
 	}
 
 	n.children = append(n.children, p.block())
+
+	return &n
+}
+
+func (p *Parser) methodReceiver() *Node {
+	const FUNC_NAME = "method receiver"
+
+	n := Node{kind: N_METHOD_RECEIVER}
+
+	if p.tok.kind != T_L_PAREN {
+		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "left paren", p.tok)
+	}
+	n.children = append(n.children, &Node{kind: N_L_PAREN, data: p.tok.data})
+	p.nextToken()
+
+	if p.tok.kind != T_IDENTIFIER {
+		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "identifier", p.tok)
+	}
+	n.children = append(n.children, &Node{kind: N_IDENTIFIER, data: p.tok.data})
+	p.nextToken()
+
+	n.children = append(n.children, p.complexType())
+	p.nextToken()
+
+	if p.tok.kind != T_R_PAREN {
+		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "right paren", p.tok)
+	}
+	n.children = append(n.children, &Node{kind: N_R_PAREN, data: p.tok.data})
 
 	return &n
 }

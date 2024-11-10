@@ -15,7 +15,6 @@ type VarType int
 const (
 	V_VAR VarType = iota
 	V_TYPE
-	V_ENUM
 	V_FUNC
 	V_MAP
 )
@@ -26,8 +25,6 @@ func (v VarType) String() string {
 		return "VAR"
 	case V_TYPE:
 		return "TYPE"
-	case V_ENUM:
-		return "ENUM"
 	case V_FUNC:
 		return "FUNC"
 	case V_MAP:

@@ -130,7 +130,7 @@ func (a *Analyser) analyseType(n *Node) {
 			throwError(JOB_ANALYSER, FUNC_NAME, n.line, "the specified type to exist", aliasName+" doesn't exist")
 		}
 
-		if v.kind != V_TYPE && v.kind != V_ENUM {
+		if v.kind != V_TYPE {
 			throwError(JOB_ANALYSER, FUNC_NAME, n.line, "the specified type isn't a type", aliasName+" is actually a "+v.kind.String())
 		}
 
@@ -153,19 +153,266 @@ func (a *Analyser) analyseType(n *Node) {
 		typeName = n.children[1].data
 
 		// The enum type
-		a.varStack.push(&Var{kind: V_ENUM, data: typeName, ref: n.children[1]})
+		a.varStack.push(&Var{kind: V_TYPE, data: typeName, ref: n.children[1]})
 
 		// The identifiers based on this type
 		for i := 3; i < len(n.children)-1; i += 2 {
 			a.varStack.push(&Var{kind: V_VAR, datatype: typeName, data: n.children[i].data, ref: n.children[i]})
 		}
+	default:
+		throwError(JOB_ANALYSER, FUNC_NAME, n.line, "Invalid statement went through type check", n.kind)
 	}
 }
 
 func (a *Analyser) analyseFunc(n *Node) {
+	const FUNC_NAME = "analyse func"
 
+	if n.kind != N_FUNC_DEF {
+		throwError(JOB_ANALYSER, FUNC_NAME, n.line, "Invalid statement went through func check", n.kind)
+		return
+	}
+
+	// At the end of this function, the
+	// stack should be one larger than it's
+	// original size, 1 being the function
+	endSize := a.varStack.length + 1
+
+	if n.children[1].kind == N_METHOD_RECEIVER {
+
+		return
+	}
+
+	a.varStack.push(&Var{kind: V_FUNC, data: n.children[1].data, ref: n})
+
+	// Parameters
+	for i := 3; i < len(n.children)-3; i += 3 {
+		typeName := a.checkValidComplexType(n.children[i+1])
+		a.varStack.push(&Var{kind: V_VAR, data: n.children[i].data, datatype: typeName, ref: n.children[i]})
+	}
+
+	// The function body
+	a.analyseNode(n.children[len(n.children)-1])
+
+	// Unrolling everything
+	for a.varStack.length > endSize {
+		a.varStack.pop()
+	}
 }
 
 func (a *Analyser) analyseNode(n *Node) {
+	const FUNC_NAME = "analyse node"
 
+	switch n.kind {
+	case N_ILLEGAL:
+		throwError(JOB_ANALYSER, FUNC_NAME, n.line, "illegal found!", n.kind)
+	case N_PROGRAM:
+		for i := range n.children {
+			a.analyseNode(n.children[i])
+		}
+	case N_VAR_DECLARATION:
+	case N_ELEMENT_ASSIGNMENT:
+	case N_IF_BLOCK:
+	case N_FOREVER_LOOP:
+	case N_RANGE_LOOP:
+	case N_FOR_LOOP:
+	case N_WHILE_LOOP:
+	case N_STRUCT_DEF:
+	case N_FUNC_DEF:
+	case N_RET_STATE:
+	case N_BREAK_STATE:
+	case N_CONT_STATE:
+	case N_ENUM_DEF:
+	case N_CONDITION:
+	case N_EXPRESSION:
+	case N_ASSIGNMENT:
+	case N_LONE_CALL:
+	case N_FUNC_CALL:
+	case N_STRUCT_NEW:
+	case N_BLOCK:
+	case N_NEW_TYPE:
+	case N_UNARY_OPERATION:
+	case N_BRACKETED_VALUE:
+	case N_MAKE_ARRAY:
+	case N_COMPLEX_TYPE:
+	case N_SWITCH_STATE:
+	case N_CASE_STATE:
+	case N_DEFAULT_STATE:
+	case N_CASE_BLOCK:
+	case N_LONE_INC:
+	case N_METHOD_RECEIVER:
+
+	default:
+		throwError(JOB_ANALYSER, FUNC_NAME, n.line, "any other start to node", n.kind)
+	}
+}
+
+func (a *Analyser) checkVarDeclaration(n *Node) {
+	const FUNC_NAME = "check var declaration"
+}
+
+func (a *Analyser) checkElementAssignment(n *Node) {
+	const FUNC_NAME = "check element assignment"
+
+}
+
+func (a *Analyser) checkIfBlock(n *Node) {
+	const FUNC_NAME = "check if block"
+
+}
+
+func (a *Analyser) checkForeverLoop(n *Node) {
+	const FUNC_NAME = "check forever loop"
+
+}
+
+func (a *Analyser) checkRangeLoop(n *Node) {
+	const FUNC_NAME = "check range loop"
+
+}
+
+func (a *Analyser) checkForLoop(n *Node) {
+	const FUNC_NAME = "check for loop"
+
+}
+
+func (a *Analyser) checkWhileLoop(n *Node) {
+	const FUNC_NAME = "check while loop"
+
+}
+
+func (a *Analyser) checkStructDef(n *Node) {
+	const FUNC_NAME = "check struct def"
+
+}
+
+func (a *Analyser) checkFuncDef(n *Node) {
+	const FUNC_NAME = "check func def"
+
+}
+
+func (a *Analyser) checkRetState(n *Node) {
+	const FUNC_NAME = "check ret state"
+
+}
+
+func (a *Analyser) checkBreakState(n *Node) {
+	const FUNC_NAME = "check break state"
+
+}
+
+func (a *Analyser) checkContState(n *Node) {
+	const FUNC_NAME = "check cont state"
+
+}
+
+func (a *Analyser) checkEnumDef(n *Node) {
+	const FUNC_NAME = "check enum def"
+
+}
+
+func (a *Analyser) checkCondition(n *Node) {
+	const FUNC_NAME = "check condition"
+
+}
+
+func (a *Analyser) checkExpression(n *Node) {
+	const FUNC_NAME = "check expression"
+
+}
+
+func (a *Analyser) checkAssignment(n *Node) {
+	const FUNC_NAME = "check assignment"
+
+}
+
+func (a *Analyser) checkLoneCall(n *Node) {
+	const FUNC_NAME = "check lone call"
+
+}
+
+func (a *Analyser) checkFuncCall(n *Node) {
+	const FUNC_NAME = "check func call"
+
+}
+
+func (a *Analyser) checkStructNew(n *Node) {
+	const FUNC_NAME = "check struct new"
+
+}
+
+func (a *Analyser) checkBlock(n *Node) {
+	const FUNC_NAME = "check block"
+
+}
+
+func (a *Analyser) checkNewType(n *Node) {
+	const FUNC_NAME = "check new type"
+
+}
+
+func (a *Analyser) checkUnaryOperation(n *Node) {
+	const FUNC_NAME = "check unary operation"
+
+}
+
+func (a *Analyser) checkBracketedValue(n *Node) {
+	const FUNC_NAME = "check bracketed value"
+
+}
+
+func (a *Analyser) checkMakeArray(n *Node) {
+	const FUNC_NAME = "check make array"
+
+}
+
+func (a *Analyser) checkSwitchState(n *Node) {
+	const FUNC_NAME = "check switch state"
+
+}
+
+func (a *Analyser) checkCaseState(n *Node) {
+	const FUNC_NAME = "check case state"
+
+}
+
+func (a *Analyser) checkDefaultState(n *Node) {
+	const FUNC_NAME = "check default state"
+
+}
+
+func (a *Analyser) checkCaseBlock(n *Node) {
+	const FUNC_NAME = "check case block"
+
+}
+
+func (a *Analyser) checkLoneInc(n *Node) {
+	const FUNC_NAME = "check lone inc"
+
+}
+
+func (a *Analyser) checkMethodReceiver(n *Node) {
+	const FUNC_NAME = "check method receiver"
+
+}
+
+// TODO: Flesh this out into doing actual complex types
+func (a *Analyser) checkValidComplexType(n *Node) string {
+	const FUNC_NAME = "check valid complex type"
+
+	if n.kind != N_COMPLEX_TYPE {
+		throwError(JOB_ANALYSER, FUNC_NAME, n.line, "complex type", n.kind)
+		return ""
+	}
+
+	typeName := ""
+
+	v := a.checkForMatch(n.children[0].data)
+	if v == nil {
+		throwError(JOB_ANALYSER, FUNC_NAME, n.line, "valid type", n.children[0].data)
+		return ""
+	}
+
+	typeName = n.children[0].data
+
+	return typeName
 }

@@ -210,36 +210,33 @@ func (a *Analyser) analyseNode(n *Node) {
 			a.analyseNode(n.children[i])
 		}
 	case N_VAR_DECLARATION:
+		a.checkVarDeclaration(n)
 	case N_ELEMENT_ASSIGNMENT:
+		a.checkElementAssignment(n)
 	case N_IF_BLOCK:
+		a.checkIfBlock(n)
 	case N_FOREVER_LOOP:
+		a.checkForeverLoop(n)
 	case N_RANGE_LOOP:
+		a.checkRangeLoop(n)
 	case N_FOR_LOOP:
+		a.checkForLoop(n)
 	case N_WHILE_LOOP:
-	case N_STRUCT_DEF:
-	case N_FUNC_DEF:
+		a.checkWhileLoop(n)
 	case N_RET_STATE:
+		a.checkRetState(n)
 	case N_BREAK_STATE:
+		a.checkBreakState(n)
 	case N_CONT_STATE:
-	case N_ENUM_DEF:
-	case N_CONDITION:
-	case N_EXPRESSION:
-	case N_ASSIGNMENT:
+		a.checkContState(n)
 	case N_LONE_CALL:
-	case N_FUNC_CALL:
-	case N_STRUCT_NEW:
-	case N_BLOCK:
-	case N_NEW_TYPE:
-	case N_UNARY_OPERATION:
-	case N_BRACKETED_VALUE:
-	case N_MAKE_ARRAY:
-	case N_COMPLEX_TYPE:
+		a.checkLoneCall(n)
 	case N_SWITCH_STATE:
-	case N_CASE_STATE:
-	case N_DEFAULT_STATE:
-	case N_CASE_BLOCK:
+		a.checkSwitchState(n)
 	case N_LONE_INC:
-	case N_METHOD_RECEIVER:
+		a.checkLoneInc(n)
+	case N_BLOCK:
+		a.checkBlock(n)
 
 	default:
 		throwError(JOB_ANALYSER, FUNC_NAME, n.line, "any other start to node", n.kind)
@@ -280,16 +277,6 @@ func (a *Analyser) checkWhileLoop(n *Node) {
 
 }
 
-func (a *Analyser) checkStructDef(n *Node) {
-	const FUNC_NAME = "check struct def"
-
-}
-
-func (a *Analyser) checkFuncDef(n *Node) {
-	const FUNC_NAME = "check func def"
-
-}
-
 func (a *Analyser) checkRetState(n *Node) {
 	const FUNC_NAME = "check ret state"
 
@@ -302,11 +289,6 @@ func (a *Analyser) checkBreakState(n *Node) {
 
 func (a *Analyser) checkContState(n *Node) {
 	const FUNC_NAME = "check cont state"
-
-}
-
-func (a *Analyser) checkEnumDef(n *Node) {
-	const FUNC_NAME = "check enum def"
 
 }
 
@@ -342,11 +324,6 @@ func (a *Analyser) checkStructNew(n *Node) {
 
 func (a *Analyser) checkBlock(n *Node) {
 	const FUNC_NAME = "check block"
-
-}
-
-func (a *Analyser) checkNewType(n *Node) {
-	const FUNC_NAME = "check new type"
 
 }
 
@@ -388,6 +365,7 @@ func (a *Analyser) checkCaseBlock(n *Node) {
 func (a *Analyser) checkLoneInc(n *Node) {
 	const FUNC_NAME = "check lone inc"
 
+	a.checkValidIdentifier(FUNC_NAME, n.children[1], n.children[1].data)
 }
 
 func (a *Analyser) checkMethodReceiver(n *Node) {
@@ -415,4 +393,16 @@ func (a *Analyser) checkValidComplexType(n *Node) string {
 	typeName = n.children[0].data
 
 	return typeName
+}
+
+func (a *Analyser) checkValidIdentifier(FUNC_NAME string, n *Node, identifier string) {
+	v := a.checkForMatch(identifier)
+
+	if v == nil {
+		throwError(JOB_ANALYSER, FUNC_NAME, n.line, "variable", n.kind)
+	}
+
+	if v.kind != V_VAR {
+		throwError(JOB_ANALYSER, FUNC_NAME, n.line, "variable", n.kind)
+	}
 }

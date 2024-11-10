@@ -27,7 +27,7 @@ breakStatement -> 'break' [VALUE] ';'
 contStatement -> 'continue' [VALUE] ';'
 enumDef -> 'enum' IDENTIFIER '{' {IDENTIFIER ','} '}'
 condition -> expression that must return a yes or noable value
-assignment -> IDENTIFIER [TYPE] '=' expression | 
+assignment -> IDENTIFIER [TYPE] '=' expression 
 
 PTYPE is TYPE but that can include a dereference
 VALUE is an IDENTIFIER or a PRIMATIVE

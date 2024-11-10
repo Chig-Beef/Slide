@@ -245,6 +245,8 @@ func (a *Analyser) analyseNode(n *Node) {
 
 func (a *Analyser) checkVarDeclaration(n *Node) {
 	const FUNC_NAME = "check var declaration"
+
+	a.checkAssignment(n.children[0])
 }
 
 func (a *Analyser) checkElementAssignment(n *Node) {
@@ -305,6 +307,11 @@ func (a *Analyser) checkExpression(n *Node) {
 func (a *Analyser) checkAssignment(n *Node) {
 	const FUNC_NAME = "check assignment"
 
+	if n.children[1].kind == N_COMPLEX_TYPE {
+		a.checkValidComplexType(n.children[1])
+	}
+
+	a.checkExpression(n.children[len(n.children)-1])
 }
 
 func (a *Analyser) checkLoneCall(n *Node) {
@@ -325,6 +332,9 @@ func (a *Analyser) checkStructNew(n *Node) {
 func (a *Analyser) checkBlock(n *Node) {
 	const FUNC_NAME = "check block"
 
+	for i := 1; i < len(n.children)-1; i++ {
+		a.analyseNode(n.children[i])
+	}
 }
 
 func (a *Analyser) checkUnaryOperation(n *Node) {
@@ -374,6 +384,7 @@ func (a *Analyser) checkMethodReceiver(n *Node) {
 }
 
 // TODO: Flesh this out into doing actual complex types
+// TODO: Map
 func (a *Analyser) checkValidComplexType(n *Node) string {
 	const FUNC_NAME = "check valid complex type"
 
@@ -386,6 +397,11 @@ func (a *Analyser) checkValidComplexType(n *Node) string {
 
 	v := a.checkForMatch(n.children[0].data)
 	if v == nil {
+		throwError(JOB_ANALYSER, FUNC_NAME, n.line, "valid type", n.children[0].data)
+		return ""
+	}
+
+	if v.kind != V_TYPE {
 		throwError(JOB_ANALYSER, FUNC_NAME, n.line, "valid type", n.children[0].data)
 		return ""
 	}

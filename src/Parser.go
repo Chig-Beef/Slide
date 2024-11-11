@@ -1468,14 +1468,31 @@ func (p *Parser) complexType() *Node {
 
 			// ArrayList
 			if p.peekToken().kind == T_R_BLOCK {
-				n.children = append(n.children, &Node{kind: N_L_BLOCK, data: p.tok.data})
-				p.nextToken()
-				n.children = append(n.children, &Node{kind: N_R_BLOCK, data: p.tok.data})
+				n.children = append(n.children, p.emptyBlock())
 			} else { // Array
 				n.children = append(n.children, p.indexUnary())
 			}
 		}
 	}
+
+	return &n
+}
+
+func (p *Parser) emptyBlock() *Node {
+	const FUNC_NAME = "empty block"
+
+	n := Node{kind: N_EMPTY_BLOCK}
+
+	if p.tok.kind != T_L_BLOCK {
+		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "left block", p.tok)
+	}
+	n.children = append(n.children, &Node{kind: N_L_BLOCK, data: p.tok.data})
+	p.nextToken()
+
+	if p.tok.kind != T_R_BLOCK {
+		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "right block", p.tok)
+	}
+	n.children = append(n.children, &Node{kind: N_R_BLOCK, data: p.tok.data})
 
 	return &n
 }

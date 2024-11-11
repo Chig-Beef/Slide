@@ -53,17 +53,17 @@ Tests
 - [ ] Struct with array, arraylist, map, and pointer properties
 - [ ] Map init
 - [ ] Complete compiler test
-- [ ] Switch test
+- [x] Switch test
 
 Emitter
 - [ ] Golang emitter
 
 Working Outputs
 - [ ] Compiler
-- [ ] array
+- [x] array
 - [ ] bubblesort
 - [ ] control
-- [ ] enum
+- [x] enum
 - [x] func
 - [ ] map
 - [ ] primes
@@ -71,4 +71,4 @@ Working Outputs
 - [ ] stack
 - [ ] structs
 - [x] switch
-- [ ] typedef
+- [x] typedef

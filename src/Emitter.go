@@ -5,9 +5,10 @@ import "os"
 const JOB_GO_EMITTER = "Go Emitter"
 
 type GoEmitter struct {
-	types *Node
-	funcs *Node
-	ast   *Node
+	types   *Node
+	funcs   *Node
+	ast     *Node
+	varType *Node // Used on making arrays
 }
 
 func (ge *GoEmitter) emit() string {
@@ -15,6 +16,8 @@ func (ge *GoEmitter) emit() string {
 
 	output += ge.recEmit(ge.types)
 	output += ge.recEmit(ge.funcs)
+
+	output += "\ntype float = float64\n"
 
 	output += "\nfunc main() {\n"
 	output += ge.recEmit(ge.ast)
@@ -36,7 +39,6 @@ func (ge *GoEmitter) recEmit(n *Node) string {
 			output += ge.recEmit(n.children[i])
 		}
 		output += "\n"
-	case N_ELEMENT_ASSIGNMENT:
 	case N_IF_BLOCK:
 		for i := 0; i < len(n.children); i++ {
 			output += ge.recEmit(n.children[i]) + " "
@@ -62,7 +64,6 @@ func (ge *GoEmitter) recEmit(n *Node) string {
 			output += ge.recEmit(n.children[i]) + " "
 		}
 		output += "\n"
-	case N_STRUCT_DEF:
 	case N_FUNC_DEF:
 		for i := range n.children {
 			output += ge.recEmit(n.children[i]) + " "
@@ -83,7 +84,6 @@ func (ge *GoEmitter) recEmit(n *Node) string {
 			output += ge.recEmit(n.children[i]) + " "
 		}
 		output += "\n"
-	case N_ENUM_DEF:
 	case N_CONDITION:
 		for i := range n.children {
 			output += ge.recEmit(n.children[i]) + " "
@@ -98,6 +98,7 @@ func (ge *GoEmitter) recEmit(n *Node) string {
 		for i := 0; i < len(n.children); i++ {
 			if n.children[i].kind == N_COMPLEX_TYPE {
 				isFirstShow = true
+				ge.varType = n.children[i]
 			} else if n.children[i].kind == N_ASSIGN && isFirstShow {
 				output += ":= "
 			} else {
@@ -112,7 +113,6 @@ func (ge *GoEmitter) recEmit(n *Node) string {
 		for i := range n.children {
 			output += ge.recEmit(n.children[i]) + " "
 		}
-	case N_STRUCT_NEW:
 	case N_BLOCK:
 		for i := 0; i < len(n.children); i++ {
 			output += ge.recEmit(n.children[i])
@@ -133,15 +133,20 @@ func (ge *GoEmitter) recEmit(n *Node) string {
 				output += ge.recEmit(n.children[i])
 			}
 		}
-	case N_BRACKETED_VALUE:
 	case N_MAKE_ARRAY:
+		output = ge.recEmit(ge.varType)
+
 		output += "{"
 		for i := 2; i < len(n.children)-1; i++ {
 			output += ge.recEmit(n.children[i])
 		}
 		output += "}"
-	case N_COMPLEX_TYPE:
+	case N_EMPTY_BLOCK:
 		for i := 0; i < len(n.children); i++ {
+			output += ge.recEmit(n.children[i])
+		}
+	case N_COMPLEX_TYPE:
+		for i := len(n.children) - 1; i >= 0; i-- {
 			output += ge.recEmit(n.children[i])
 		}
 	case N_SWITCH_STATE:
@@ -172,6 +177,20 @@ func (ge *GoEmitter) recEmit(n *Node) string {
 			ge.recEmit(n.children[1]) + " " +
 			ge.recEmit(n.children[2]) +
 			ge.recEmit(n.children[3])
+	case N_ELEMENT_ASSIGNMENT:
+	case N_STRUCT_DEF:
+	case N_ENUM_DEF: // TODO: What happens when we get an empty enum?
+		typeName := ge.recEmit(n.children[1])
+		output = "type " + typeName + " int\n"
+
+		output += "\nconst (\n"
+		output += ge.recEmit(n.children[3]) + " " + typeName + " = iota\n"
+		for i := 5; i < len(n.children)-1; i += 2 {
+			output += ge.recEmit(n.children[i]) + "\n"
+		}
+		output += ")\n"
+	case N_STRUCT_NEW:
+	case N_BRACKETED_VALUE:
 
 	case N_FOR:
 		output = "for"

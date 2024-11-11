@@ -1,20 +1,21 @@
 x int = 7;
+y int = 0;
 if x == 7 {
-	y int = 3;
+	y = 3;
 } elif x == 3 {
-	y int = 7;
+	y = 7;
 } else {
-	y int = 0;
+	y = 0;
 }
 
 range 7 {
 	x int = 7;
 	if x == 7 {
-		y int = 3;
+		y = 3;
 	} elif x == 3 {
-		y int = 7;
+		y = 7;
 	} else {
-		y int = 0;
+		y = 0;
 		continue;
 	}
 }
@@ -23,19 +24,19 @@ range 7 {
 forever {
 	x int = 7;
 	if x == 7 {
-		y int = 3;
+		y = 3;
 	} elif x == 3 {
-		y int = 7;
+		y = 7;
 	} else {
-		y int = 0;
+		y = 0;
 	}
 	break;
 }
 
-//for x = 0; x < 10; ++x {
+for x = 0; x < 10; ++x {
 
-//}
+}
 
 while x < 10 {
-	//++x;
+	++x;
 }

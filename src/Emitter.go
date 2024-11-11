@@ -93,8 +93,16 @@ func (ge *GoEmitter) recEmit(n *Node) string {
 			output += ge.recEmit(n.children[i]) + " "
 		}
 	case N_ASSIGNMENT:
-		for i := range n.children {
-			output += ge.recEmit(n.children[i]) + " "
+		isFirstShow := false
+
+		for i := 0; i < len(n.children); i++ {
+			if n.children[i].kind == N_COMPLEX_TYPE {
+				isFirstShow = true
+			} else if n.children[i].kind == N_ASSIGN && isFirstShow {
+				output += ":= "
+			} else {
+				output += ge.recEmit(n.children[i]) + " "
+			}
 		}
 	case N_LONE_CALL:
 		for i := range n.children {
@@ -137,8 +145,17 @@ func (ge *GoEmitter) recEmit(n *Node) string {
 			output += ge.recEmit(n.children[i])
 		}
 	case N_SWITCH_STATE:
+		for i := 0; i < len(n.children); i++ {
+			output += ge.recEmit(n.children[i]) + " "
+		}
 	case N_CASE_STATE:
+		for i := 0; i < len(n.children); i++ {
+			output += ge.recEmit(n.children[i]) + " "
+		}
 	case N_DEFAULT_STATE:
+		for i := 0; i < len(n.children); i++ {
+			output += ge.recEmit(n.children[i])
+		}
 	case N_CASE_BLOCK:
 		for i := 0; i < len(n.children); i++ {
 			output += ge.recEmit(n.children[i])

@@ -64,11 +64,11 @@ Working Outputs
 - [ ] bubblesort
 - [ ] control
 - [ ] enum
-- [ ] func
+- [x] func
 - [ ] map
 - [ ] primes
-- [ ] simple
+- [x] simple
 - [ ] stack
 - [ ] structs
-- [ ] switch
+- [x] switch
 - [ ] typedef

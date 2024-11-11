@@ -43,6 +43,7 @@ Semantic Analysis
 - [ ] Exhaustive switches
 - [ ] Switches on same time
 - [ ] No Illegals
+- [ ] Line numbers?
 
 Tests
 - [ ] Create proper tests
@@ -62,11 +63,11 @@ Working Outputs
 - [ ] Compiler
 - [x] array
 - [ ] bubblesort
-- [ ] control
+- [x] control
 - [x] enum
 - [x] func
-- [ ] map
-- [ ] primes
+- [x] map
+- [x] primes
 - [x] simple
 - [ ] stack
 - [ ] structs

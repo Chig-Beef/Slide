@@ -8,6 +8,7 @@ type Var struct {
 	props    []*Var  // For structs, their properties
 	key      *Var    // For maps, the type for the key
 	value    *Var    // For maps, the type for the value
+	isArray  bool    // Will have length property
 }
 
 type VarType int

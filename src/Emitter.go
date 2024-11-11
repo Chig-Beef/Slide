@@ -95,14 +95,20 @@ func (ge *GoEmitter) recEmit(n *Node) string {
 	case N_ASSIGNMENT:
 		isFirstShow := false
 
-		for i := 0; i < len(n.children); i++ {
-			if n.children[i].kind == N_COMPLEX_TYPE {
-				isFirstShow = true
-				ge.varType = n.children[i]
-			} else if n.children[i].kind == N_ASSIGN && isFirstShow {
-				output += ":= "
-			} else {
-				output += ge.recEmit(n.children[i]) + " "
+		if len(n.children) == 2 {
+			// No definition, just declaration
+			output = "var " + ge.recEmit(n.children[0]) + " " + ge.recEmit(n.children[1])
+
+		} else {
+			for i := 0; i < len(n.children); i++ {
+				if n.children[i].kind == N_COMPLEX_TYPE {
+					isFirstShow = true
+					ge.varType = n.children[i]
+				} else if n.children[i].kind == N_ASSIGN && isFirstShow {
+					output += ":= "
+				} else {
+					output += ge.recEmit(n.children[i]) + " "
+				}
 			}
 		}
 	case N_LONE_CALL:
@@ -146,8 +152,16 @@ func (ge *GoEmitter) recEmit(n *Node) string {
 			output += ge.recEmit(n.children[i])
 		}
 	case N_COMPLEX_TYPE:
-		for i := len(n.children) - 1; i >= 0; i-- {
-			output += ge.recEmit(n.children[i])
+		if n.children[0].kind == N_MAP {
+			output = "map" +
+				ge.recEmit(n.children[2]) +
+				ge.recEmit(n.children[3]) +
+				ge.recEmit(n.children[4]) +
+				ge.recEmit(n.children[1])
+		} else {
+			for i := len(n.children) - 1; i >= 0; i-- {
+				output += ge.recEmit(n.children[i])
+			}
 		}
 	case N_SWITCH_STATE:
 		for i := 0; i < len(n.children); i++ {
@@ -177,8 +191,6 @@ func (ge *GoEmitter) recEmit(n *Node) string {
 			ge.recEmit(n.children[1]) + " " +
 			ge.recEmit(n.children[2]) +
 			ge.recEmit(n.children[3])
-	case N_ELEMENT_ASSIGNMENT:
-	case N_STRUCT_DEF:
 	case N_ENUM_DEF: // TODO: What happens when we get an empty enum?
 		typeName := ge.recEmit(n.children[1])
 		output = "type " + typeName + " int\n"
@@ -191,6 +203,13 @@ func (ge *GoEmitter) recEmit(n *Node) string {
 		output += ")\n"
 	case N_STRUCT_NEW:
 	case N_BRACKETED_VALUE:
+	case N_ELEMENT_ASSIGNMENT:
+		output = ge.recEmit(n.children[1].children[0]) + " " + ge.recEmit(n.children[0])
+		for i := 1; i < len(n.children[1].children); i++ {
+			output += " " + ge.recEmit(n.children[1].children[i])
+		}
+		output += "\n"
+	case N_STRUCT_DEF:
 
 	case N_FOR:
 		output = "for"
@@ -237,7 +256,7 @@ func (ge *GoEmitter) recEmit(n *Node) string {
 	case N_SEMICOLON:
 		output = ";"
 	case N_ASSIGN:
-		output = ":="
+		output = "="
 	case N_SEP:
 		output = ","
 	case N_COLON:

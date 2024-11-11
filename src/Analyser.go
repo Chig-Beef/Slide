@@ -188,16 +188,16 @@ func (a *Analyser) analyseFunc(n *Node) {
 
 		// Parameters
 		for i := 4; i < len(n.children)-3; i += 3 {
-			typeName := a.checkValidComplexType(n.children[i+1])
-			a.varStack.push(&Var{kind: V_VAR, data: n.children[i].data, datatype: typeName, ref: n.children[i]})
+			typeName, isArray := a.checkValidComplexType(n.children[i+1])
+			a.varStack.push(&Var{kind: V_VAR, data: n.children[i].data, datatype: typeName, ref: n.children[i], isArray: isArray})
 		}
 	} else {
 		a.varStack.push(&Var{kind: V_FUNC, data: n.children[1].data, ref: n})
 
 		// Parameters
 		for i := 3; i < len(n.children)-3; i += 3 {
-			typeName := a.checkValidComplexType(n.children[i+1])
-			a.varStack.push(&Var{kind: V_VAR, data: n.children[i].data, datatype: typeName, ref: n.children[i]})
+			typeName, isArray := a.checkValidComplexType(n.children[i+1])
+			a.varStack.push(&Var{kind: V_VAR, data: n.children[i].data, datatype: typeName, ref: n.children[i], isArray: isArray})
 		}
 	}
 
@@ -421,7 +421,9 @@ func (a *Analyser) checkAssignment(n *Node) {
 		a.checkValidComplexType(n.children[1])
 	}
 
-	a.checkExpression(n.children[len(n.children)-1])
+	if len(n.children) > 2 {
+		a.checkExpression(n.children[len(n.children)-1])
+	}
 
 	// Add the variable to the stack
 	a.varStack.push(&Var{kind: V_VAR, data: n.children[0].data, ref: n.children[0]})
@@ -526,40 +528,48 @@ func (a *Analyser) checkLoneInc(n *Node) {
 func (a *Analyser) checkMethodReceiver(n *Node) {
 	const FUNC_NAME = "check method receiver"
 
-	typeName := a.checkValidComplexType(n.children[2])
+	typeName, isArray := a.checkValidComplexType(n.children[2])
 
 	// Add the variable to the stack. This
 	// will be popped by the function
 	// definition
-	a.varStack.push(&Var{kind: V_VAR, data: n.children[1].data, datatype: typeName})
+	a.varStack.push(&Var{kind: V_VAR, data: n.children[1].data, datatype: typeName, isArray: isArray})
 }
 
 // TODO: Flesh this out into doing actual complex types
 // TODO: Map
-func (a *Analyser) checkValidComplexType(n *Node) string {
+func (a *Analyser) checkValidComplexType(n *Node) (string, bool) {
 	const FUNC_NAME = "check valid complex type"
 
 	if n.kind != N_COMPLEX_TYPE {
 		throwError(JOB_ANALYSER, FUNC_NAME, n.line, "complex type", n.kind)
-		return ""
+		return "", false
 	}
 
 	typeName := ""
 
+	if n.children[0].kind == N_MAP {
+
+		return "map", false
+	}
+
 	v := a.checkForMatch(n.children[0].data)
 	if v == nil {
 		throwError(JOB_ANALYSER, FUNC_NAME, n.line, "valid type", n.children[0])
-		return ""
+		return "", false
 	}
 
 	if v.kind != V_TYPE {
 		throwError(JOB_ANALYSER, FUNC_NAME, n.line, "valid type", n.children[0])
-		return ""
+		return "", false
 	}
 
 	typeName = n.children[0].data
 
-	return typeName
+	// For isArray check
+	l := n.children[len(n.children)-1].kind
+
+	return typeName, l == N_EMPTY_BLOCK || l == N_INDEX
 }
 
 func (a *Analyser) checkValidIdentifier(FUNC_NAME string, n *Node) {

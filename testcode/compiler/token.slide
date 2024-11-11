@@ -1,0 +1,237 @@
+struct Token {
+	// What is looks like in the actual source
+	data string
+
+	// What the token is depicting
+	kind TokenType
+
+	// What line this token comes from
+	line int
+}
+
+fun (t Token) String() string {
+	return "(" + t.data + " " + call t.kind.String() + ")";
+}
+
+typedef TokenType byte;
+
+T_ILLEGAL TokenType = 0;
+
+// Keywords
+T_FOR TokenType = 1;
+T_RANGE TokenType = 2;
+T_FOREVER TokenType = 3;
+T_WHILE TokenType = 4;
+T_IF TokenType = 5;
+T_ELIF TokenType = 6;
+T_ELSE TokenType = 7;
+T_CALL TokenType = 8;
+T_STRUCT TokenType = 9;
+T_FUN TokenType = 10;
+T_RET TokenType = 11;
+T_BREAK TokenType = 12;
+T_CONT TokenType = 13;
+T_ENUM TokenType = 14;
+T_TYPEDEF TokenType = 15;
+T_NEW TokenType = 16;
+T_MAKE TokenType = 17;
+T_MAP TokenType = 18;
+T_SWITCH TokenType = 19;
+T_CASE TokenType = 20;
+T_DEFAULT TokenType = 21;
+
+// Various symbols
+T_SEMICOLON TokenType = 22;
+T_ASSIGN TokenType = 23;
+T_SEP TokenType = 24;
+T_COLON TokenType = 25;
+
+// Operators
+T_ADD TokenType = 26;
+T_SUB TokenType = 27;
+T_MUL TokenType = 28;
+T_DIV TokenType = 29;
+T_OR TokenType = 30;
+T_AND TokenType = 31;
+T_OROR TokenType = 32;
+T_ANDAND TokenType = 33;
+T_EQ TokenType = 34;
+T_LT TokenType = 35;
+T_GT TokenType = 36;
+T_LTEQ TokenType = 37;
+T_GTEQ TokenType = 38;
+T_NEQ TokenType = 39;
+T_MOD TokenType = 40;
+T_XOR TokenType = 41;
+T_ACCESS TokenType = 42;
+T_NOT TokenType = 43;
+T_INC TokenType = 44;
+T_DINC TokenType = 45;
+T_REF TokenType = 46;
+T_DEREF TokenType = 47;
+T_L_SHIFT TokenType = 48;
+T_R_SHIFT TokenType = 49;
+
+// Paired symbols
+T_L_SQUIRLY TokenType = 50;
+T_R_SQUIRLY TokenType = 51;
+T_L_BLOCK TokenType = 52;
+T_R_BLOCK TokenType = 53;
+T_L_PAREN TokenType = 54;
+T_R_PAREN TokenType = 55;
+
+// Values
+T_TYPE TokenType = 56;
+T_IDENTIFIER TokenType = 57;
+T_INT TokenType = 58;
+T_FLOAT TokenType = 59;
+T_STRING TokenType = 60;
+T_CHAR TokenType = 61;
+T_BOOL TokenType = 62;
+T_NIL TokenType = 63;
+
+fun (t TokenType) String() string {
+	switch t {
+	case T_ILLEGAL:
+		return "ILLEGAL";
+
+	// Keywords
+	case T_FOR:
+		return "FOR";
+	case T_RANGE:
+		return "RANGE";
+	case T_FOREVER:
+		return "FOREVER";
+	case T_WHILE:
+		return "WHILE";
+	case T_IF:
+		return "IF";
+	case T_ELIF:
+		return "ELIF";
+	case T_ELSE:
+		return "ELSE";
+	case T_CALL:
+		return "CALL";
+	case T_STRUCT:
+		return "STRUCT";
+	case T_FUN:
+		return "FUN";
+	case T_RET:
+		return "RET";
+	case T_BREAK:
+		return "BREAK";
+	case T_CONT:
+		return "CONT";
+	case T_ENUM:
+		return "ENUM";
+	case T_TYPEDEF:
+		return "TYPEDEF";
+	case T_NEW:
+		return "NEW";
+	case T_MAKE:
+		return "MAKE";
+	case T_MAP:
+		return "MAP";
+	case T_SWITCH:
+		return "SWITCH";
+	case T_CASE:
+		return "CASE";
+	case T_DEFAULT:
+		return "DEFAULT";
+
+	// Various symbols
+	case T_SEMICOLON:
+		return "SEMICOLON";
+	case T_ASSIGN:
+		return "ASSIGN";
+	case T_SEP:
+		return "SEP";
+	case T_COLON:
+		return "COLON";
+
+	// Operators
+	case T_L_SHIFT:
+		return "T_L_SHIFT";
+	case T_R_SHIFT:
+		return "T_R_SHIFT";
+	case T_ADD:
+		return "ADD";
+	case T_SUB:
+		return "SUB";
+	case T_MUL:
+		return "MUL";
+	case T_DIV:
+		return "DIV";
+	case T_OR:
+		return "OR";
+	case T_AND:
+		return "AND";
+	case T_OROR:
+		return "OROR";
+	case T_ANDAND:
+		return "ANDAND";
+	case T_EQ:
+		return "EQ";
+	case T_LT:
+		return "LT";
+	case T_GT:
+		return "GT";
+	case T_LTEQ:
+		return "LTEQ";
+	case T_GTEQ:
+		return "GTEQ";
+	case T_NEQ:
+		return "NEQ";
+	case T_MOD:
+		return "MOD";
+	case T_XOR:
+		return "XOR";
+	case T_ACCESS:
+		return "ACCESS";
+
+	// Unary
+	case T_NOT:
+		return "NOT";
+	case T_INC:
+		return "INC";
+	case T_DINC:
+		return "DINC";
+	case T_REF:
+		return "REF";
+	case T_DEREF:
+		return "DEREF";
+
+	// Paired symbols
+	case T_L_SQUIRLY:
+		return "L_SQUIRLY";
+	case T_R_SQUIRLY:
+		return "R_SQUIRLY";
+	case T_L_BLOCK:
+		return "L_BLOCK";
+	case T_R_BLOCK:
+		return "R_BLOCK";
+	case T_L_PAREN:
+		return "L_PAREN";
+	case T_R_PAREN:
+		return "R_PAREN";
+
+	case T_TYPE:
+		return "TYPE";
+	case T_IDENTIFIER:
+		return "IDENTIFIER";
+	case T_INT:
+		return "INT";
+	case T_FLOAT:
+		return "FLOAT";
+	case T_STRING:
+		return "STRING";
+	case T_CHAR:
+		return "CHAR";
+	case T_BOOL:
+		return "BOOL";
+	case T_NIL:
+		return "NIL";
+	default:
+		return "UNKNOWN";
+	}
+}

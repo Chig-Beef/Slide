@@ -963,8 +963,7 @@ func (p *Parser) funcCall() *Node {
 	p.nextToken()
 
 	// Calling a method
-	// TODO: Call in loop or whatever
-	if p.tok.kind == T_ACCESS {
+	for p.tok.kind == T_ACCESS {
 		n.children = append(n.children, &Node{kind: N_ACCESS, data: p.tok.data})
 		p.nextToken()
 

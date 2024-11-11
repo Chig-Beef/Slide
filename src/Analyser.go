@@ -254,59 +254,106 @@ func (a *Analyser) checkVarDeclaration(n *Node) {
 	const FUNC_NAME = "check var declaration"
 
 	a.checkAssignment(n.children[0])
-
-	// Add the variable to the stack
-	a.varStack.push(&Var{kind: V_VAR, data: n.children[0].children[0].data, ref: n.children[0].children[0]})
 }
 
 func (a *Analyser) checkElementAssignment(n *Node) {
 	const FUNC_NAME = "check element assignment"
 
+	a.checkIndexUnary(n.children[0])
+	a.checkAssignment(n.children[1])
+}
+
+func (a *Analyser) checkIndexUnary(n *Node) {
+	const FUNC_NAME = "check index unary"
+
+	a.checkExpression(n.children[1])
 }
 
 func (a *Analyser) checkIfBlock(n *Node) {
 	const FUNC_NAME = "check if block"
-
 }
 
 func (a *Analyser) checkForeverLoop(n *Node) {
 	const FUNC_NAME = "check forever loop"
 
+	a.checkBlock(n.children[len(n.children)-1])
 }
 
 func (a *Analyser) checkRangeLoop(n *Node) {
 	const FUNC_NAME = "check range loop"
 
+	a.checkExpression(n.children[1])
+
+	a.checkBlock(n.children[len(n.children)-1])
 }
 
 func (a *Analyser) checkForLoop(n *Node) {
 	const FUNC_NAME = "check for loop"
 
+	i := 1
+
+	if n.children[i].kind != N_SEMICOLON {
+		a.checkAssignment(n.children[i])
+		i++
+	}
+	i++
+
+	if n.children[i].kind != N_SEMICOLON {
+		a.checkCondition(n.children[i])
+		i++
+	}
+	i++
+
+	if n.children[i].kind != N_BLOCK {
+		if n.children[i].kind == N_UNARY_OPERATION {
+			a.checkUnaryOperation(n.children[i])
+		} else {
+			a.checkAssignment(n.children[i])
+		}
+	}
+
+	a.checkBlock(n.children[len(n.children)-1])
 }
 
 func (a *Analyser) checkWhileLoop(n *Node) {
 	const FUNC_NAME = "check while loop"
 
+	a.checkCondition(n.children[1])
+
+	a.checkBlock(n.children[len(n.children)-1])
 }
 
+// TODO: Check in function
 func (a *Analyser) checkRetState(n *Node) {
 	const FUNC_NAME = "check ret state"
 
+	if n.children[1].kind != N_SEMICOLON {
+		a.checkExpression(n.children[1])
+	}
 }
 
+// TODO: Check in loop
 func (a *Analyser) checkBreakState(n *Node) {
 	const FUNC_NAME = "check break state"
 
+	if n.children[1].kind != N_SEMICOLON {
+		a.checkValue(n.children[1])
+	}
 }
 
+// TODO: Check in loop
 func (a *Analyser) checkContState(n *Node) {
 	const FUNC_NAME = "check cont state"
 
+	if n.children[1].kind != N_SEMICOLON {
+		a.checkValue(n.children[1])
+	}
 }
 
 func (a *Analyser) checkCondition(n *Node) {
 	const FUNC_NAME = "check condition"
 
+	a.checkExpression(n)
 }
 
 func (a *Analyser) checkExpression(n *Node) {
@@ -334,7 +381,7 @@ func (a *Analyser) checkValue(n *Node) {
 
 	case N_UNARY_OPERATION:
 		a.checkUnaryOperation(n)
-	case N_MAKE:
+	case N_MAKE_ARRAY:
 		a.checkMakeArray(n)
 	case N_L_PAREN:
 		a.checkBracketedValue(n)
@@ -355,6 +402,9 @@ func (a *Analyser) checkAssignment(n *Node) {
 	}
 
 	a.checkExpression(n.children[len(n.children)-1])
+
+	// Add the variable to the stack
+	a.varStack.push(&Var{kind: V_VAR, data: n.children[0].data, ref: n.children[0]})
 }
 
 func (a *Analyser) checkLoneCall(n *Node) {
@@ -376,8 +426,14 @@ func (a *Analyser) checkStructNew(n *Node) {
 func (a *Analyser) checkBlock(n *Node) {
 	const FUNC_NAME = "check block"
 
+	endSize := a.varStack.length
+
 	for i := 1; i < len(n.children)-1; i++ {
 		a.analyseNode(n.children[i])
+	}
+
+	for a.varStack.length > endSize {
+		a.varStack.pop()
 	}
 }
 
@@ -430,8 +486,14 @@ func (a *Analyser) checkDefaultState(n *Node) {
 func (a *Analyser) checkCaseBlock(n *Node) {
 	const FUNC_NAME = "check case block"
 
+	endSize := a.varStack.length
+
 	for i := range n.children {
 		a.analyseNode(n.children[i])
+	}
+
+	for a.varStack.length > endSize {
+		a.varStack.pop()
 	}
 }
 
@@ -466,12 +528,12 @@ func (a *Analyser) checkValidComplexType(n *Node) string {
 
 	v := a.checkForMatch(n.children[0].data)
 	if v == nil {
-		throwError(JOB_ANALYSER, FUNC_NAME, n.line, "valid type", n.children[0].data)
+		throwError(JOB_ANALYSER, FUNC_NAME, n.line, "valid type", n.children[0])
 		return ""
 	}
 
 	if v.kind != V_TYPE {
-		throwError(JOB_ANALYSER, FUNC_NAME, n.line, "valid type", n.children[0].data)
+		throwError(JOB_ANALYSER, FUNC_NAME, n.line, "valid type", n.children[0])
 		return ""
 	}
 
@@ -481,6 +543,18 @@ func (a *Analyser) checkValidComplexType(n *Node) string {
 }
 
 func (a *Analyser) checkValidIdentifier(FUNC_NAME string, n *Node) {
+	v := a.checkForMatch(n.data)
+
+	if v == nil {
+		throwError(JOB_ANALYSER, FUNC_NAME, n.line, "existing variable", n)
+	}
+
+	if v.kind != V_VAR {
+		throwError(JOB_ANALYSER, FUNC_NAME, n.line, "variable", n)
+	}
+}
+
+func (a *Analyser) checkValidFunction(FUNC_NAME string, n *Node) {
 	v := a.checkForMatch(n.data)
 
 	if v == nil {

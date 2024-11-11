@@ -64,9 +64,25 @@ func (ge *GoEmitter) recEmit(n *Node) string {
 		output += "\n"
 	case N_STRUCT_DEF:
 	case N_FUNC_DEF:
+		for i := range n.children {
+			output += ge.recEmit(n.children[i]) + " "
+		}
+		output += "\n\n"
 	case N_RET_STATE:
+		for i := range n.children {
+			output += ge.recEmit(n.children[i]) + " "
+		}
+		output += "\n"
 	case N_BREAK_STATE:
+		for i := range n.children {
+			output += ge.recEmit(n.children[i]) + " "
+		}
+		output += "\n"
 	case N_CONT_STATE:
+		for i := range n.children {
+			output += ge.recEmit(n.children[i]) + " "
+		}
+		output += "\n"
 	case N_ENUM_DEF:
 	case N_CONDITION:
 		for i := range n.children {
@@ -117,6 +133,9 @@ func (ge *GoEmitter) recEmit(n *Node) string {
 		}
 		output += "}"
 	case N_COMPLEX_TYPE:
+		for i := 0; i < len(n.children); i++ {
+			output += ge.recEmit(n.children[i])
+		}
 	case N_SWITCH_STATE:
 	case N_CASE_STATE:
 	case N_DEFAULT_STATE:

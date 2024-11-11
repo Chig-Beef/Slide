@@ -271,6 +271,22 @@ func (a *Analyser) checkIndexUnary(n *Node) {
 
 func (a *Analyser) checkIfBlock(n *Node) {
 	const FUNC_NAME = "check if block"
+
+	a.checkExpression(n.children[1])
+	a.checkBlock(n.children[2])
+
+	for i := 3; i < len(n.children); i += 3 {
+		if n.children[i].kind == N_ELIF {
+			a.checkExpression(n.children[i+1])
+			a.checkBlock(n.children[i+2])
+		}
+	}
+
+	i := len(n.children) - 2
+
+	if n.children[i].kind == N_ELSE {
+		a.checkBlock(n.children[i+1])
+	}
 }
 
 func (a *Analyser) checkForeverLoop(n *Node) {

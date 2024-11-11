@@ -90,7 +90,7 @@ func compile(source []byte) {
 	parser := Parser{}
 	hoister := Hoister{}
 	analyser := Analyser{}
-	//emitter := GoEmitter{}
+	emitter := GoEmitter{}
 
 	lexer.source = source
 	lexed := lexer.lex()
@@ -116,8 +116,8 @@ func compile(source []byte) {
 	analyser.ast = ast
 	analyser.analyse()
 
-	//emitted := emitter.emit()
-	//emitter.dump(emitted)
+	emitted := emitter.emit()
+	emitter.dump(emitted)
 
 	fmt.Println()
 	fmt.Println("Compilation ended in", time.Now().Sub(t))

@@ -178,16 +178,23 @@ func (a *Analyser) analyseFunc(n *Node) {
 	endSize := a.varStack.length + 1
 
 	if n.children[1].kind == N_METHOD_RECEIVER {
+		a.checkMethodReceiver(n.children[1])
 
-		return
-	}
+		a.varStack.push(&Var{kind: V_FUNC, data: n.children[2].data, ref: n})
 
-	a.varStack.push(&Var{kind: V_FUNC, data: n.children[1].data, ref: n})
+		// Parameters
+		for i := 4; i < len(n.children)-3; i += 3 {
+			typeName := a.checkValidComplexType(n.children[i+1])
+			a.varStack.push(&Var{kind: V_VAR, data: n.children[i].data, datatype: typeName, ref: n.children[i]})
+		}
+	} else {
+		a.varStack.push(&Var{kind: V_FUNC, data: n.children[1].data, ref: n})
 
-	// Parameters
-	for i := 3; i < len(n.children)-3; i += 3 {
-		typeName := a.checkValidComplexType(n.children[i+1])
-		a.varStack.push(&Var{kind: V_VAR, data: n.children[i].data, datatype: typeName, ref: n.children[i]})
+		// Parameters
+		for i := 3; i < len(n.children)-3; i += 3 {
+			typeName := a.checkValidComplexType(n.children[i+1])
+			a.varStack.push(&Var{kind: V_VAR, data: n.children[i].data, datatype: typeName, ref: n.children[i]})
+		}
 	}
 
 	// The function body
@@ -247,6 +254,9 @@ func (a *Analyser) checkVarDeclaration(n *Node) {
 	const FUNC_NAME = "check var declaration"
 
 	a.checkAssignment(n.children[0])
+
+	// Add the variable to the stack
+	a.varStack.push(&Var{kind: V_VAR, data: n.children[0].children[0].data, ref: n.children[0].children[0]})
 }
 
 func (a *Analyser) checkElementAssignment(n *Node) {
@@ -302,6 +312,39 @@ func (a *Analyser) checkCondition(n *Node) {
 func (a *Analyser) checkExpression(n *Node) {
 	const FUNC_NAME = "check expression"
 
+	// TODO: Check operators make sense
+
+	for i := 0; i < len(n.children); i += 2 {
+		a.checkValue(n.children[i])
+	}
+}
+
+func (a *Analyser) checkValue(n *Node) {
+	const FUNC_NAME = "check value"
+
+	switch n.kind {
+	case N_IDENTIFIER:
+		a.checkValidIdentifier(FUNC_NAME, n)
+	case N_INT:
+	case N_FLOAT:
+	case N_STRING:
+	case N_CHAR:
+	case N_BOOL:
+	case N_NIL:
+
+	case N_UNARY_OPERATION:
+		a.checkUnaryOperation(n)
+	case N_MAKE:
+		a.checkMakeArray(n)
+	case N_L_PAREN:
+		a.checkBracketedValue(n)
+	case N_CALL:
+		a.checkFuncCall(n)
+	case N_NEW:
+		a.checkStructNew(n)
+	default:
+		throwError(JOB_ANALYSER, FUNC_NAME, n.line, "value", n.kind)
+	}
 }
 
 func (a *Analyser) checkAssignment(n *Node) {
@@ -317,6 +360,7 @@ func (a *Analyser) checkAssignment(n *Node) {
 func (a *Analyser) checkLoneCall(n *Node) {
 	const FUNC_NAME = "check lone call"
 
+	a.checkFuncCall(n.children[0])
 }
 
 func (a *Analyser) checkFuncCall(n *Node) {
@@ -345,6 +389,7 @@ func (a *Analyser) checkUnaryOperation(n *Node) {
 func (a *Analyser) checkBracketedValue(n *Node) {
 	const FUNC_NAME = "check bracketed value"
 
+	a.checkExpression(n.children[1])
 }
 
 func (a *Analyser) checkMakeArray(n *Node) {
@@ -355,32 +400,56 @@ func (a *Analyser) checkMakeArray(n *Node) {
 func (a *Analyser) checkSwitchState(n *Node) {
 	const FUNC_NAME = "check switch state"
 
+	a.checkExpression(n.children[1])
+
+	// TODO: Don't do default check on every
+	// single one for performance?
+	for i := 3; i < len(n.children)-1; i++ {
+		if n.children[i].kind == N_DEFAULT_STATE {
+			a.checkDefaultState(n.children[i])
+		} else {
+			a.checkCaseState(n.children[i])
+		}
+	}
 }
 
+// TODO: More checks on expression
 func (a *Analyser) checkCaseState(n *Node) {
 	const FUNC_NAME = "check case state"
 
+	a.checkExpression(n.children[1])
+
+	a.checkCaseBlock(n.children[3])
 }
 
 func (a *Analyser) checkDefaultState(n *Node) {
 	const FUNC_NAME = "check default state"
-
+	a.checkCaseBlock(n.children[2])
 }
 
 func (a *Analyser) checkCaseBlock(n *Node) {
 	const FUNC_NAME = "check case block"
 
+	for i := range n.children {
+		a.analyseNode(n.children[i])
+	}
 }
 
 func (a *Analyser) checkLoneInc(n *Node) {
 	const FUNC_NAME = "check lone inc"
 
-	a.checkValidIdentifier(FUNC_NAME, n.children[1], n.children[1].data)
+	a.checkValidIdentifier(FUNC_NAME, n.children[1])
 }
 
 func (a *Analyser) checkMethodReceiver(n *Node) {
 	const FUNC_NAME = "check method receiver"
 
+	typeName := a.checkValidComplexType(n.children[2])
+
+	// Add the variable to the stack. This
+	// will be popped by the function
+	// definition
+	a.varStack.push(&Var{kind: V_VAR, data: n.children[1].data, datatype: typeName})
 }
 
 // TODO: Flesh this out into doing actual complex types
@@ -411,14 +480,14 @@ func (a *Analyser) checkValidComplexType(n *Node) string {
 	return typeName
 }
 
-func (a *Analyser) checkValidIdentifier(FUNC_NAME string, n *Node, identifier string) {
-	v := a.checkForMatch(identifier)
+func (a *Analyser) checkValidIdentifier(FUNC_NAME string, n *Node) {
+	v := a.checkForMatch(n.data)
 
 	if v == nil {
-		throwError(JOB_ANALYSER, FUNC_NAME, n.line, "variable", n.kind)
+		throwError(JOB_ANALYSER, FUNC_NAME, n.line, "existing variable", n)
 	}
 
 	if v.kind != V_VAR {
-		throwError(JOB_ANALYSER, FUNC_NAME, n.line, "variable", n.kind)
+		throwError(JOB_ANALYSER, FUNC_NAME, n.line, "variable", n)
 	}
 }

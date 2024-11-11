@@ -80,7 +80,7 @@ func (l *Lexer) lex() []Token {
 			token = Token{",", T_SEP, l.line}
 
 		case '%':
-			token = Token{"%", T_MUL, l.line}
+			token = Token{"%", T_MOD, l.line}
 
 		case '*':
 			token = Token{"*", T_MUL, l.line}

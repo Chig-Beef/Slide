@@ -116,6 +116,10 @@ func compile(source []byte) {
 	analyser.ast = ast
 	analyser.analyse()
 
+	emitter.types = types
+	emitter.funcs = funcs
+	emitter.ast = ast
+
 	emitted := emitter.emit()
 	emitter.dump(emitted)
 

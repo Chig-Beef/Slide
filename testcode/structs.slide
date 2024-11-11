@@ -13,3 +13,5 @@ struct Point {
 // type, which requires extra logic to
 // figure out?
 p Point = new Point(0, 0, "origin");
+
+p.x = 3;

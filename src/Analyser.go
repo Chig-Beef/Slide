@@ -390,15 +390,19 @@ func (a *Analyser) checkValue(n *Node) {
 	const FUNC_NAME = "check value"
 
 	switch n.kind {
-	case N_IDENTIFIER:
-		a.checkValidIdentifier(FUNC_NAME, n)
 	case N_INT:
 	case N_FLOAT:
 	case N_STRING:
 	case N_CHAR:
 	case N_BOOL:
 	case N_NIL:
+	case N_PROPERTY:
+		panic("not implemented")
 
+	case N_STRUCT_NEW:
+		a.checkStructNew(n)
+	case N_IDENTIFIER:
+		a.checkValidIdentifier(FUNC_NAME, n)
 	case N_UNARY_OPERATION:
 		a.checkUnaryOperation(n)
 	case N_MAKE_ARRAY:
@@ -443,6 +447,18 @@ func (a *Analyser) checkFuncCall(n *Node) {
 func (a *Analyser) checkStructNew(n *Node) {
 	const FUNC_NAME = "check struct new"
 
+	v := a.checkForMatch(n.children[1].data)
+	if v == nil {
+		throwError(JOB_ANALYSER, FUNC_NAME, n.line, "existing type", n)
+	}
+
+	if v.kind != V_TYPE {
+		throwError(JOB_ANALYSER, FUNC_NAME, n.line, "valid type", n)
+	}
+
+	for i := 3; i < len(n.children)-1; i += 2 {
+		a.checkExpression(n.children[i])
+	}
 }
 
 func (a *Analyser) checkBlock(n *Node) {

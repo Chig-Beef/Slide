@@ -202,6 +202,13 @@ func (ge *GoEmitter) recEmit(n *Node) string {
 		}
 		output += ")\n"
 	case N_STRUCT_NEW:
+		output = ge.recEmit(n.children[1]) + "{"
+
+		for i := 3; i < len(n.children)-1; i++ {
+			output += ge.recEmit(n.children[i])
+		}
+
+		output += "}"
 	case N_BRACKETED_VALUE:
 	case N_ELEMENT_ASSIGNMENT:
 		output = ge.recEmit(n.children[1].children[0]) + " " + ge.recEmit(n.children[0])
@@ -210,7 +217,18 @@ func (ge *GoEmitter) recEmit(n *Node) string {
 		}
 		output += "\n"
 	case N_STRUCT_DEF:
-
+		// First line
+		output = "type " + ge.recEmit(n.children[1]) + " struct {"
+		// Props
+		for i := 3; i < len(n.children)-1; i += 2 {
+			output += "\n" + ge.recEmit(n.children[i]) + " " + ge.recEmit(n.children[i+1])
+		}
+		// Closing
+		output += "\n}"
+	case N_PROPERTY:
+		for i := 0; i < len(n.children); i++ {
+			output += ge.recEmit(n.children[i])
+		}
 	case N_FOR:
 		output = "for"
 	case N_RANGE:

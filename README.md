@@ -70,6 +70,6 @@ Working Outputs
 - [x] primes
 - [x] simple
 - [ ] stack
-- [ ] structs
+- [x] structs
 - [x] switch
 - [x] typedef

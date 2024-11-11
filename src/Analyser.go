@@ -397,7 +397,7 @@ func (a *Analyser) checkValue(n *Node) {
 	case N_BOOL:
 	case N_NIL:
 	case N_PROPERTY:
-		panic("not implemented")
+		panic("not implemented " + FUNC_NAME)
 
 	case N_STRUCT_NEW:
 		a.checkStructNew(n)
@@ -421,13 +421,38 @@ func (a *Analyser) checkValue(n *Node) {
 func (a *Analyser) checkAssignment(n *Node) {
 	const FUNC_NAME = "check assignment"
 
-	if n.children[1].kind == N_COMPLEX_TYPE {
-		a.checkValidComplexType(n.children[1])
+	// Assigning to property
+	if n.children[0].kind == N_PROPERTY {
+		panic("not implemented " + FUNC_NAME)
+		return
 	}
 
+	// Has somthing assigned to it
 	if len(n.children) > 2 {
 		a.checkExpression(n.children[len(n.children)-1])
 	}
+
+	// Modifying an existing variable
+	if n.children[1].kind != N_COMPLEX_TYPE {
+		v := a.checkForMatch(n.children[0].data)
+		if v == nil {
+			throwError(JOB_ANALYSER, FUNC_NAME, n.line, "existing variable", n)
+		}
+
+		if v.kind != V_VAR {
+			throwError(JOB_ANALYSER, FUNC_NAME, n.line, "variable", n)
+		}
+		return
+	}
+
+	// This means we're making a new
+	// variable, and need to check it
+	// doesn't already exist
+	if a.checkForMatch(n.children[0].data) != nil {
+		throwError(JOB_ANALYSER, FUNC_NAME, n.line, "that variable to not already exist", n.children[0])
+	}
+
+	a.checkValidComplexType(n.children[1])
 
 	// Add the variable to the stack
 	a.varStack.push(&Var{kind: V_VAR, data: n.children[0].data, ref: n.children[0]})
@@ -538,7 +563,19 @@ func (a *Analyser) checkCaseBlock(n *Node) {
 func (a *Analyser) checkLoneInc(n *Node) {
 	const FUNC_NAME = "check lone inc"
 
-	a.checkValidIdentifier(FUNC_NAME, n.children[1])
+	if n.children[1].kind == N_IDENTIFIER {
+		a.checkValidIdentifier(FUNC_NAME, n.children[1])
+	} else if n.children[1].kind == N_PROPERTY {
+		a.checkProperty(n.children[1])
+	} else {
+		throwError(JOB_ANALYSER, FUNC_NAME, n.line, "property or identifier", n)
+	}
+}
+
+func (a *Analyser) checkProperty(n *Node) {
+	const FUNC_NAME = "check property"
+
+	panic("not implemented " + FUNC_NAME)
 }
 
 func (a *Analyser) checkMethodReceiver(n *Node) {

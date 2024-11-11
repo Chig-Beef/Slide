@@ -22,8 +22,8 @@ Parse
 - [x] While
 
 Semantic Analysis
-- [ ] Identifier exists
-- [ ] Type exists
+- [x] Identifier exists
+- [x] Type exists
 - [ ] Correct types used in expression
 - [ ] Correct type returned in function
 - [ ] Correct type assigned to variable
@@ -70,6 +70,6 @@ Working Outputs
 - [x] primes
 - [x] simple
 - [ ] stack
-- [x] structs
+- [ ] structs
 - [x] switch
 - [x] typedef

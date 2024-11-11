@@ -80,6 +80,7 @@ const (
 	N_LONE_INC           // Can also be a lone decrement
 	N_METHOD_RECEIVER    // Brackets before a function name that shows that it's a method
 	N_EMPTY_BLOCK        // Empty block brackets for denoting slices
+	N_PROPERTY           // A chain of accesses
 
 	// Keywords
 	N_FOR
@@ -228,6 +229,8 @@ func (n NodeType) String() string {
 		return "METHOD_RECEIVER"
 	case N_EMPTY_BLOCK:
 		return "EMPTY_BLOCK"
+	case N_PROPERTY:
+		return "PROPERTY"
 
 	// Keywords
 	case N_FOR:

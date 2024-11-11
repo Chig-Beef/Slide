@@ -152,17 +152,13 @@ func (p *Parser) loneIncrement() *Node {
 	if p.tok.kind != T_IDENTIFIER {
 		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "identifier", p.tok)
 	}
-	n.children = append(n.children, &Node{kind: N_IDENTIFIER, data: p.tok.data})
-	p.nextToken()
 
-	// TODO: Loop through
-	if p.tok.kind == T_ACCESS {
-		n.children = append(n.children, &Node{kind: N_ACCESS, data: p.tok.data})
+	if p.peekToken().kind == T_ACCESS {
+		// Property
+		n.children = append(n.children, p.property())
 		p.nextToken()
-
-		if p.tok.kind != T_IDENTIFIER {
-			throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "identifier", p.tok)
-		}
+	} else {
+		// Standalone
 		n.children = append(n.children, &Node{kind: N_IDENTIFIER, data: p.tok.data})
 		p.nextToken()
 	}
@@ -222,6 +218,7 @@ func (p *Parser) switchStatement() *Node {
 		p.nextToken()
 	}
 
+	// End switch
 	if p.tok.kind != T_R_SQUIRLY {
 		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "right squirly", p.tok)
 	}
@@ -881,17 +878,11 @@ func (p *Parser) assignment() *Node {
 	if p.tok.kind != T_IDENTIFIER {
 		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "identifier", p.tok)
 	}
-	n.children = append(n.children, &Node{kind: N_IDENTIFIER, data: p.tok.data})
-	p.nextToken()
 
-	// Access
-	if p.tok.kind == T_ACCESS {
-		n.children = append(n.children, &Node{kind: N_ACCESS, data: p.tok.data})
+	if p.peekToken().kind == T_ACCESS {
+		n.children = append(n.children, p.property())
 		p.nextToken()
-
-		if p.tok.kind != T_IDENTIFIER {
-			throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "identifier", p.tok)
-		}
+	} else {
 		n.children = append(n.children, &Node{kind: N_IDENTIFIER, data: p.tok.data})
 		p.nextToken()
 	}
@@ -959,17 +950,11 @@ func (p *Parser) funcCall() *Node {
 	if p.tok.kind != T_IDENTIFIER {
 		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "identifier", p.tok)
 	}
-	n.children = append(n.children, &Node{kind: N_IDENTIFIER, data: p.tok.data})
-	p.nextToken()
 
-	// Calling a method
-	for p.tok.kind == T_ACCESS {
-		n.children = append(n.children, &Node{kind: N_ACCESS, data: p.tok.data})
+	if p.peekToken().kind == T_ACCESS {
+		n.children = append(n.children, p.property())
 		p.nextToken()
-
-		if p.tok.kind != T_IDENTIFIER {
-			throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "identifier", p.tok)
-		}
+	} else {
 		n.children = append(n.children, &Node{kind: N_IDENTIFIER, data: p.tok.data})
 		p.nextToken()
 	}
@@ -983,18 +968,6 @@ func (p *Parser) funcCall() *Node {
 	if p.tok.kind != T_R_PAREN {
 		n.children = append(n.children, p.expression())
 		p.nextToken()
-
-		// TODO: Call in loop or whatever
-		if p.tok.kind == T_ACCESS {
-			n.children = append(n.children, &Node{kind: N_ACCESS, data: p.tok.data})
-			p.nextToken()
-
-			if p.tok.kind != T_IDENTIFIER {
-				throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "identifier", p.tok)
-			}
-			n.children = append(n.children, &Node{kind: N_IDENTIFIER, data: p.tok.data})
-			p.nextToken()
-		}
 
 		for p.tok.kind == T_SEP {
 			n.children = append(n.children, &Node{kind: N_SEP, data: p.tok.data})
@@ -1195,7 +1168,11 @@ func (p *Parser) value() *Node {
 
 	switch p.tok.kind {
 	case T_IDENTIFIER:
-		return &Node{kind: N_IDENTIFIER, data: p.tok.data}
+		if p.peekToken().kind == T_ACCESS {
+			return p.property()
+		} else {
+			return &Node{kind: N_IDENTIFIER, data: p.tok.data}
+		}
 	case T_INT:
 		return &Node{kind: N_INT, data: p.tok.data}
 	case T_FLOAT:
@@ -1493,6 +1470,36 @@ func (p *Parser) emptyBlock() *Node {
 		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "right block", p.tok)
 	}
 	n.children = append(n.children, &Node{kind: N_R_BLOCK, data: p.tok.data})
+
+	return &n
+}
+
+func (p *Parser) property() *Node {
+	const FUNC_NAME = "property"
+
+	n := Node{kind: N_PROPERTY}
+
+	if p.tok.kind != T_IDENTIFIER {
+		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "identifier", p.tok)
+	}
+	n.children = append(n.children, &Node{kind: N_IDENTIFIER, data: p.tok.data})
+	p.nextToken()
+
+	if p.tok.kind != T_ACCESS {
+		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "access", p.tok)
+	}
+	n.children = append(n.children, &Node{kind: N_ACCESS, data: p.tok.data})
+	p.nextToken()
+
+	if p.tok.kind != T_IDENTIFIER {
+		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "identifier", p.tok)
+	}
+
+	if p.peekToken().kind == T_ACCESS {
+		n.children = append(n.children, p.property())
+	} else {
+		n.children = append(n.children, &Node{kind: N_IDENTIFIER, data: p.tok.data})
+	}
 
 	return &n
 }

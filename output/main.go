@@ -1,17 +1,35 @@
 package main
 
 func main() {
-	for i := 2; i < 100; i++ {
-		prime := true
-		for j := 2; j < i; j++ {
-			if i%j == 0 {
-				prime = false
-			}
+	x := 7
+	if x == 7 {
+		y := 3
+	} else if x == 3 {
+		y := 7
+	} else {
+		y := 0
+	}
+	for range 7 {
+		x := 7
+		if x == 7 {
+			y := 3
+		} else if x == 3 {
+			y := 7
+		} else {
+			y := 0
 		}
-		if prime {
-			print(i)
-			print()
+	}
+	for {
+		x := 7
+		if x == 7 {
+			y := 3
+		} else if x == 3 {
+			y := 7
+		} else {
+			y := 0
 		}
+	}
+	for x < 10 {
 	}
 
 }

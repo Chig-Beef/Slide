@@ -80,6 +80,10 @@ func (a *Analyser) initVarStack() {
 	a.varStack.push(&Var{kind: V_FUNC, data: "todouble"})
 	a.varStack.push(&Var{kind: V_FUNC, data: "tofloat"})
 	a.varStack.push(&Var{kind: V_FUNC, data: "tobool"})
+
+	// Other
+	a.varStack.push(&Var{kind: V_FUNC, data: "print"})
+	a.varStack.push(&Var{kind: V_FUNC, data: "println"})
 }
 
 // Searches the stack until a match for

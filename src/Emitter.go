@@ -43,13 +43,25 @@ func (ge *GoEmitter) recEmit(n *Node) string {
 		}
 		output += "\n"
 	case N_FOREVER_LOOP:
+		for i := range n.children {
+			output += ge.recEmit(n.children[i]) + " "
+		}
+		output += "\n"
 	case N_RANGE_LOOP:
+		output = ge.recEmit(n.children[0]) + " range " +
+			ge.recEmit(n.children[1]) + " " +
+			ge.recEmit(n.children[2])
+		output += "\n"
 	case N_FOR_LOOP:
 		for i := range n.children {
 			output += ge.recEmit(n.children[i]) + " "
 		}
 		output += "\n"
 	case N_WHILE_LOOP:
+		for i := range n.children {
+			output += ge.recEmit(n.children[i]) + " "
+		}
+		output += "\n"
 	case N_STRUCT_DEF:
 	case N_FUNC_DEF:
 	case N_RET_STATE:
@@ -99,6 +111,11 @@ func (ge *GoEmitter) recEmit(n *Node) string {
 		}
 	case N_BRACKETED_VALUE:
 	case N_MAKE_ARRAY:
+		output += "{"
+		for i := 2; i < len(n.children)-1; i++ {
+			output += ge.recEmit(n.children[i])
+		}
+		output += "}"
 	case N_COMPLEX_TYPE:
 	case N_SWITCH_STATE:
 	case N_CASE_STATE:

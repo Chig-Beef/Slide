@@ -57,3 +57,18 @@ Tests
 
 Emitter
 - [ ] Golang emitter
+
+Working Outputs
+- [ ] Compiler
+- [ ] array
+- [ ] bubblesort
+- [ ] control
+- [ ] enum
+- [ ] func
+- [ ] map
+- [ ] primes
+- [ ] simple
+- [ ] stack
+- [ ] structs
+- [ ] switch
+- [ ] typedef

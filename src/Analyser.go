@@ -150,7 +150,8 @@ func (a *Analyser) analyseType(n *Node) {
 
 		// Attributes
 		for i := 3; i < len(n.children)-1; i += 2 {
-			s.props = append(s.props, &Var{kind: V_VAR, datatype: n.children[i+1].data, data: n.children[i].data, ref: n.children[i]})
+			typeName, isArray := a.checkValidComplexType(n.children[i+1])
+			s.props = append(s.props, &Var{kind: V_VAR, datatype: typeName, isArray: isArray, data: n.children[i].data, ref: n.children[i]})
 		}
 
 	case N_ENUM_DEF:
@@ -396,9 +397,9 @@ func (a *Analyser) checkValue(n *Node) {
 	case N_CHAR:
 	case N_BOOL:
 	case N_NIL:
-	case N_PROPERTY:
-		panic("not implemented " + FUNC_NAME)
 
+	case N_PROPERTY:
+		a.checkProperty(n)
 	case N_STRUCT_NEW:
 		a.checkStructNew(n)
 	case N_IDENTIFIER:
@@ -423,7 +424,7 @@ func (a *Analyser) checkAssignment(n *Node) {
 
 	// Assigning to property
 	if n.children[0].kind == N_PROPERTY {
-		panic("not implemented " + FUNC_NAME)
+		a.checkProperty(n.children[0])
 		return
 	}
 
@@ -452,10 +453,10 @@ func (a *Analyser) checkAssignment(n *Node) {
 		throwError(JOB_ANALYSER, FUNC_NAME, n.line, "that variable to not already exist", n.children[0])
 	}
 
-	a.checkValidComplexType(n.children[1])
+	typeName, isArray := a.checkValidComplexType(n.children[1])
 
 	// Add the variable to the stack
-	a.varStack.push(&Var{kind: V_VAR, data: n.children[0].data, ref: n.children[0]})
+	a.varStack.push(&Var{kind: V_VAR, data: n.children[0].data, datatype: typeName, ref: n.children[0], isArray: isArray})
 }
 
 func (a *Analyser) checkLoneCall(n *Node) {
@@ -575,7 +576,67 @@ func (a *Analyser) checkLoneInc(n *Node) {
 func (a *Analyser) checkProperty(n *Node) {
 	const FUNC_NAME = "check property"
 
-	panic("not implemented " + FUNC_NAME)
+	v := a.checkForMatch(n.children[0].data)
+
+	if v == nil {
+		throwError(JOB_ANALYSER, FUNC_NAME, n.line, "existing variable", n)
+	}
+
+	if v.kind != V_VAR {
+		throwError(JOB_ANALYSER, FUNC_NAME, n.line, "valid variable", n)
+	}
+
+	// Type of the variable
+	parent := a.checkForMatch(v.datatype)
+	if parent == nil {
+		throwError(JOB_ANALYSER, FUNC_NAME, n.line, "valid variable type", v)
+	}
+
+	for n.children[2].kind == N_PROPERTY {
+		n = n.children[2]
+
+		var propName string
+		propName = n.children[0].data
+
+		var prop *Var
+
+		for i := range parent.props {
+			if parent.props[i].data == propName {
+				prop = parent.props[i]
+				break
+			}
+		}
+
+		if prop == nil {
+			throwError(JOB_ANALYSER, FUNC_NAME, n.line, "existing property", n)
+		}
+
+		v = prop
+
+		// Type of the variable
+		parent = a.checkForMatch(v.datatype)
+		if parent == nil {
+			throwError(JOB_ANALYSER, FUNC_NAME, n.line, "valid variable type", v)
+		}
+	}
+
+	// At this point n.children[2] should be an identifier
+	propName := n.children[2].data
+
+	var prop *Var
+
+	for i := range parent.props {
+		if parent.props[i].data == propName {
+			prop = parent.props[i]
+			break
+		}
+	}
+
+	if prop == nil {
+		if !(v.isArray && propName == "len") {
+			throwError(JOB_ANALYSER, FUNC_NAME, n.line, "existing property", n)
+		}
+	}
 }
 
 func (a *Analyser) checkMethodReceiver(n *Node) {

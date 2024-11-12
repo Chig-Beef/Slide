@@ -1,5 +1,9 @@
 package main
 
+import (
+	"strconv"
+)
+
 type Var struct {
 	kind     VarType // Overarching type (identifier, func, etc)
 	data     string  // Name of it
@@ -9,6 +13,10 @@ type Var struct {
 	key      *Var    // For maps, the type for the key
 	value    *Var    // For maps, the type for the value
 	isArray  bool    // Will have length property
+}
+
+func (v *Var) String() string {
+	return v.kind.String() + " " + v.data + " " + v.datatype + " " + strconv.FormatBool(v.isArray)
 }
 
 type VarType int

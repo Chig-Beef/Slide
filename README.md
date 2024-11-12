@@ -62,14 +62,14 @@ Emitter
 Working Outputs
 - [ ] Compiler
 - [x] array
-- [ ] bubblesort
+- [x] bubblesort
 - [x] control
 - [x] enum
 - [x] func
 - [x] map
 - [x] primes
 - [x] simple
-- [ ] stack
-- [ ] structs
+- [x] stack
+- [x] structs
 - [x] switch
 - [x] typedef

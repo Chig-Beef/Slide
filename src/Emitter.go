@@ -129,7 +129,7 @@ func (ge *GoEmitter) recEmit(n *Node) string {
 		}
 		output += "\n"
 	case N_UNARY_OPERATION:
-		if n.children[0].kind == N_INC || n.children[0].kind == N_DINC {
+		if n.children[0].kind == N_INC || n.children[0].kind == N_DINC || n.children[0].kind == N_INDEX {
 			for i := 1; i < len(n.children); i++ {
 				output += ge.recEmit(n.children[i])
 			}
@@ -224,10 +224,15 @@ func (ge *GoEmitter) recEmit(n *Node) string {
 			output += "\n" + ge.recEmit(n.children[i]) + " " + ge.recEmit(n.children[i+1])
 		}
 		// Closing
-		output += "\n}"
+		output += "\n}\n\n"
 	case N_PROPERTY:
-		for i := 0; i < len(n.children); i++ {
-			output += ge.recEmit(n.children[i])
+		// Check for a len property
+		if n.children[2].data == "len" {
+			output += "len(" + ge.recEmit(n.children[0]) + ")"
+		} else {
+			for i := 0; i < len(n.children); i++ {
+				output += ge.recEmit(n.children[i])
+			}
 		}
 	case N_FOR:
 		output = "for"

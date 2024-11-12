@@ -1,6 +1,6 @@
 package main
 
-type Alias int ; 
+type Alias int
 
 type float = float64
 

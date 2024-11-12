@@ -1,4 +1,4 @@
-struct StackNode {
+struct Node {
 	value any
 	prev Node^
 }
@@ -9,7 +9,7 @@ struct Stack {
 }
 
 fun (s Stack^) push(value any) {
-	n StackNode^ = ^new StackNode(value, nil);
+	n Node^ = `new Node(value, nil);
 
 	++s.length;
 
@@ -30,12 +30,12 @@ fun (s Stack^) pop() any {
 	--s.length;
 
 	if s.length == 0 {
-		tail StackNode^ = s.tail;
+		tail Node^ = s.tail;
 		s.tail = nil;
 		return tail.value;
 	}
 
-	tail StackNode^ = vs.tail;
+	tail Node^ = s.tail;
 	s.tail = s.tail.prev;
 	return tail.value;
 }

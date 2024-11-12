@@ -183,15 +183,21 @@ func (a *Analyser) analyseFunc(n *Node) {
 	endSize := a.varStack.length + 1
 
 	if n.children[1].kind == N_METHOD_RECEIVER {
-		a.checkMethodReceiver(n.children[1])
+		receiver := a.checkMethodReceiver(n.children[1])
 
-		a.varStack.push(&Var{kind: V_FUNC, data: n.children[2].data, ref: n})
+		s := &Var{kind: V_FUNC, data: n.children[2].data, ref: n}
 
 		// Parameters
 		for i := 4; i < len(n.children)-3; i += 3 {
 			typeName, isArray := a.checkValidComplexType(n.children[i+1])
 			a.varStack.push(&Var{kind: V_VAR, data: n.children[i].data, datatype: typeName, ref: n.children[i], isArray: isArray})
 		}
+
+		// Chuck this method as a prop of the
+		// receiver
+		parent := a.checkForMatch(receiver)
+		parent.props = append(parent.props, s)
+
 	} else {
 		a.varStack.push(&Var{kind: V_FUNC, data: n.children[1].data, ref: n})
 
@@ -397,6 +403,8 @@ func (a *Analyser) checkValue(n *Node) {
 	case N_CHAR:
 	case N_BOOL:
 	case N_NIL:
+	case N_FUNC_CALL:
+		a.checkFuncCall(n)
 
 	case N_PROPERTY:
 		a.checkProperty(n)
@@ -468,6 +476,13 @@ func (a *Analyser) checkLoneCall(n *Node) {
 func (a *Analyser) checkFuncCall(n *Node) {
 	const FUNC_NAME = "check func call"
 
+	if n.children[1].kind == N_PROPERTY {
+		a.checkProperty(n)
+
+		panic("not implemented " + FUNC_NAME)
+	}
+
+	panic("not implemented " + FUNC_NAME)
 }
 
 func (a *Analyser) checkStructNew(n *Node) {
@@ -639,15 +654,21 @@ func (a *Analyser) checkProperty(n *Node) {
 	}
 }
 
-func (a *Analyser) checkMethodReceiver(n *Node) {
+func (a *Analyser) checkMethodReceiver(n *Node) string {
 	const FUNC_NAME = "check method receiver"
 
 	typeName, isArray := a.checkValidComplexType(n.children[2])
+
+	if isArray {
+		panic("not implemented " + FUNC_NAME + " with array receiver")
+	}
 
 	// Add the variable to the stack. This
 	// will be popped by the function
 	// definition
 	a.varStack.push(&Var{kind: V_VAR, data: n.children[1].data, datatype: typeName, isArray: isArray})
+
+	return typeName
 }
 
 // TODO: Flesh this out into doing actual complex types

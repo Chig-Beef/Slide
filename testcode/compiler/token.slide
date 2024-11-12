@@ -1,3 +1,5 @@
+typedef TokenType byte;
+
 struct Token {
 	// What is looks like in the actual source
 	data string
@@ -8,12 +10,6 @@ struct Token {
 	// What line this token comes from
 	line int
 }
-
-fun (t Token) String() string {
-	return "(" + t.data + " " + call t.kind.String() + ")";
-}
-
-typedef TokenType byte;
 
 T_ILLEGAL TokenType = 0;
 
@@ -234,4 +230,8 @@ fun (t TokenType) String() string {
 	default:
 		return "UNKNOWN";
 	}
+}
+
+fun (t Token) String() string {
+	return "(" + t.data + " " + call t.kind.String() + ")";
 }

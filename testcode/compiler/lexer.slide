@@ -19,10 +19,7 @@ fun (l Lexer^) lex() Token[] {
 	tokens Token[];
 	token Token;
 
-	source byte[] = l.source;
-	sourceLen int = source.len;
-
-	for ; l.index < sourceLen; l.index = l.index+1 {
+	for ; l.index < l.source.len; l.index = l.index+1 {
 		// Automatically sets it to ILLEGAL
 		token = new Token();
 
@@ -177,7 +174,7 @@ fun (l Lexer^) lex() Token[] {
 			// TODO: Deal with the case when you have escaped characters, such as newline?
 
 			l.index = l.index + 1;
-			if l.index == sourceLen {
+			if l.index == l.source.len {
 				// TODO: Better error messages
 				call panic("Expected more source");
 			}

@@ -23,9 +23,7 @@ func (l *Lexer) peekChar() byte {
 func (l *Lexer) lex() []Token {
 	var tokens []Token
 	var token Token
-	source := l.source
-	sourceLen := len(source)
-	for ; l.index < sourceLen; l.index = l.index + 1 {
+	for ; l.index < len(l.source); l.index = l.index + 1 {
 		token = Token{}
 		switch l.source[l.index] {
 		case ' ':
@@ -150,33 +148,33 @@ func (l *Lexer) lex() []Token {
 			token = Token{"'", T_CHAR, l.line}
 			l.index = l.index + 1
 
-			if l.index == sourceLen {
+			if l.index == len(l.source) {
 				panic("Expected more source")
 			}
 
 			if l.source[l.index] != '\'' {
 				panic("Expected '")
 			}
-			token.data = token.data + tostring(l.source[l.index-1]) + tostring(l.source[l.index])
+			token.data = token.data + string(l.source[l.index-1]) + string(l.source[l.index])
 		case '"':
 			token = Token{"\"", T_STRING, l.line}
 			for l.peekChar() != '"' && l.peekChar() != 0 {
 				l.index = l.index + 1
-				token.data = token.data + tostring(l.source[l.index])
+				token.data = token.data + string(l.source[l.index])
 			}
 
 			if l.peekChar() != '"' {
 				panic("Couldn't find end of string")
 			}
 			l.index = l.index + 1
-			token.data = token.data + tostring(l.source[l.index])
+			token.data = token.data + string(l.source[l.index])
 		}
 		if l.source[l.index]-'0' <= 9 {
-			token = Token{tostring(l.source[l.index]), T_ILLEGAL, l.line}
+			token = Token{string(l.source[l.index]), T_ILLEGAL, l.line}
 			isFloat := false
 			for (l.peekChar()-'0' <= 9 || l.peekChar() == '.') && l.peekChar() != 0 {
 				l.index = l.index + 1
-				token.data = token.data + tostring(l.source[l.index])
+				token.data = token.data + string(l.source[l.index])
 
 				if l.source[l.index] == '.' {
 					isFloat = true
@@ -194,10 +192,10 @@ func (l *Lexer) lex() []Token {
 				token.kind = T_INT
 			}
 		} else if l.source[l.index]-'a' < 26 || l.source[l.index]-'A' < 26 {
-			token = Token{tostring(l.source[l.index]), T_ILLEGAL, l.line}
+			token = Token{string(l.source[l.index]), T_ILLEGAL, l.line}
 			for (l.peekChar()-'a' < 26 || l.peekChar()-'A' < 26 || l.peekChar() == '_') && l.peekChar() != 0 {
 				l.index = l.index + 1
-				token.data = token.data + tostring(l.source[l.index])
+				token.data = token.data + string(l.source[l.index])
 			}
 			switch token.data {
 			case "for":
@@ -302,7 +300,7 @@ func (l *Lexer) lex() []Token {
 		}
 
 		if token.kind == T_ILLEGAL {
-			throwError(JOB_LEXER, "lexing", l.line, "anything else", "ILLEGAL ("+tostring(l.source[l.index])+")")
+			throwError(JOB_LEXER, "lexing", l.line, "anything else", "ILLEGAL ("+string(l.source[l.index])+")")
 		}
 		tokens.append(token)
 	}
@@ -310,7 +308,7 @@ func (l *Lexer) lex() []Token {
 }
 
 func throwError(job string, caller string, line int, expected string, got any) {
-	panic("Error in the " + job + "!\n" + "When the " + job + " was trying to decipher: " + caller + "\n" + "Error found on line " + tostring(line) + "\n" + "Expected: " + expected + "\n" + "Got: " + tostring(got))
+	panic("Error in the " + job + "!\n" + "When the " + job + " was trying to decipher: " + caller + "\n" + "Error found on line " + string(line) + "\n" + "Expected: " + expected + "\n" + "Got: " + string(got))
 }
 
 func (t TokenType) String() string {

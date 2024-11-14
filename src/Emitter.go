@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 )
 
@@ -274,6 +273,52 @@ func (ge *GoEmitter) prePass(n *Node) {
 	case N_DEREF:
 	case N_TYPE:
 	case N_IDENTIFIER:
+		switch n.data {
+		case "tobyte":
+			n.data = "byte"
+		case "toword":
+			n.data = "word"
+		case "todword":
+			n.data = "dword"
+		case "toqword":
+			n.data = "qword"
+		case "touint8":
+			n.data = "uint8"
+		case "touint16":
+			n.data = "uint16"
+		case "touint32":
+			n.data = "uint32"
+		case "touint64":
+			n.data = "uint64"
+		case "touint":
+			n.data = "uint"
+		case "toint8":
+			n.data = "int8"
+		case "toint16":
+			n.data = "int16"
+		case "toint32":
+			n.data = "int32"
+		case "toint64":
+			n.data = "int64"
+		case "tosint":
+			n.data = "sint"
+		case "toint":
+			n.data = "int"
+		case "tochar":
+			n.data = "char"
+		case "tostring":
+			n.data = "string"
+		case "tofloat32":
+			n.data = "float32"
+		case "tofloat64":
+			n.data = "float64"
+		case "todouble":
+			n.data = "double"
+		case "tofloat":
+			n.data = "float"
+		case "tobool":
+			n.data = "bool"
+		}
 	case N_INT:
 	case N_FLOAT:
 	case N_STRING:

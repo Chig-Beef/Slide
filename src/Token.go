@@ -42,6 +42,7 @@ const (
 	T_SWITCH
 	T_CASE
 	T_DEFAULT
+	T_CONST
 
 	// Various symbols
 	T_SEMICOLON
@@ -142,6 +143,8 @@ func (t TokenType) String() string {
 		return "CASE"
 	case T_DEFAULT:
 		return "DEFAULT"
+	case T_CONST:
+		return "CONST"
 
 	// Various symbols
 	case T_SEMICOLON:

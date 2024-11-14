@@ -16,8 +16,9 @@ type Hoister struct {
 // all definitions should be on the
 // global scope, we only have to check
 // the program's children
-func (h *Hoister) hoist() (*Node, *Node, *Node) {
+func (h *Hoister) hoist() (*Node, *Node, *Node, *Node) {
 	types := &Node{kind: N_PROGRAM}
+	consts := &Node{kind: N_PROGRAM}
 	funcs := &Node{kind: N_PROGRAM}
 
 	for i := 0; i < len(h.ast.children); i++ {
@@ -36,8 +37,12 @@ func (h *Hoister) hoist() (*Node, *Node, *Node) {
 			types.children = append(types.children, c)
 
 		} else if c.kind == N_FUNC_DEF {
-			// Add the child to types
+			// Add the child to funcs
 			funcs.children = append(funcs.children, c)
+
+		} else if c.kind == N_CONSTANT {
+			// Add the child to consts
+			consts.children = append(consts.children, c)
 
 		} else {
 			continue
@@ -50,5 +55,5 @@ func (h *Hoister) hoist() (*Node, *Node, *Node) {
 		i--
 	}
 
-	return types, funcs, h.ast
+	return types, consts, funcs, h.ast
 }

@@ -3,9 +3,10 @@ package main
 const JOB_ANALYSER = "Analyser"
 
 type Analyser struct {
-	types *Node
-	funcs *Node
-	ast   *Node
+	types  *Node
+	funcs  *Node
+	consts *Node
+	ast    *Node
 
 	// The stack that all variables are on,
 	// all types and functions are added
@@ -21,6 +22,10 @@ func (a *Analyser) analyse() {
 
 	for i := 0; i < len(a.types.children); i++ {
 		a.analyseType(a.types.children[i])
+	}
+
+	for i := 0; i < len(a.consts.children); i++ {
+		a.analyseConst(a.consts.children[i])
 	}
 
 	for i := 0; i < len(a.funcs.children); i++ {
@@ -169,6 +174,12 @@ func (a *Analyser) analyseType(n *Node) {
 	}
 }
 
+func (a *Analyser) analyseConst(n *Node) {
+	const FUNC_NAME = "analyse const"
+
+	a.checkVarDeclaration(n.children[1])
+}
+
 func (a *Analyser) analyseFunc(n *Node) {
 	const FUNC_NAME = "analyse func"
 
@@ -257,7 +268,7 @@ func (a *Analyser) analyseNode(n *Node) {
 		a.checkBlock(n)
 
 	default:
-		throwError(JOB_ANALYSER, FUNC_NAME, n.line, "any other start to node", n.kind)
+		throwError(JOB_ANALYSER, FUNC_NAME, n.line, "any other start to node", n)
 	}
 }
 
@@ -403,9 +414,11 @@ func (a *Analyser) checkValue(n *Node) {
 	case N_CHAR:
 	case N_BOOL:
 	case N_NIL:
+
+	case N_BRACKETED_VALUE:
+		a.checkBracketedValue(n)
 	case N_FUNC_CALL:
 		a.checkFuncCall(n)
-
 	case N_PROPERTY:
 		a.checkProperty(n)
 	case N_STRUCT_NEW:
@@ -418,10 +431,6 @@ func (a *Analyser) checkValue(n *Node) {
 		a.checkMakeArray(n)
 	case N_L_PAREN:
 		a.checkBracketedValue(n)
-	case N_CALL:
-		a.checkFuncCall(n)
-	case N_NEW:
-		a.checkStructNew(n)
 	default:
 		throwError(JOB_ANALYSER, FUNC_NAME, n.line, "value", n.kind)
 	}
@@ -477,12 +486,11 @@ func (a *Analyser) checkFuncCall(n *Node) {
 	const FUNC_NAME = "check func call"
 
 	if n.children[1].kind == N_PROPERTY {
-		a.checkProperty(n)
-
-		panic("not implemented " + FUNC_NAME)
+		// a.checkProperty(n.children[1])
+		// panic("not implemented " + FUNC_NAME)
 	}
 
-	panic("not implemented " + FUNC_NAME)
+	// panic("not implemented " + FUNC_NAME)
 }
 
 func (a *Analyser) checkStructNew(n *Node) {

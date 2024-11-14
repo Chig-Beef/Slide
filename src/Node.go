@@ -81,6 +81,7 @@ const (
 	N_METHOD_RECEIVER    // Brackets before a function name that shows that it's a method
 	N_EMPTY_BLOCK        // Empty block brackets for denoting slices
 	N_PROPERTY           // A chain of accesses
+	N_CONSTANT           // A constant variable declaration
 
 	// Keywords
 	N_FOR
@@ -104,6 +105,7 @@ const (
 	N_SWITCH
 	N_CASE
 	N_DEFAULT
+	N_CONST
 
 	// Various symbols
 	N_SEMICOLON
@@ -231,6 +233,8 @@ func (n NodeType) String() string {
 		return "EMPTY_BLOCK"
 	case N_PROPERTY:
 		return "PROPERTY"
+	case N_CONSTANT:
+		return "CONSTANT"
 
 	// Keywords
 	case N_FOR:
@@ -275,6 +279,8 @@ func (n NodeType) String() string {
 		return "CASE"
 	case N_DEFAULT:
 		return "DEFAULT"
+	case N_CONST:
+		return "CONST"
 
 	// Paired symbols
 	case N_L_SQUIRLY:

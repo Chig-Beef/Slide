@@ -315,6 +315,8 @@ func (l *Lexer) lex() []Token {
 				token.kind = T_CASE
 			case "default":
 				token.kind = T_DEFAULT
+			case "const":
+				token.kind = T_CONST
 			case "true", "false":
 				token.kind = T_BOOL
 

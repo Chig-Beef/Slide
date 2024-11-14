@@ -11,80 +11,80 @@ struct Token {
 	line int
 }
 
-T_ILLEGAL TokenType = 0;
+const T_ILLEGAL TokenType = 0;
 
 // Keywords
-T_FOR TokenType = 1;
-T_RANGE TokenType = 2;
-T_FOREVER TokenType = 3;
-T_WHILE TokenType = 4;
-T_IF TokenType = 5;
-T_ELIF TokenType = 6;
-T_ELSE TokenType = 7;
-T_CALL TokenType = 8;
-T_STRUCT TokenType = 9;
-T_FUN TokenType = 10;
-T_RET TokenType = 11;
-T_BREAK TokenType = 12;
-T_CONT TokenType = 13;
-T_ENUM TokenType = 14;
-T_TYPEDEF TokenType = 15;
-T_NEW TokenType = 16;
-T_MAKE TokenType = 17;
-T_MAP TokenType = 18;
-T_SWITCH TokenType = 19;
-T_CASE TokenType = 20;
-T_DEFAULT TokenType = 21;
+const T_FOR TokenType = 1;
+const T_RANGE TokenType = 2;
+const T_FOREVER TokenType = 3;
+const T_WHILE TokenType = 4;
+const T_IF TokenType = 5;
+const T_ELIF TokenType = 6;
+const T_ELSE TokenType = 7;
+const T_CALL TokenType = 8;
+const T_STRUCT TokenType = 9;
+const T_FUN TokenType = 10;
+const T_RET TokenType = 11;
+const T_BREAK TokenType = 12;
+const T_CONT TokenType = 13;
+const T_ENUM TokenType = 14;
+const T_TYPEDEF TokenType = 15;
+const T_NEW TokenType = 16;
+const T_MAKE TokenType = 17;
+const T_MAP TokenType = 18;
+const T_SWITCH TokenType = 19;
+const T_CASE TokenType = 20;
+const T_DEFAULT TokenType = 21;
 
 // Various symbols
-T_SEMICOLON TokenType = 22;
-T_ASSIGN TokenType = 23;
-T_SEP TokenType = 24;
-T_COLON TokenType = 25;
+const T_SEMICOLON TokenType = 22;
+const T_ASSIGN TokenType = 23;
+const T_SEP TokenType = 24;
+const T_COLON TokenType = 25;
 
 // Operators
-T_ADD TokenType = 26;
-T_SUB TokenType = 27;
-T_MUL TokenType = 28;
-T_DIV TokenType = 29;
-T_OR TokenType = 30;
-T_AND TokenType = 31;
-T_OROR TokenType = 32;
-T_ANDAND TokenType = 33;
-T_EQ TokenType = 34;
-T_LT TokenType = 35;
-T_GT TokenType = 36;
-T_LTEQ TokenType = 37;
-T_GTEQ TokenType = 38;
-T_NEQ TokenType = 39;
-T_MOD TokenType = 40;
-T_XOR TokenType = 41;
-T_ACCESS TokenType = 42;
-T_NOT TokenType = 43;
-T_INC TokenType = 44;
-T_DINC TokenType = 45;
-T_REF TokenType = 46;
-T_DEREF TokenType = 47;
-T_L_SHIFT TokenType = 48;
-T_R_SHIFT TokenType = 49;
+const T_ADD TokenType = 26;
+const T_SUB TokenType = 27;
+const T_MUL TokenType = 28;
+const T_DIV TokenType = 29;
+const T_OR TokenType = 30;
+const T_AND TokenType = 31;
+const T_OROR TokenType = 32;
+const T_ANDAND TokenType = 33;
+const T_EQ TokenType = 34;
+const T_LT TokenType = 35;
+const T_GT TokenType = 36;
+const T_LTEQ TokenType = 37;
+const T_GTEQ TokenType = 38;
+const T_NEQ TokenType = 39;
+const T_MOD TokenType = 40;
+const T_XOR TokenType = 41;
+const T_ACCESS TokenType = 42;
+const T_NOT TokenType = 43;
+const T_INC TokenType = 44;
+const T_DINC TokenType = 45;
+const T_REF TokenType = 46;
+const T_DEREF TokenType = 47;
+const T_L_SHIFT TokenType = 48;
+const T_R_SHIFT TokenType = 49;
 
 // Paired symbols
-T_L_SQUIRLY TokenType = 50;
-T_R_SQUIRLY TokenType = 51;
-T_L_BLOCK TokenType = 52;
-T_R_BLOCK TokenType = 53;
-T_L_PAREN TokenType = 54;
-T_R_PAREN TokenType = 55;
+const T_L_SQUIRLY TokenType = 50;
+const T_R_SQUIRLY TokenType = 51;
+const T_L_BLOCK TokenType = 52;
+const T_R_BLOCK TokenType = 53;
+const T_L_PAREN TokenType = 54;
+const T_R_PAREN TokenType = 55;
 
 // Values
-T_TYPE TokenType = 56;
-T_IDENTIFIER TokenType = 57;
-T_INT TokenType = 58;
-T_FLOAT TokenType = 59;
-T_STRING TokenType = 60;
-T_CHAR TokenType = 61;
-T_BOOL TokenType = 62;
-T_NIL TokenType = 63;
+const T_TYPE TokenType = 56;
+const T_IDENTIFIER TokenType = 57;
+const T_INT TokenType = 58;
+const T_FLOAT TokenType = 59;
+const T_STRING TokenType = 60;
+const T_CHAR TokenType = 61;
+const T_BOOL TokenType = 62;
+const T_NIL TokenType = 63;
 
 fun (t TokenType) String() string {
 	switch t {

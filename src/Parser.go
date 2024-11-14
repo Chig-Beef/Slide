@@ -125,6 +125,10 @@ func (p *Parser) parse() *Node {
 			n = p.switchStatement()
 			program.children = append(program.children, n)
 
+		case T_CONST: //  Constant definition
+			n = p.constantStatement()
+			program.children = append(program.children, n)
+
 		default:
 			panic(fmt.Sprint("Bad start to statement: ", p.tok.kind, " on line ", p.tok.line))
 		}
@@ -167,6 +171,22 @@ func (p *Parser) loneIncrement() *Node {
 		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "semicolon", p.tok)
 	}
 	n.children = append(n.children, &Node{kind: N_SEMICOLON, data: p.tok.data, line: p.tok.line})
+
+	return &n
+}
+
+func (p *Parser) constantStatement() *Node {
+	const FUNC_NAME = "constant statement"
+
+	n := Node{kind: N_CONSTANT, line: p.tok.line}
+
+	if p.tok.kind != T_CONST {
+		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "const", p.tok)
+	}
+	n.children = append(n.children, &Node{kind: N_CONST, data: p.tok.data, line: p.tok.line})
+	p.nextToken()
+
+	n.children = append(n.children, p.variableDeclaration())
 
 	return &n
 }
@@ -1010,7 +1030,7 @@ func (p *Parser) structNew() *Node {
 	p.nextToken()
 
 	if p.tok.kind != T_R_PAREN {
-		n.children = append(n.children, p.value())
+		n.children = append(n.children, p.expression())
 		p.nextToken()
 
 		for p.tok.kind == T_SEP {

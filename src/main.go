@@ -94,29 +94,33 @@ func compile(source []byte) {
 
 	lexer.source = source
 	lexed := lexer.lex()
-	fmt.Println(lexed)
-	fmt.Println()
+	// fmt.Println(lexed)
+	// fmt.Println()
 
 	parser.source = lexed
 	parsed := parser.parse()
-	fmt.Println(parsed)
-	fmt.Println()
+	// fmt.Println(parsed)
+	// fmt.Println()
 
 	hoister.ast = parsed
-	types, funcs, ast := hoister.hoist()
-	fmt.Println("types: ", types)
-	fmt.Println()
-	fmt.Println("funcs: ", funcs)
-	fmt.Println()
-	fmt.Println("ast: ", ast)
-	fmt.Println()
+	types, consts, funcs, ast := hoister.hoist()
+	// fmt.Println("types: ", types)
+	// fmt.Println()
+	// fmt.Println("funcs: ", funcs)
+	// fmt.Println()
+	// fmt.Println("consts: ", funcs)
+	// fmt.Println()
+	// fmt.Println("ast: ", ast)
+	// fmt.Println()
 
 	analyser.types = types
+	analyser.consts = consts
 	analyser.funcs = funcs
 	analyser.ast = ast
 	analyser.analyse()
 
 	emitter.types = types
+	emitter.consts = consts
 	emitter.funcs = funcs
 	emitter.ast = ast
 

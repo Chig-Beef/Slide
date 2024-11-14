@@ -1,4 +1,4 @@
-JOB_LEXER string = "Lexer";
+const JOB_LEXER string = "Lexer";
 
 struct Lexer {
 	source byte[]
@@ -19,7 +19,10 @@ fun (l Lexer^) lex() Token[] {
 	tokens Token[];
 	token Token;
 
-	for ; l.index < l.source.len; l.index = l.index+1 {
+	source byte[] = l.source;
+	sourceLen int = source.len;
+
+	for ; l.index < sourceLen; l.index = l.index+1 {
 		// Automatically sets it to ILLEGAL
 		token = new Token();
 
@@ -174,7 +177,7 @@ fun (l Lexer^) lex() Token[] {
 			// TODO: Deal with the case when you have escaped characters, such as newline?
 
 			l.index = l.index + 1;
-			if l.index == l.source.len {
+			if l.index == sourceLen {
 				// TODO: Better error messages
 				call panic("Expected more source");
 			}
@@ -224,7 +227,8 @@ fun (l Lexer^) lex() Token[] {
 			}
 
 			if isFloat {
-				if [token.data.len-1]token.data == '.' {
+				tokenData string = token.data;
+				if [tokenData.len-1]token.data == '.' {
 					call panic("Floats cannot end with '.'");
 				}
 				token.kind = T_FLOAT;
@@ -281,16 +285,57 @@ fun (l Lexer^) lex() Token[] {
 				token.kind = T_MAKE;
 			case "map":
 				token.kind = T_MAP;
-			case "true", "false":
+			case "true":
+				token.kind = T_BOOL;
+			case "false":
 				token.kind = T_BOOL;
 
 				// Types
-			case "byte", "word", "dword", "qword",
-				"uint8", "uint16", "uint32", "uint64",
-				"uint", "int8", "int16", "int32",
-				"int64", "sint", "int", "char",
-				"string", "float32", "float64", "double",
-				"float", "bool", "any":
+			case "byte":
+				token.kind = T_TYPE;
+			case "word":
+				token.kind = T_TYPE;
+			case "dword":
+				token.kind = T_TYPE;
+			case "qword":
+				token.kind = T_TYPE;
+			case "uint8":
+				token.kind = T_TYPE;
+			case "uint16":
+				token.kind = T_TYPE;
+			case "uint32":
+				token.kind = T_TYPE;
+			case "uint64":
+				token.kind = T_TYPE;
+			case "uint":
+				token.kind = T_TYPE;
+			case "int8":
+				token.kind = T_TYPE;
+			case "int16":
+				token.kind = T_TYPE;
+			case "int32":
+				token.kind = T_TYPE;
+			case "int64":
+				token.kind = T_TYPE;
+			case "sint":
+				token.kind = T_TYPE;
+			case "int":
+				token.kind = T_TYPE;
+			case "char":
+				token.kind = T_TYPE;
+			case "string":
+				token.kind = T_TYPE;
+			case "float32":
+				token.kind = T_TYPE;
+			case "float64":
+				token.kind = T_TYPE;
+			case "double":
+				token.kind = T_TYPE;
+			case "float":
+				token.kind = T_TYPE;
+			case "bool":
+				token.kind = T_TYPE;
+			case "any":
 				token.kind = T_TYPE;
 
 				// Identifiers

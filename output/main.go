@@ -302,7 +302,7 @@ func (l *Lexer) lex() []Token {
 		if token.kind == T_ILLEGAL {
 			throwError(JOB_LEXER, "lexing", l.line, "anything else", "ILLEGAL ("+string(l.source[l.index])+")")
 		}
-		tokens.append(token)
+		tokens = append(tokens, token)
 	}
 	return tokens
 }

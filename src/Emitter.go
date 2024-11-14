@@ -96,6 +96,53 @@ func (ge *GoEmitter) prePass(n *Node) {
 			ge.prePass(n.children[i])
 		}
 	case N_LONE_CALL:
+		// Using append?
+		curr := n.children[0].children[1]
+		for len(curr.children) == 3 {
+			curr = curr.children[2]
+		}
+
+		// TODO: What if it's var.property.append?
+		if curr.data == "append" {
+			fc := *n.children[0]
+			p := *fc.children[1]
+
+			// Start constructing new tree
+			line := n.line
+
+			// Move the item into the correct position
+			fc.children = fc.children[:len(fc.children)-1]
+			fc.children = append(fc.children, &Node{line: line, kind: N_SEP, data: ","})
+			fc.children = append(fc.children, fc.children[3])
+			fc.children = append(fc.children, &Node{line: line, kind: N_R_PAREN, data: ")"})
+
+			// Move the list into the correct positino
+			fc.children[3] = &Node{line: line, kind: N_EXPRESSION, children: []*Node{
+				fc.children[1].children[0],
+			}}
+
+			// Move the append into the correct position
+			fc.children[1] = fc.children[1].children[2]
+
+			finalParent := Node{line: line, kind: N_VAR_DECLARATION}
+			assign := Node{line: line, kind: N_ASSIGNMENT}
+			finalParent.children = []*Node{
+				&assign,
+				{line: line, kind: N_SEMICOLON, data: ";"},
+			}
+
+			assign.children = []*Node{
+				p.children[0],
+				{line: line, kind: N_ASSIGN, data: "="},
+				{line: line, kind: N_EXPRESSION, children: []*Node{
+					&fc,
+				}},
+			}
+
+			// Apply the changes
+			*n = finalParent
+		}
+
 		for i := 0; i < len(n.children); i++ {
 			ge.prePass(n.children[i])
 		}
@@ -182,31 +229,29 @@ func (ge *GoEmitter) prePass(n *Node) {
 
 		// Now curr should be the identifier at
 		// the end
-		if curr.data != "len" {
-			return
+		if curr.data == "len" {
+			// Get rid of ".len"
+			parent.children = parent.children[:1]
+			// Is a single identifier rather than a
+			// property, so just clean up the tree
+			// a bit
+			*parent = *parent.children[0]
+
+			value := *n
+
+			// The function call that will be used
+			p := Node{kind: N_FUNC_CALL, line: line}
+			p.children = []*Node{
+				{line: line, kind: N_CALL, data: "call"},
+				{line: line, kind: N_IDENTIFIER, data: "len"},
+				{line: line, kind: N_L_PAREN, data: "("},
+				{line: line, kind: N_EXPRESSION, children: []*Node{&value}},
+				{line: line, kind: N_R_PAREN, data: ")"},
+			}
+
+			// Place the new node back in the AST
+			*n = p
 		}
-
-		// Get rid of ".len"
-		parent.children = parent.children[:1]
-		// Is a single identifier rather than a
-		// property, so just clean up the tree
-		// a bit
-		*parent = *parent.children[0]
-
-		value := *n
-
-		// The function call that will be used
-		p := Node{kind: N_FUNC_CALL, line: line}
-		p.children = []*Node{
-			{line: line, kind: N_CALL, data: "call"},
-			{line: line, kind: N_IDENTIFIER, data: "len"},
-			{line: line, kind: N_L_PAREN, data: "("},
-			{line: line, kind: N_EXPRESSION, children: []*Node{&value}},
-			{line: line, kind: N_R_PAREN, data: ")"},
-		}
-
-		// Place the new node back in the AST
-		*n = p
 	case N_CONSTANT:
 		for i := 0; i < len(n.children); i++ {
 			ge.prePass(n.children[i])

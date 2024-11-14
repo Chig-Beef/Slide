@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	"strings"
 )
 
 const JOB_GO_EMITTER = "Go Emitter"
@@ -368,71 +369,76 @@ func (ge *GoEmitter) prePass(n *Node) {
 }
 
 func (ge *GoEmitter) recEmit(n *Node) string {
-	output := ""
+	// Faster string manipulation, instead
+	// of creating a copy on each iteration
+	// of a loop, it just mutates the
+	// slice.
+	output := strings.Builder{}
 
 	switch n.kind {
 	case N_PROGRAM:
+		output.Grow(20)
 		for i := 0; i < len(n.children); i++ {
-			output += ge.recEmit(n.children[i])
+			output.WriteString(ge.recEmit(n.children[i]))
 		}
 	case N_VAR_DECLARATION:
-		output = ge.recEmit(n.children[0]) + ge.recEmit(n.children[1]) + "\n"
+		output.WriteString(ge.recEmit(n.children[0]) + ge.recEmit(n.children[1]) + "\n")
 	case N_IF_BLOCK:
-		output = "\n"
+		output.WriteString("\n")
 		for i := 0; i < len(n.children); i++ {
-			output += ge.recEmit(n.children[i]) + " "
+			output.WriteString(ge.recEmit(n.children[i]) + " ")
 		}
-		output += "\n"
+		output.WriteString("\n")
 	case N_FOREVER_LOOP:
-		output = ge.recEmit(n.children[0]) + " " +
-			ge.recEmit(n.children[1]) + "\n"
+		output.WriteString(ge.recEmit(n.children[0]) + " " +
+			ge.recEmit(n.children[1]) + "\n")
 	case N_RANGE_LOOP:
-		output = ge.recEmit(n.children[0]) + " range " +
+		output.WriteString(ge.recEmit(n.children[0]) + " range " +
 			ge.recEmit(n.children[1]) + " " +
-			ge.recEmit(n.children[2]) + "\n"
+			ge.recEmit(n.children[2]) + "\n")
 	case N_FOR_LOOP:
 		for i := range n.children {
-			output += ge.recEmit(n.children[i]) + " "
+			output.WriteString(ge.recEmit(n.children[i]) + " ")
 		}
-		output += "\n"
+		output.WriteString("\n")
 	case N_WHILE_LOOP:
-		output = ge.recEmit(n.children[0]) + " " +
+		output.WriteString(ge.recEmit(n.children[0]) + " " +
 			ge.recEmit(n.children[1]) + " " +
-			ge.recEmit(n.children[2]) + "\n"
+			ge.recEmit(n.children[2]) + "\n")
 	case N_FUNC_DEF:
 		for i := range n.children {
-			output += ge.recEmit(n.children[i]) + " "
+			output.WriteString(ge.recEmit(n.children[i]) + " ")
 		}
-		output += "\n\n"
+		output.WriteString("\n\n")
 	case N_RET_STATE:
 		for i := range n.children {
-			output += ge.recEmit(n.children[i]) + " "
+			output.WriteString(ge.recEmit(n.children[i]) + " ")
 		}
-		output += "\n"
+		output.WriteString("\n")
 	case N_BREAK_STATE:
 		for i := range n.children {
-			output += ge.recEmit(n.children[i]) + " "
+			output.WriteString(ge.recEmit(n.children[i]) + " ")
 		}
-		output += "\n"
+		output.WriteString("\n")
 	case N_CONT_STATE:
 		for i := range n.children {
-			output += ge.recEmit(n.children[i]) + " "
+			output.WriteString(ge.recEmit(n.children[i]) + " ")
 		}
-		output += "\n"
+		output.WriteString("\n")
 	case N_CONDITION:
 		for i := range n.children {
-			output += ge.recEmit(n.children[i]) + " "
+			output.WriteString(ge.recEmit(n.children[i]) + " ")
 		}
 	case N_EXPRESSION:
 		for i := range n.children {
-			output += ge.recEmit(n.children[i]) + " "
+			output.WriteString(ge.recEmit(n.children[i]) + " ")
 		}
 	case N_ASSIGNMENT:
 		isFirstShow := false
 
 		if len(n.children) == 2 {
 			// No definition, just declaration
-			output = "var " + ge.recEmit(n.children[0]) + " " + ge.recEmit(n.children[1])
+			output.WriteString("var " + ge.recEmit(n.children[0]) + " " + ge.recEmit(n.children[1]))
 
 		} else {
 			for i := 0; i < len(n.children); i++ {
@@ -441,269 +447,269 @@ func (ge *GoEmitter) recEmit(n *Node) string {
 					ge.varType = n.children[i]
 				} else if n.children[i].kind == N_ASSIGN && isFirstShow {
 					if ge.inConst {
-						output += "= "
+						output.WriteString("= ")
 					} else {
-						output += ":= "
+						output.WriteString(":= ")
 					}
 				} else {
-					output += ge.recEmit(n.children[i]) + " "
+					output.WriteString(ge.recEmit(n.children[i]) + " ")
 				}
 			}
 		}
 	case N_LONE_CALL:
-		output += ge.recEmit(n.children[0]) + " " +
-			ge.recEmit(n.children[1])
+		output.WriteString(ge.recEmit(n.children[0]) + " " +
+			ge.recEmit(n.children[1]))
 	case N_FUNC_CALL:
 		for i := range n.children {
-			output += ge.recEmit(n.children[i]) + " "
+			output.WriteString(ge.recEmit(n.children[i]) + " ")
 		}
 	case N_BLOCK:
 		for i := 0; i < len(n.children); i++ {
-			output += ge.recEmit(n.children[i])
+			output.WriteString(ge.recEmit(n.children[i]))
 		}
 	case N_NEW_TYPE:
-		output = ge.recEmit(n.children[0]) + " " +
+		output.WriteString(ge.recEmit(n.children[0]) + " " +
 			ge.recEmit(n.children[1]) + " " +
 			ge.recEmit(n.children[2]) + " " +
-			ge.recEmit(n.children[3]) + "\n"
+			ge.recEmit(n.children[3]) + "\n")
 	case N_UNARY_OPERATION:
 		if n.children[0].kind == N_INC || n.children[0].kind == N_DINC || n.children[0].kind == N_INDEX {
-			output = ge.recEmit(n.children[1]) +
-				ge.recEmit(n.children[0])
+			output.WriteString(ge.recEmit(n.children[1]) +
+				ge.recEmit(n.children[0]))
 		} else {
-			output = ge.recEmit(n.children[0]) +
-				ge.recEmit(n.children[1])
+			output.WriteString(ge.recEmit(n.children[0]) +
+				ge.recEmit(n.children[1]))
 		}
 	case N_MAKE_ARRAY:
-		output = ge.recEmit(ge.varType)
+		output.WriteString(ge.recEmit(ge.varType))
 
-		output += "{"
+		output.WriteString("{")
 		for i := 2; i < len(n.children)-1; i++ {
-			output += ge.recEmit(n.children[i])
+			output.WriteString(ge.recEmit(n.children[i]))
 		}
-		output += "}"
+		output.WriteString("}")
 	case N_EMPTY_BLOCK:
-		output = "[]"
+		output.WriteString("[]")
 	case N_COMPLEX_TYPE:
 		if n.children[0].kind == N_MAP {
-			output = "map" +
+			output.WriteString("map" +
 				ge.recEmit(n.children[2]) +
 				ge.recEmit(n.children[3]) +
 				ge.recEmit(n.children[4]) +
-				ge.recEmit(n.children[1])
+				ge.recEmit(n.children[1]))
 		} else {
 			for i := len(n.children) - 1; i >= 0; i-- {
-				output += ge.recEmit(n.children[i])
+				output.WriteString(ge.recEmit(n.children[i]))
 			}
 		}
 	case N_SWITCH_STATE:
 		for i := 0; i < len(n.children); i++ {
-			output += ge.recEmit(n.children[i]) + " "
+			output.WriteString(ge.recEmit(n.children[i]) + " ")
 		}
 	case N_CASE_STATE:
-		output += ge.recEmit(n.children[0]) + " " +
+		output.WriteString(ge.recEmit(n.children[0]) + " " +
 			ge.recEmit(n.children[1]) +
 			":\n" +
-			ge.recEmit(n.children[3])
+			ge.recEmit(n.children[3]))
 	case N_DEFAULT_STATE:
-		output += ge.recEmit(n.children[0]) + " " +
+		output.WriteString(ge.recEmit(n.children[0]) + " " +
 			":\n" +
-			ge.recEmit(n.children[2])
+			ge.recEmit(n.children[2]))
 	case N_CASE_BLOCK:
 		for i := 0; i < len(n.children); i++ {
-			output += ge.recEmit(n.children[i])
+			output.WriteString(ge.recEmit(n.children[i]))
 		}
 	case N_LONE_INC:
-		output += ge.recEmit(n.children[1]) +
+		output.WriteString(ge.recEmit(n.children[1]) +
 			ge.recEmit(n.children[0]) +
-			ge.recEmit(n.children[2]) + "\n"
+			ge.recEmit(n.children[2]) + "\n")
 	case N_METHOD_RECEIVER:
-		output = ge.recEmit(n.children[0]) +
+		output.WriteString(ge.recEmit(n.children[0]) +
 			ge.recEmit(n.children[1]) + " " +
 			ge.recEmit(n.children[2]) +
-			ge.recEmit(n.children[3])
+			ge.recEmit(n.children[3]))
 	case N_ENUM_DEF: // TODO: What happens when we get an empty enum?
 		typeName := ge.recEmit(n.children[1])
-		output = "type " + typeName + " int\n"
+		output.WriteString("type " + typeName + " int\n")
 
-		output += "\nconst (\n"
-		output += ge.recEmit(n.children[3]) + " " + typeName + " = iota\n"
+		output.WriteString("\nconst (\n")
+		output.WriteString(ge.recEmit(n.children[3]) + " " + typeName + " = iota\n")
 		for i := 5; i < len(n.children)-1; i += 2 {
-			output += ge.recEmit(n.children[i]) + "\n"
+			output.WriteString(ge.recEmit(n.children[i]) + "\n")
 		}
-		output += ")\n"
+		output.WriteString(")\n")
 	case N_STRUCT_NEW:
-		output = ge.recEmit(n.children[1]) + "{"
+		output.WriteString(ge.recEmit(n.children[1]) + "{")
 
 		for i := 3; i < len(n.children)-1; i++ {
-			output += ge.recEmit(n.children[i])
+			output.WriteString(ge.recEmit(n.children[i]))
 		}
 
-		output += "}"
+		output.WriteString("}")
 	case N_BRACKETED_VALUE:
-		output = ge.recEmit(n.children[0]) +
+		output.WriteString(ge.recEmit(n.children[0]) +
 			ge.recEmit(n.children[1]) +
-			ge.recEmit(n.children[2])
+			ge.recEmit(n.children[2]))
 	case N_ELEMENT_ASSIGNMENT:
-		output = ge.recEmit(n.children[0]) + " " +
+		output.WriteString(ge.recEmit(n.children[0]) + " " +
 			ge.recEmit(n.children[1]) +
-			ge.recEmit(n.children[2]) + "\n"
+			ge.recEmit(n.children[2]) + "\n")
 	case N_STRUCT_DEF:
 		// First line
-		output = "type " + ge.recEmit(n.children[1]) + " struct {"
+		output.WriteString("type " + ge.recEmit(n.children[1]) + " struct {")
 		// Props
 		for i := 3; i < len(n.children)-1; i += 2 {
-			output += "\n" + ge.recEmit(n.children[i]) + " " + ge.recEmit(n.children[i+1])
+			output.WriteString("\n" + ge.recEmit(n.children[i]) + " " + ge.recEmit(n.children[i+1]))
 		}
 		// Closing
-		output += "\n}\n\n"
+		output.WriteString("\n}\n\n")
 	case N_PROPERTY:
-		output = ge.recEmit(n.children[0]) +
+		output.WriteString(ge.recEmit(n.children[0]) +
 			ge.recEmit(n.children[1]) +
-			ge.recEmit(n.children[2])
+			ge.recEmit(n.children[2]))
 	case N_CONSTANT:
 		ge.inConst = true
-		output += ge.recEmit(n.children[0]) + " " +
-			ge.recEmit(n.children[1])
+		output.WriteString(ge.recEmit(n.children[0]) + " " +
+			ge.recEmit(n.children[1]))
 		ge.inConst = false
 	case N_INDEX:
-		output = ge.recEmit(n.children[0]) +
+		output.WriteString(ge.recEmit(n.children[0]) +
 			ge.recEmit(n.children[1]) +
-			ge.recEmit(n.children[2])
+			ge.recEmit(n.children[2]))
 	case N_CONST:
-		output = "const"
+		output.WriteString("const")
 	case N_FOR:
-		output = "for"
+		output.WriteString("for")
 	case N_RANGE:
-		output = "for"
+		output.WriteString("for")
 	case N_FOREVER:
-		output = "for"
+		output.WriteString("for")
 	case N_WHILE:
-		output = "for"
+		output.WriteString("for")
 	case N_IF:
-		output = "if"
+		output.WriteString("if")
 	case N_ELIF:
-		output = "else if"
+		output.WriteString("else if")
 	case N_ELSE:
-		output = "else"
+		output.WriteString("else")
 	case N_CALL:
-		output = ""
+		output.WriteString("")
 	case N_STRUCT:
-		output = "struct"
+		output.WriteString("struct")
 	case N_FUN:
-		output = "func"
+		output.WriteString("func")
 	case N_RET:
-		output = "return"
+		output.WriteString("return")
 	case N_BREAK:
-		output = "break"
+		output.WriteString("break")
 	case N_CONT:
-		output = "continue"
+		output.WriteString("continue")
 	case N_ENUM:
-		output = "enum"
+		output.WriteString("enum")
 	case N_TYPEDEF:
-		output = "type"
+		output.WriteString("type")
 	case N_NEW:
-		output = "new"
+		output.WriteString("new")
 	case N_MAKE:
-		output = "make"
+		output.WriteString("make")
 	case N_MAP:
-		output = "map"
+		output.WriteString("map")
 	case N_SWITCH:
-		output = "switch"
+		output.WriteString("switch")
 	case N_CASE:
-		output = "case"
+		output.WriteString("case")
 	case N_DEFAULT:
-		output = "default"
+		output.WriteString("default")
 	case N_SEMICOLON:
-		output = ";"
+		output.WriteString(";")
 	case N_ASSIGN:
-		output = "="
+		output.WriteString("=")
 	case N_SEP:
-		output = ","
+		output.WriteString(",")
 	case N_COLON:
-		output = ":"
+		output.WriteString(":")
 	case N_L_SQUIRLY:
-		output = "{"
+		output.WriteString("{")
 	case N_R_SQUIRLY:
-		output = "}"
+		output.WriteString("}")
 	case N_L_BLOCK:
-		output = "["
+		output.WriteString("[")
 	case N_R_BLOCK:
-		output = "]"
+		output.WriteString("]")
 	case N_L_PAREN:
-		output = "("
+		output.WriteString("(")
 	case N_R_PAREN:
-		output = ")"
+		output.WriteString(")")
 	case N_ADD:
-		output = "+"
+		output.WriteString("+")
 	case N_SUB:
-		output = "-"
+		output.WriteString("-")
 	case N_MUL:
-		output = "*"
+		output.WriteString("*")
 	case N_DIV:
-		output = "/"
+		output.WriteString("/")
 	case N_OR:
-		output = "|"
+		output.WriteString("|")
 	case N_AND:
-		output = "&"
+		output.WriteString("&")
 	case N_OROR:
-		output = "||"
+		output.WriteString("||")
 	case N_ANDAND:
-		output = "&&"
+		output.WriteString("&&")
 	case N_EQ:
-		output = "=="
+		output.WriteString("==")
 	case N_LT:
-		output = "<"
+		output.WriteString("<")
 	case N_GT:
-		output = ">"
+		output.WriteString(">")
 	case N_LTEQ:
-		output = "<="
+		output.WriteString("<=")
 	case N_GTEQ:
-		output = ">="
+		output.WriteString(">=")
 	case N_NEQ:
-		output = "!="
+		output.WriteString("!=")
 	case N_MOD:
-		output = "%"
+		output.WriteString("%")
 	case N_ACCESS:
-		output = "."
+		output.WriteString(".")
 	case N_XOR:
-		output = "^"
+		output.WriteString("^")
 	case N_L_SHIFT:
-		output = "<<"
+		output.WriteString("<<")
 	case N_R_SHIFT:
-		output = ">>"
+		output.WriteString(">>")
 	case N_INC:
-		output = "++"
+		output.WriteString("++")
 	case N_DINC:
-		output = "--"
+		output.WriteString("--")
 	case N_NOT:
-		output = "!"
+		output.WriteString("!")
 	case N_REF:
-		output = "&"
+		output.WriteString("&")
 	case N_DEREF:
-		output = "*"
+		output.WriteString("*")
 	case N_TYPE:
-		output = n.data
+		output.WriteString(n.data)
 	case N_IDENTIFIER:
-		output = n.data
+		output.WriteString(n.data)
 	case N_INT:
-		output = n.data
+		output.WriteString(n.data)
 	case N_FLOAT:
-		output = n.data
+		output.WriteString(n.data)
 	case N_STRING:
-		output = n.data
+		output.WriteString(n.data)
 	case N_CHAR:
-		output = n.data
+		output.WriteString(n.data)
 	case N_BOOL:
-		output = n.data
+		output.WriteString(n.data)
 	case N_NIL:
-		output = "nil"
+		output.WriteString("nil")
 
 	default:
 		panic("Bad node in emitter?")
 	}
 
-	return output
+	return output.String()
 }
 
 func (ge *GoEmitter) dump(emitted string) {

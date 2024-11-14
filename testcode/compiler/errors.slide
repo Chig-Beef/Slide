@@ -1,8 +1,0 @@
-fun throwError(job string, caller string, line int, expected string, got any) {
-	call panic("Error in the " + job + "!\n" +
-		"When the " + job + " was trying to decipher: " + caller + "\n" +
-		"Error found on line " + call tostring(line) + "\n" +
-		"Expected: " + expected + "\n" +
-		"Got: " + call tostring(got)
-	);
-}

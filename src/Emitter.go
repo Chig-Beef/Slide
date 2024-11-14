@@ -514,8 +514,8 @@ func (ge *GoEmitter) recEmit(n *Node) string {
 			output += ge.recEmit(n.children[i])
 		}
 	case N_LONE_INC:
-		output += ge.recEmit(n.children[0]) +
-			ge.recEmit(n.children[1]) +
+		output += ge.recEmit(n.children[1]) +
+			ge.recEmit(n.children[0]) +
 			ge.recEmit(n.children[2]) + "\n"
 	case N_METHOD_RECEIVER:
 		output = ge.recEmit(n.children[0]) +

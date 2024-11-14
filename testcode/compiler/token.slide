@@ -35,56 +35,57 @@ const T_MAP TokenType = 18;
 const T_SWITCH TokenType = 19;
 const T_CASE TokenType = 20;
 const T_DEFAULT TokenType = 21;
+const T_CONST TokenType = 22;
 
 // Various symbols
-const T_SEMICOLON TokenType = 22;
-const T_ASSIGN TokenType = 23;
-const T_SEP TokenType = 24;
-const T_COLON TokenType = 25;
+const T_SEMICOLON TokenType = 23;
+const T_ASSIGN TokenType = 24;
+const T_SEP TokenType = 25;
+const T_COLON TokenType = 26;
 
 // Operators
-const T_ADD TokenType = 26;
-const T_SUB TokenType = 27;
-const T_MUL TokenType = 28;
-const T_DIV TokenType = 29;
-const T_OR TokenType = 30;
-const T_AND TokenType = 31;
-const T_OROR TokenType = 32;
-const T_ANDAND TokenType = 33;
-const T_EQ TokenType = 34;
-const T_LT TokenType = 35;
-const T_GT TokenType = 36;
-const T_LTEQ TokenType = 37;
-const T_GTEQ TokenType = 38;
-const T_NEQ TokenType = 39;
-const T_MOD TokenType = 40;
-const T_XOR TokenType = 41;
-const T_ACCESS TokenType = 42;
-const T_NOT TokenType = 43;
-const T_INC TokenType = 44;
-const T_DINC TokenType = 45;
-const T_REF TokenType = 46;
-const T_DEREF TokenType = 47;
-const T_L_SHIFT TokenType = 48;
-const T_R_SHIFT TokenType = 49;
+const T_ADD TokenType = 27;
+const T_SUB TokenType = 28;
+const T_MUL TokenType = 29;
+const T_DIV TokenType = 30;
+const T_OR TokenType = 31;
+const T_AND TokenType = 32;
+const T_OROR TokenType = 33;
+const T_ANDAND TokenType = 34;
+const T_EQ TokenType = 35;
+const T_LT TokenType = 36;
+const T_GT TokenType = 37;
+const T_LTEQ TokenType = 38;
+const T_GTEQ TokenType = 39;
+const T_NEQ TokenType = 40;
+const T_MOD TokenType = 41;
+const T_XOR TokenType = 42;
+const T_ACCESS TokenType = 43;
+const T_NOT TokenType = 44;
+const T_INC TokenType = 45;
+const T_DINC TokenType = 46;
+const T_REF TokenType = 47;
+const T_DEREF TokenType = 48;
+const T_L_SHIFT TokenType = 49;
+const T_R_SHIFT TokenType = 50;
 
 // Paired symbols
-const T_L_SQUIRLY TokenType = 50;
-const T_R_SQUIRLY TokenType = 51;
-const T_L_BLOCK TokenType = 52;
-const T_R_BLOCK TokenType = 53;
-const T_L_PAREN TokenType = 54;
-const T_R_PAREN TokenType = 55;
+const T_L_SQUIRLY TokenType = 51;
+const T_R_SQUIRLY TokenType = 52;
+const T_L_BLOCK TokenType = 53;
+const T_R_BLOCK TokenType = 54;
+const T_L_PAREN TokenType = 55;
+const T_R_PAREN TokenType = 56;
 
 // Values
-const T_TYPE TokenType = 56;
-const T_IDENTIFIER TokenType = 57;
-const T_INT TokenType = 58;
-const T_FLOAT TokenType = 59;
-const T_STRING TokenType = 60;
-const T_CHAR TokenType = 61;
-const T_BOOL TokenType = 62;
-const T_NIL TokenType = 63;
+const T_TYPE TokenType = 57;
+const T_IDENTIFIER TokenType = 58;
+const T_INT TokenType = 59;
+const T_FLOAT TokenType = 60;
+const T_STRING TokenType = 61;
+const T_CHAR TokenType = 62;
+const T_BOOL TokenType = 63;
+const T_NIL TokenType = 64;
 
 fun (t TokenType) String() string {
 	switch t {
@@ -134,6 +135,8 @@ fun (t TokenType) String() string {
 		return "CASE";
 	case T_DEFAULT:
 		return "DEFAULT";
+	case T_CONST:
+		return "CONST";
 
 	// Various symbols
 	case T_SEMICOLON:

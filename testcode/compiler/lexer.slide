@@ -6,6 +6,9 @@ struct Lexer {
 	line int
 }
 
+// Returns the character that is next
+// in line, is useful when you have a
+// duo of characters to create a token
 fun (l Lexer^) peekChar() byte {
 	if l.index >= l.source.len-1 {
 		return 0;
@@ -14,12 +17,11 @@ fun (l Lexer^) peekChar() byte {
 	return [l.index+1]l.source;
 }
 
-
 fun (l Lexer^) lex() Token[] {
 	tokens Token[];
 	token Token;
 
-	for ; l.index < l.source.len; l.index = l.index+1 {
+	for ; l.index < l.source.len; ++l.index {
 		// Automatically sets it to ILLEGAL
 		token = new Token();
 
@@ -31,11 +33,12 @@ fun (l Lexer^) lex() Token[] {
 		case '\t':
 			continue;
 		case '\n':
-			l.line = l.line + 1;
+			++l.line;
 			continue;
 		case '\r':
 			continue;
 
+		// Actual symbols
 		case ';':
 			token = new Token(";", T_SEMICOLON, l.line);
 
@@ -72,67 +75,77 @@ fun (l Lexer^) lex() Token[] {
 		case ')':
 			token = new Token(")", T_R_PAREN, l.line);
 
-		case '|':
-			token = new Token("|", T_OR, l.line);
-
-		case '&':
-			token = new Token("&", T_AND, l.line);
-
 		case ',':
 			token = new Token(",", T_SEP, l.line);
 
 		case '%':
-			token = new Token("%", T_MUL, l.line);
+			token = new Token("%", T_MOD, l.line);
 
 		case '*':
 			token = new Token("*", T_MUL, l.line);
+
+		// Doubles
+		case '|':
+			token = new Token("|", T_OR, l.line);
+			if call l.peekChar() == '|' {
+				token = new Token("||", T_OROR, l.line);
+				++l.index;
+			}
+
+		case '&':
+			token = new Token("&", T_AND, l.line);
+			if call l.peekChar() == '&' {
+				token = new Token("&&", T_ANDAND, l.line);
+				++l.index;
+			}
 
 		case '=':
 			token = new Token("=", T_ASSIGN, l.line);
 			if call l.peekChar() == '=' {
 				token = new Token("==", T_EQ, l.line);
-				l.index = l.index + 1;
+				++l.index;
 			}
 
 		case '!':
 			token = new Token("!", T_NOT, l.line);
 			if call l.peekChar() == '=' {
 				token = new Token("!=", T_NEQ, l.line);
-				l.index = l.index + 1;
-			}
-
-		case '<':
-			token = new Token("<", T_LT, l.line);
-			if call l.peekChar() == '=' {
-				token = new Token("<=", T_LTEQ, l.line);
-				l.index = l.index + 1;
-			} elif call l.peekChar() == '<' {
-				token = new Token("<<", T_L_SHIFT, l.line);
-				l.index = l.index + 1;
-			}
-
-		case '>':
-			token = new Token(">", T_GT, l.line);
-			if call l.peekChar() == '=' {
-				token = new Token(">=", T_GTEQ, l.line);
-				l.index = l.index + 1;
-			} elif call l.peekChar() == '>' {
-				token = new Token(">>", T_R_SHIFT, l.line);
-				l.index = l.index + 1;
+				++l.index;
 			}
 
 		case '+':
 			token = new Token("+", T_ADD, l.line);
 			if call l.peekChar() == '+' {
 				token = new Token("++", T_INC, l.line);
-				l.index = l.index + 1;
+				++l.index;
 			}
 
 		case '-':
 			token = new Token("-", T_SUB, l.line);
 			if call l.peekChar() == '-' {
-				token = new Token("--", T_SUB, l.line);
-				l.index = l.index + 1;
+				token = new Token("--", T_DINC, l.line);
+				++l.index;
+			}
+
+		// Complicated doubles
+		case '<':
+			token = new Token("<", T_LT, l.line);
+			if call l.peekChar() == '=' {
+				token = new Token("<=", T_LTEQ, l.line);
+				++l.index;
+			} elif call l.peekChar() == '<' {
+				token = new Token("<<", T_L_SHIFT, l.line);
+				++l.index;
+			}
+
+		case '>':
+			token = new Token(">", T_GT, l.line);
+			if call l.peekChar() == '=' {
+				token = new Token(">=", T_GTEQ, l.line);
+				++l.index;
+			} elif call l.peekChar() == '>' {
+				token = new Token(">>", T_R_SHIFT, l.line);
+				++l.index;
 			}
 
 		case '/':
@@ -144,10 +157,10 @@ fun (l Lexer^) lex() Token[] {
 
 					// Make sure line numbers make sense
 					if call l.peekChar() == '\n' {
-						l.line = l.line + 1;
+						++l.line;
 					}
 
-					l.index = l.index + 1;
+					++l.index;
 				}
 				continue;
 			}
@@ -158,49 +171,61 @@ fun (l Lexer^) lex() Token[] {
 
 					// Make sure line numbers make sense
 					if call l.peekChar() == '\n' {
-						l.line = l.line + 1;
+						++l.line;
 					}
 					if call l.peekChar() == '/' && [l.index]l.source == '*' {
-						l.index = l.index + 1;
+						++l.index;
 						break;
 					}
-					l.index = l.index + 1;
+					++l.index;
 				}
 				continue;
 			}
 
 		case '\'': // Characters
 			token = new Token("'", T_CHAR, l.line);
-			// TODO: Deal with the case when you have escaped characters, such as newline?
 
-			l.index = l.index + 1;
-			if l.index == l.source.len {
-				// TODO: Better error messages
-				call panic("Expected more source");
+			if call l.peekChar() == '\\' {
+				l.index = l.index + 3;
+				if l.index >= l.source.len {
+					call l.throwError("character", l.line, "more source", "end of source");
+				}
+
+				if [l.index]l.source != '\'' {
+					call l.throwError("character", l.line, "' (single quote)", call tostring([l.index]l.source));
+				}
+				token.data = token.data + call tostring([l.index-2]l.source) + call tostring([l.index-1]l.source) + call tostring([l.index]l.source);
+			} else {
+				l.index = l.index + 2;
+				if l.index >= l.source.len {
+					call l.throwError("character", l.line, "more source", "end of source");
+				}
+
+				if [l.index]l.source != '\'' {
+					call l.throwError("character", l.line, "' (single quote)", call tostring([l.index]l.source));
+				}
+				token.data = token.data + call tostring([l.index-1]l.source) + call tostring([l.index]l.source);
 			}
-
-			if [l.index]l.source != '\'' {
-				call panic("Expected '");
-			}
-
-			token.data = token.data + call tostring([l.index-1]l.source) + call tostring([l.index]l.source);
 
 		case '"': // Strings
-
-			// TODO: Have to deal with comments in string (maybe)
-
 			token = new Token("\"", T_STRING, l.line);
 
-			while call l.peekChar() != '"' && call l.peekChar() != 0 {
-				l.index = l.index + 1;
+			escaped bool = false;
+			while !(call l.peekChar() == '"' && !escaped) && call l.peekChar() != 0 {
+				++l.index;
 				token.data = token.data + call tostring([l.index]l.source);
+				if [l.index]l.source == '\\' {
+					escaped = true;
+				} else {
+					escaped = false;
+				}
 			}
 
 			if call l.peekChar() != '"' {
-				call panic("Couldn't find end of string");
+				call l.throwError("string", l.line, "\" (end of string)", "end of source");
 			}
 
-			l.index = l.index + 1;
+			++l.index;
 			token.data = token.data + call tostring([l.index]l.source);
 		}
 
@@ -215,7 +240,7 @@ fun (l Lexer^) lex() Token[] {
 			isFloat bool = false;
 
 			while (call l.peekChar()-'0' <= 9 || call l.peekChar() == '.') && call l.peekChar() != 0 {
-				l.index = l.index + 1;
+				++l.index;
 				token.data = token.data + call tostring([l.index]l.source);
 
 				if [l.index]l.source == '.' {
@@ -224,8 +249,7 @@ fun (l Lexer^) lex() Token[] {
 			}
 
 			if isFloat {
-				tokenData string = token.data;
-				if [tokenData.len-1]token.data == '.' {
+				if [token.data.len-1]token.data == '.' {
 					call panic("Floats cannot end with '.'");
 				}
 				token.kind = T_FLOAT;
@@ -240,7 +264,7 @@ fun (l Lexer^) lex() Token[] {
 			token = new Token(call tostring([l.index]l.source), T_ILLEGAL, l.line);
 
 			while (call l.peekChar()-'a' < 26 || call l.peekChar()-'A' < 26 || call l.peekChar() == '_') && call l.peekChar() != 0 {
-				l.index = l.index + 1;
+				++l.index;
 				token.data = token.data + call tostring([l.index]l.source);
 			}
 
@@ -252,6 +276,8 @@ fun (l Lexer^) lex() Token[] {
 				token.kind = T_RANGE;
 			case "forever":
 				token.kind = T_FOREVER;
+			case "while":
+				token.kind = T_WHILE;
 			case "if":
 				token.kind = T_IF;
 			case "elif":
@@ -282,6 +308,14 @@ fun (l Lexer^) lex() Token[] {
 				token.kind = T_MAKE;
 			case "map":
 				token.kind = T_MAP;
+			case "switch":
+				token.kind = T_SWITCH;
+			case "case":
+				token.kind = T_CASE;
+			case "default":
+				token.kind = T_DEFAULT;
+			case "const":
+				token.kind = T_CONST;
 			case "true":
 				token.kind = T_BOOL;
 			case "false":
@@ -337,6 +371,9 @@ fun (l Lexer^) lex() Token[] {
 
 				// Identifiers
 			default:
+				// TODO: I think types and identifiers
+				// should be considered the same thing
+
 				// HOWEVER, the programmer is allowed
 				// to create new types, and the 2 cases
 				// that this occurs is in struct and
@@ -372,12 +409,20 @@ fun (l Lexer^) lex() Token[] {
 		}
 
 		if token.kind == T_ILLEGAL {
-			// TODO: Better error messages
-			call throwError(JOB_LEXER, "lexing", l.line, "anything else", "ILLEGAL ("+call tostring([l.index]l.source)+")");
+			call l.throwError("lexing", l.line, "anything else", "ILLEGAL ("+call tostring([l.index]l.source)+")");
 		}
 
 		call tokens.append(token);
 	}
 
 	return tokens;
+}
+
+fun (l Lexer^) throwError(caller string, line int, expected string, got string) {
+	call panic("Error in the " + JOB_LEXER + "!\n" +
+		"When the " + JOB_LEXER + " was trying to decipher: " + caller + "\n" +
+		"Error found on line " + call tostring(line) + "\n" +
+		"Expected: " + expected + "\n" +
+		"Got: " + got
+	);
 }

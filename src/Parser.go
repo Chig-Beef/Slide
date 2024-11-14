@@ -545,8 +545,10 @@ func (p *Parser) forLoop() *Node {
 			}
 			p.nextToken()
 
-			if p.tok.kind != T_IDENTIFIER {
-				p.throwError(FUNC_NAME, p.tok.line, "identifier", p.tok)
+			if p.peekToken().kind == T_ACCESS {
+				inc.children = append(inc.children, p.property())
+			} else {
+				inc.children = append(inc.children, &Node{kind: N_IDENTIFIER, data: p.tok.data, line: p.tok.line})
 			}
 			inc.children = append(inc.children, &Node{kind: N_IDENTIFIER, data: p.tok.data, line: p.tok.line})
 			n.children = append(n.children, &inc)

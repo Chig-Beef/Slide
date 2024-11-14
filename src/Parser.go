@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strconv"
 )
 
 const JOB_PARSER = "Parser"
@@ -149,12 +150,12 @@ func (p *Parser) loneIncrement() *Node {
 	} else if p.tok.kind == T_DINC {
 		n.children = append(n.children, &Node{kind: N_DINC, data: p.tok.data, line: p.tok.line})
 	} else {
-		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "inc or dinc", p.tok)
+		p.throwError(FUNC_NAME, p.tok.line, "inc or dinc", p.tok)
 	}
 	p.nextToken()
 
 	if p.tok.kind != T_IDENTIFIER {
-		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "identifier", p.tok)
+		p.throwError(FUNC_NAME, p.tok.line, "identifier", p.tok)
 	}
 
 	if p.peekToken().kind == T_ACCESS {
@@ -168,7 +169,7 @@ func (p *Parser) loneIncrement() *Node {
 	}
 
 	if p.tok.kind != T_SEMICOLON {
-		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "semicolon", p.tok)
+		p.throwError(FUNC_NAME, p.tok.line, "semicolon", p.tok)
 	}
 	n.children = append(n.children, &Node{kind: N_SEMICOLON, data: p.tok.data, line: p.tok.line})
 
@@ -181,7 +182,7 @@ func (p *Parser) constantStatement() *Node {
 	n := Node{kind: N_CONSTANT, line: p.tok.line}
 
 	if p.tok.kind != T_CONST {
-		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "const", p.tok)
+		p.throwError(FUNC_NAME, p.tok.line, "const", p.tok)
 	}
 	n.children = append(n.children, &Node{kind: N_CONST, data: p.tok.data, line: p.tok.line})
 	p.nextToken()
@@ -200,7 +201,7 @@ func (p *Parser) variableDeclaration() *Node {
 
 	p.nextToken()
 	if p.tok.kind != T_SEMICOLON {
-		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "semicolon", p.tok)
+		p.throwError(FUNC_NAME, p.tok.line, "semicolon", p.tok)
 	}
 	n.children = append(n.children, &Node{kind: N_SEMICOLON, data: p.tok.data, line: p.tok.line})
 
@@ -213,7 +214,7 @@ func (p *Parser) switchStatement() *Node {
 	n := Node{kind: N_SWITCH_STATE, line: p.tok.line}
 
 	if p.tok.kind != T_SWITCH {
-		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "switch", p.tok)
+		p.throwError(FUNC_NAME, p.tok.line, "switch", p.tok)
 	}
 	n.children = append(n.children, &Node{kind: N_SWITCH, data: p.tok.data, line: p.tok.line})
 	p.nextToken()
@@ -222,7 +223,7 @@ func (p *Parser) switchStatement() *Node {
 	p.nextToken()
 
 	if p.tok.kind != T_L_SQUIRLY {
-		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "left squirly", p.tok)
+		p.throwError(FUNC_NAME, p.tok.line, "left squirly", p.tok)
 	}
 	n.children = append(n.children, &Node{kind: N_L_SQUIRLY, data: p.tok.data, line: p.tok.line})
 	p.nextToken()
@@ -240,7 +241,7 @@ func (p *Parser) switchStatement() *Node {
 
 	// End switch
 	if p.tok.kind != T_R_SQUIRLY {
-		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "right squirly", p.tok)
+		p.throwError(FUNC_NAME, p.tok.line, "right squirly", p.tok)
 	}
 	n.children = append(n.children, &Node{kind: N_R_SQUIRLY, data: p.tok.data, line: p.tok.line})
 
@@ -253,7 +254,7 @@ func (p *Parser) caseStatement() *Node {
 	n := Node{kind: N_CASE_STATE, line: p.tok.line}
 
 	if p.tok.kind != T_CASE {
-		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "case", p.tok)
+		p.throwError(FUNC_NAME, p.tok.line, "case", p.tok)
 	}
 	n.children = append(n.children, &Node{kind: N_CASE, data: p.tok.data, line: p.tok.line})
 	p.nextToken()
@@ -270,7 +271,7 @@ func (p *Parser) caseStatement() *Node {
 	}
 
 	if p.tok.kind != T_COLON {
-		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "colon", p.tok)
+		p.throwError(FUNC_NAME, p.tok.line, "colon", p.tok)
 	}
 	n.children = append(n.children, &Node{kind: N_COLON, data: p.tok.data, line: p.tok.line})
 	p.nextToken()
@@ -286,13 +287,13 @@ func (p *Parser) defaultStatement() *Node {
 	n := Node{kind: N_DEFAULT_STATE, line: p.tok.line}
 
 	if p.tok.kind != T_DEFAULT {
-		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "default", p.tok)
+		p.throwError(FUNC_NAME, p.tok.line, "default", p.tok)
 	}
 	n.children = append(n.children, &Node{kind: N_DEFAULT, data: p.tok.data, line: p.tok.line})
 	p.nextToken()
 
 	if p.tok.kind != T_COLON {
-		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "colon", p.tok)
+		p.throwError(FUNC_NAME, p.tok.line, "colon", p.tok)
 	}
 	n.children = append(n.children, &Node{kind: N_COLON, data: p.tok.data, line: p.tok.line})
 	p.nextToken()
@@ -408,7 +409,7 @@ func (p *Parser) elementAssignment() *Node {
 	p.nextToken()
 
 	if p.tok.kind != T_SEMICOLON {
-		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "semicolon", p.tok)
+		p.throwError(FUNC_NAME, p.tok.line, "semicolon", p.tok)
 	}
 	n.children = append(n.children, &Node{kind: N_SEMICOLON, data: p.tok.data, line: p.tok.line})
 
@@ -421,7 +422,7 @@ func (p *Parser) ifBlock() *Node {
 	n := Node{kind: N_IF_BLOCK, line: p.tok.line}
 
 	if p.tok.kind != T_IF {
-		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "if", p.tok)
+		p.throwError(FUNC_NAME, p.tok.line, "if", p.tok)
 	}
 	n.children = append(n.children, &Node{kind: N_IF, data: p.tok.data, line: p.tok.line})
 	p.nextToken()
@@ -463,7 +464,7 @@ func (p *Parser) foreverLoop() *Node {
 	n := Node{kind: N_FOREVER_LOOP, line: p.tok.line}
 
 	if p.tok.kind != T_FOREVER {
-		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "forever", p.tok)
+		p.throwError(FUNC_NAME, p.tok.line, "forever", p.tok)
 	}
 	n.children = append(n.children, &Node{kind: N_FOREVER, line: p.tok.line})
 	p.nextToken()
@@ -479,7 +480,7 @@ func (p *Parser) rangeLoop() *Node {
 	n := Node{kind: N_RANGE_LOOP, line: p.tok.line}
 
 	if p.tok.kind != T_RANGE {
-		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "range", p.tok)
+		p.throwError(FUNC_NAME, p.tok.line, "range", p.tok)
 	}
 	n.children = append(n.children, &Node{kind: N_RANGE, line: p.tok.line})
 	p.nextToken()
@@ -499,7 +500,7 @@ func (p *Parser) forLoop() *Node {
 
 	// for
 	if p.tok.kind != T_FOR {
-		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "for", p.tok)
+		p.throwError(FUNC_NAME, p.tok.line, "for", p.tok)
 	}
 	n.children = append(n.children, &Node{kind: N_FOR, line: p.tok.line})
 	p.nextToken()
@@ -512,7 +513,7 @@ func (p *Parser) forLoop() *Node {
 
 	// for i int = 0;
 	if p.tok.kind != T_SEMICOLON {
-		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "semicolon", p.tok)
+		p.throwError(FUNC_NAME, p.tok.line, "semicolon", p.tok)
 	}
 	n.children = append(n.children, &Node{kind: N_SEMICOLON, line: p.tok.line})
 	p.nextToken()
@@ -525,7 +526,7 @@ func (p *Parser) forLoop() *Node {
 
 	// for i int = 0; i < 10;
 	if p.tok.kind != T_SEMICOLON {
-		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "semicolon", p.tok)
+		p.throwError(FUNC_NAME, p.tok.line, "semicolon", p.tok)
 	}
 	n.children = append(n.children, &Node{kind: N_SEMICOLON, line: p.tok.line})
 	p.nextToken()
@@ -540,12 +541,12 @@ func (p *Parser) forLoop() *Node {
 			} else if p.tok.kind == T_DINC {
 				inc.children = append(inc.children, &Node{kind: N_DINC, data: p.tok.data, line: p.tok.line})
 			} else {
-				throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "inc or dinc", p.tok)
+				p.throwError(FUNC_NAME, p.tok.line, "inc or dinc", p.tok)
 			}
 			p.nextToken()
 
 			if p.tok.kind != T_IDENTIFIER {
-				throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "identifier", p.tok)
+				p.throwError(FUNC_NAME, p.tok.line, "identifier", p.tok)
 			}
 			inc.children = append(inc.children, &Node{kind: N_IDENTIFIER, data: p.tok.data, line: p.tok.line})
 			n.children = append(n.children, &inc)
@@ -568,7 +569,7 @@ func (p *Parser) whileLoop() *Node {
 
 	// while
 	if p.tok.kind != T_WHILE {
-		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "while", p.tok)
+		p.throwError(FUNC_NAME, p.tok.line, "while", p.tok)
 	}
 	n.children = append(n.children, &Node{kind: N_WHILE, line: p.tok.line})
 	p.nextToken()
@@ -589,7 +590,7 @@ func (p *Parser) structDef() *Node {
 	n := Node{kind: N_STRUCT_DEF, line: p.tok.line}
 
 	if p.tok.kind != T_STRUCT {
-		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "struct", p.tok)
+		p.throwError(FUNC_NAME, p.tok.line, "struct", p.tok)
 	}
 	n.children = append(n.children, &Node{kind: N_STRUCT, data: p.tok.data, line: p.tok.line})
 	p.nextToken()
@@ -599,20 +600,20 @@ func (p *Parser) structDef() *Node {
 	// struct is a type, and therefore we
 	// check for type (over identifier)
 	if p.tok.kind != T_TYPE {
-		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "type", p.tok)
+		p.throwError(FUNC_NAME, p.tok.line, "type", p.tok)
 	}
 	n.children = append(n.children, &Node{kind: N_TYPE, data: p.tok.data, line: p.tok.line})
 	p.nextToken()
 
 	if p.tok.kind != T_L_SQUIRLY {
-		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "left squirly", p.tok)
+		p.throwError(FUNC_NAME, p.tok.line, "left squirly", p.tok)
 	}
 	n.children = append(n.children, &Node{kind: N_L_SQUIRLY, data: p.tok.data, line: p.tok.line})
 	p.nextToken()
 
 	for p.tok.kind != T_R_SQUIRLY && p.tok.kind != T_ILLEGAL {
 		if p.tok.kind != T_IDENTIFIER {
-			throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "identifier", p.tok)
+			p.throwError(FUNC_NAME, p.tok.line, "identifier", p.tok)
 		}
 		n.children = append(n.children, &Node{kind: N_IDENTIFIER, data: p.tok.data, line: p.tok.line})
 		p.nextToken()
@@ -622,7 +623,7 @@ func (p *Parser) structDef() *Node {
 	}
 
 	if p.tok.kind != T_R_SQUIRLY {
-		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "right squirly", p.tok)
+		p.throwError(FUNC_NAME, p.tok.line, "right squirly", p.tok)
 	}
 	n.children = append(n.children, &Node{kind: N_R_SQUIRLY, data: p.tok.data, line: p.tok.line})
 
@@ -635,7 +636,7 @@ func (p *Parser) funcDef() *Node {
 	n := Node{kind: N_FUNC_DEF, line: p.tok.line}
 
 	if p.tok.kind != T_FUN {
-		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "fun", p.tok)
+		p.throwError(FUNC_NAME, p.tok.line, "fun", p.tok)
 	}
 	n.children = append(n.children, &Node{kind: N_FUN, data: p.tok.data, line: p.tok.line})
 	p.nextToken()
@@ -647,13 +648,13 @@ func (p *Parser) funcDef() *Node {
 	}
 
 	if p.tok.kind != T_IDENTIFIER {
-		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "identifier", p.tok)
+		p.throwError(FUNC_NAME, p.tok.line, "identifier", p.tok)
 	}
 	n.children = append(n.children, &Node{kind: N_IDENTIFIER, data: p.tok.data, line: p.tok.line})
 	p.nextToken()
 
 	if p.tok.kind != T_L_PAREN {
-		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "left paren", p.tok)
+		p.throwError(FUNC_NAME, p.tok.line, "left paren", p.tok)
 	}
 	n.children = append(n.children, &Node{kind: N_L_PAREN, data: p.tok.data, line: p.tok.line})
 	p.nextToken()
@@ -670,7 +671,7 @@ func (p *Parser) funcDef() *Node {
 			p.nextToken()
 
 			if p.tok.kind != T_IDENTIFIER {
-				throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "identifier", p.tok)
+				p.throwError(FUNC_NAME, p.tok.line, "identifier", p.tok)
 			}
 			n.children = append(n.children, &Node{kind: N_IDENTIFIER, data: p.tok.data, line: p.tok.line})
 			p.nextToken()
@@ -681,7 +682,7 @@ func (p *Parser) funcDef() *Node {
 	}
 
 	if p.tok.kind != T_R_PAREN {
-		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "right paren", p.tok)
+		p.throwError(FUNC_NAME, p.tok.line, "right paren", p.tok)
 	}
 	n.children = append(n.children, &Node{kind: N_R_PAREN, data: p.tok.data, line: p.tok.line})
 	p.nextToken()
@@ -703,13 +704,13 @@ func (p *Parser) methodReceiver() *Node {
 	n := Node{kind: N_METHOD_RECEIVER, line: p.tok.line}
 
 	if p.tok.kind != T_L_PAREN {
-		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "left paren", p.tok)
+		p.throwError(FUNC_NAME, p.tok.line, "left paren", p.tok)
 	}
 	n.children = append(n.children, &Node{kind: N_L_PAREN, data: p.tok.data, line: p.tok.line})
 	p.nextToken()
 
 	if p.tok.kind != T_IDENTIFIER {
-		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "identifier", p.tok)
+		p.throwError(FUNC_NAME, p.tok.line, "identifier", p.tok)
 	}
 	n.children = append(n.children, &Node{kind: N_IDENTIFIER, data: p.tok.data, line: p.tok.line})
 	p.nextToken()
@@ -718,7 +719,7 @@ func (p *Parser) methodReceiver() *Node {
 	p.nextToken()
 
 	if p.tok.kind != T_R_PAREN {
-		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "right paren", p.tok)
+		p.throwError(FUNC_NAME, p.tok.line, "right paren", p.tok)
 	}
 	n.children = append(n.children, &Node{kind: N_R_PAREN, data: p.tok.data, line: p.tok.line})
 
@@ -731,7 +732,7 @@ func (p *Parser) retStatement() *Node {
 	n := Node{kind: N_RET_STATE, line: p.tok.line}
 
 	if p.tok.kind != T_RET {
-		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "return", p.tok)
+		p.throwError(FUNC_NAME, p.tok.line, "return", p.tok)
 	}
 	n.children = append(n.children, &Node{kind: N_RET, data: p.tok.data, line: p.tok.line})
 	p.nextToken()
@@ -746,7 +747,7 @@ func (p *Parser) retStatement() *Node {
 	p.nextToken()
 
 	if p.tok.kind != T_SEMICOLON {
-		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "semicolon", p.tok)
+		p.throwError(FUNC_NAME, p.tok.line, "semicolon", p.tok)
 	}
 	n.children = append(n.children, &Node{kind: N_SEMICOLON, data: p.tok.data, line: p.tok.line})
 
@@ -759,7 +760,7 @@ func (p *Parser) breakStatement() *Node {
 	n := Node{kind: N_BREAK_STATE, line: p.tok.line}
 
 	if p.tok.kind != T_BREAK {
-		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "break", p.tok)
+		p.throwError(FUNC_NAME, p.tok.line, "break", p.tok)
 	}
 	n.children = append(n.children, &Node{kind: N_BREAK, data: p.tok.data, line: p.tok.line})
 	p.nextToken()
@@ -774,7 +775,7 @@ func (p *Parser) breakStatement() *Node {
 	p.nextToken()
 
 	if p.tok.kind != T_SEMICOLON {
-		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "semicolon", p.tok)
+		p.throwError(FUNC_NAME, p.tok.line, "semicolon", p.tok)
 	}
 	n.children = append(n.children, &Node{kind: N_SEMICOLON, data: p.tok.data, line: p.tok.line})
 
@@ -787,7 +788,7 @@ func (p *Parser) contStatement() *Node {
 	n := Node{kind: N_CONT_STATE, line: p.tok.line}
 
 	if p.tok.kind != T_CONT {
-		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "continue", p.tok)
+		p.throwError(FUNC_NAME, p.tok.line, "continue", p.tok)
 	}
 	n.children = append(n.children, &Node{kind: N_CONT, data: p.tok.data, line: p.tok.line})
 	p.nextToken()
@@ -803,7 +804,7 @@ func (p *Parser) contStatement() *Node {
 	p.nextToken()
 
 	if p.tok.kind != T_SEMICOLON {
-		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "semicolon", p.tok)
+		p.throwError(FUNC_NAME, p.tok.line, "semicolon", p.tok)
 	}
 	n.children = append(n.children, &Node{kind: N_SEMICOLON, data: p.tok.data, line: p.tok.line})
 
@@ -816,39 +817,39 @@ func (p *Parser) enumDef() *Node {
 	n := Node{kind: N_ENUM_DEF, line: p.tok.line}
 
 	if p.tok.kind != T_ENUM {
-		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "enum", p.tok)
+		p.throwError(FUNC_NAME, p.tok.line, "enum", p.tok)
 	}
 	n.children = append(n.children, &Node{kind: N_ENUM, data: p.tok.data, line: p.tok.line})
 	p.nextToken()
 
 	if p.tok.kind != T_IDENTIFIER {
-		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "identifier", p.tok)
+		p.throwError(FUNC_NAME, p.tok.line, "identifier", p.tok)
 	}
 	n.children = append(n.children, &Node{kind: N_IDENTIFIER, data: p.tok.data, line: p.tok.line})
 	p.nextToken()
 
 	if p.tok.kind != T_L_SQUIRLY {
-		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "left squirly", p.tok)
+		p.throwError(FUNC_NAME, p.tok.line, "left squirly", p.tok)
 	}
 	n.children = append(n.children, &Node{kind: N_L_SQUIRLY, data: p.tok.data, line: p.tok.line})
 	p.nextToken()
 
 	for p.tok.kind != T_R_SQUIRLY && p.tok.kind != T_ILLEGAL {
 		if p.tok.kind != T_IDENTIFIER {
-			throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "identifier", p.tok)
+			p.throwError(FUNC_NAME, p.tok.line, "identifier", p.tok)
 		}
 		n.children = append(n.children, &Node{kind: N_IDENTIFIER, data: p.tok.data, line: p.tok.line})
 		p.nextToken()
 
 		if p.tok.kind != T_SEP {
-			throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "separator", p.tok)
+			p.throwError(FUNC_NAME, p.tok.line, "separator", p.tok)
 		}
 		n.children = append(n.children, &Node{kind: N_SEP, data: p.tok.data, line: p.tok.line})
 		p.nextToken()
 	}
 
 	if p.tok.kind != T_R_SQUIRLY {
-		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "right squirly", p.tok)
+		p.throwError(FUNC_NAME, p.tok.line, "right squirly", p.tok)
 	}
 	n.children = append(n.children, &Node{kind: N_R_SQUIRLY, data: p.tok.data, line: p.tok.line})
 
@@ -896,7 +897,7 @@ func (p *Parser) assignment() *Node {
 
 	// x
 	if p.tok.kind != T_IDENTIFIER {
-		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "identifier", p.tok)
+		p.throwError(FUNC_NAME, p.tok.line, "identifier", p.tok)
 	}
 
 	if p.peekToken().kind == T_ACCESS {
@@ -923,7 +924,7 @@ func (p *Parser) assignment() *Node {
 	// Now we MUST have an assign
 	if p.tok.kind != T_ASSIGN {
 		if p.tok.kind != T_SEMICOLON {
-			throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "assign or semicolon", p.tok)
+			p.throwError(FUNC_NAME, p.tok.line, "assign or semicolon", p.tok)
 		}
 
 		p.index--
@@ -949,7 +950,7 @@ func (p *Parser) loneCall() *Node {
 	p.nextToken()
 
 	if p.tok.kind != T_SEMICOLON {
-		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "semicolon", p.tok)
+		p.throwError(FUNC_NAME, p.tok.line, "semicolon", p.tok)
 	}
 	n.children = append(n.children, &Node{kind: N_SEMICOLON, data: p.tok.data, line: p.tok.line})
 
@@ -962,13 +963,13 @@ func (p *Parser) funcCall() *Node {
 	n := Node{kind: N_FUNC_CALL, line: p.tok.line}
 
 	if p.tok.kind != T_CALL {
-		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "call", p.tok)
+		p.throwError(FUNC_NAME, p.tok.line, "call", p.tok)
 	}
 	n.children = append(n.children, &Node{kind: N_CALL, data: p.tok.data, line: p.tok.line})
 	p.nextToken()
 
 	if p.tok.kind != T_IDENTIFIER {
-		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "identifier", p.tok)
+		p.throwError(FUNC_NAME, p.tok.line, "identifier", p.tok)
 	}
 
 	if p.peekToken().kind == T_ACCESS {
@@ -980,7 +981,7 @@ func (p *Parser) funcCall() *Node {
 	}
 
 	if p.tok.kind != T_L_PAREN {
-		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "left paren", p.tok)
+		p.throwError(FUNC_NAME, p.tok.line, "left paren", p.tok)
 	}
 	n.children = append(n.children, &Node{kind: N_L_PAREN, data: p.tok.data, line: p.tok.line})
 	p.nextToken()
@@ -999,7 +1000,7 @@ func (p *Parser) funcCall() *Node {
 	}
 
 	if p.tok.kind != T_R_PAREN {
-		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "right paren", p.tok)
+		p.throwError(FUNC_NAME, p.tok.line, "right paren", p.tok)
 	}
 	n.children = append(n.children, &Node{kind: N_R_PAREN, data: p.tok.data, line: p.tok.line})
 
@@ -1012,19 +1013,19 @@ func (p *Parser) structNew() *Node {
 	n := Node{kind: N_STRUCT_NEW, line: p.tok.line}
 
 	if p.tok.kind != T_NEW {
-		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "new", p.tok)
+		p.throwError(FUNC_NAME, p.tok.line, "new", p.tok)
 	}
 	n.children = append(n.children, &Node{kind: N_NEW, data: p.tok.data, line: p.tok.line})
 	p.nextToken()
 
 	if p.tok.kind != T_TYPE {
-		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "type", p.tok)
+		p.throwError(FUNC_NAME, p.tok.line, "type", p.tok)
 	}
 	n.children = append(n.children, &Node{kind: N_TYPE, data: p.tok.data, line: p.tok.line})
 	p.nextToken()
 
 	if p.tok.kind != T_L_PAREN {
-		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "left paren", p.tok)
+		p.throwError(FUNC_NAME, p.tok.line, "left paren", p.tok)
 	}
 	n.children = append(n.children, &Node{kind: N_L_PAREN, data: p.tok.data, line: p.tok.line})
 	p.nextToken()
@@ -1043,7 +1044,7 @@ func (p *Parser) structNew() *Node {
 	}
 
 	if p.tok.kind != T_R_PAREN {
-		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "right paren", p.tok)
+		p.throwError(FUNC_NAME, p.tok.line, "right paren", p.tok)
 	}
 	n.children = append(n.children, &Node{kind: N_R_PAREN, data: p.tok.data, line: p.tok.line})
 
@@ -1058,7 +1059,7 @@ func (p *Parser) block() *Node {
 	var n *Node
 
 	if p.tok.kind != T_L_SQUIRLY {
-		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "left squirly", p.tok)
+		p.throwError(FUNC_NAME, p.tok.line, "left squirly", p.tok)
 	}
 	block.children = append(block.children, &Node{kind: N_L_SQUIRLY, data: p.tok.data, line: p.tok.line})
 	p.nextToken()
@@ -1141,7 +1142,7 @@ func (p *Parser) block() *Node {
 	}
 
 	if p.tok.kind != T_R_SQUIRLY {
-		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "right squirly", p.tok)
+		p.throwError(FUNC_NAME, p.tok.line, "right squirly", p.tok)
 	}
 	block.children = append(block.children, &Node{kind: N_R_SQUIRLY, data: p.tok.data, line: p.tok.line})
 
@@ -1154,25 +1155,25 @@ func (p *Parser) typeDef() *Node {
 	n := Node{kind: N_NEW_TYPE, line: p.tok.line}
 
 	if p.tok.kind != T_TYPEDEF {
-		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "typedef", p.tok)
+		p.throwError(FUNC_NAME, p.tok.line, "typedef", p.tok)
 	}
 	n.children = append(n.children, &Node{kind: N_TYPEDEF, line: p.tok.line})
 	p.nextToken()
 
 	if p.tok.kind != T_TYPE {
-		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "type", p.tok)
+		p.throwError(FUNC_NAME, p.tok.line, "type", p.tok)
 	}
 	n.children = append(n.children, &Node{kind: N_TYPE, data: p.tok.data, line: p.tok.line})
 	p.nextToken()
 
 	if p.tok.kind != T_TYPE {
-		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "type", p.tok)
+		p.throwError(FUNC_NAME, p.tok.line, "type", p.tok)
 	}
 	n.children = append(n.children, &Node{kind: N_TYPE, data: p.tok.data, line: p.tok.line})
 	p.nextToken()
 
 	if p.tok.kind != T_SEMICOLON {
-		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "semicolon", p.tok)
+		p.throwError(FUNC_NAME, p.tok.line, "semicolon", p.tok)
 	}
 	n.children = append(n.children, &Node{kind: N_SEMICOLON, line: p.tok.line})
 
@@ -1270,7 +1271,7 @@ func (p *Parser) value() *Node {
 		p.nextToken()
 
 		if p.tok.kind != T_R_PAREN {
-			throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "right paren", p.tok)
+			p.throwError(FUNC_NAME, p.tok.line, "right paren", p.tok)
 		}
 		n.children = append(n.children, &Node{kind: N_R_PAREN, data: p.tok.data, line: p.tok.line})
 		return &n
@@ -1284,7 +1285,7 @@ func (p *Parser) value() *Node {
 		return p.structNew()
 
 	default:
-		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "unary or value", p.tok)
+		p.throwError(FUNC_NAME, p.tok.line, "unary or value", p.tok)
 
 		// This never executes because
 		// throwError panics
@@ -1351,7 +1352,7 @@ func (p *Parser) indexUnary() *Node {
 	n := Node{kind: N_INDEX, line: p.tok.line}
 
 	if p.tok.kind != T_L_BLOCK {
-		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "left block", p.tok)
+		p.throwError(FUNC_NAME, p.tok.line, "left block", p.tok)
 	}
 	n.children = append(n.children, &Node{kind: N_L_BLOCK, data: p.tok.data, line: p.tok.line})
 	p.nextToken()
@@ -1360,7 +1361,7 @@ func (p *Parser) indexUnary() *Node {
 	p.nextToken()
 
 	if p.tok.kind != T_R_BLOCK {
-		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "right block", p.tok)
+		p.throwError(FUNC_NAME, p.tok.line, "right block", p.tok)
 	}
 	n.children = append(n.children, &Node{kind: N_R_BLOCK, data: p.tok.data, line: p.tok.line})
 
@@ -1373,13 +1374,13 @@ func (p *Parser) makeArray() *Node {
 	n := Node{kind: N_MAKE_ARRAY, line: p.tok.line}
 
 	if p.tok.kind != T_MAKE {
-		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "make", p.tok)
+		p.throwError(FUNC_NAME, p.tok.line, "make", p.tok)
 	}
 	n.children = append(n.children, &Node{kind: N_MAKE, data: p.tok.data, line: p.tok.line})
 	p.nextToken()
 
 	if p.tok.kind != T_L_BLOCK {
-		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "left block", p.tok)
+		p.throwError(FUNC_NAME, p.tok.line, "left block", p.tok)
 	}
 	n.children = append(n.children, &Node{kind: N_L_BLOCK, data: p.tok.data, line: p.tok.line})
 	p.nextToken()
@@ -1396,7 +1397,7 @@ func (p *Parser) makeArray() *Node {
 	}
 
 	if p.tok.kind != T_R_BLOCK {
-		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "right block", p.tok)
+		p.throwError(FUNC_NAME, p.tok.line, "right block", p.tok)
 	}
 	n.children = append(n.children, &Node{kind: N_R_BLOCK, data: p.tok.data, line: p.tok.line})
 
@@ -1414,13 +1415,13 @@ func (p *Parser) complexType() *Node {
 		p.nextToken()
 
 		if p.tok.kind != T_TYPE {
-			throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "type", p.tok)
+			p.throwError(FUNC_NAME, p.tok.line, "type", p.tok)
 		}
 		n.children = append(n.children, &Node{kind: N_TYPE, data: p.tok.data, line: p.tok.line})
 		p.nextToken()
 
 		if p.tok.kind != T_L_BLOCK {
-			throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "left block", p.tok)
+			p.throwError(FUNC_NAME, p.tok.line, "left block", p.tok)
 		}
 		n.children = append(n.children, &Node{kind: N_L_BLOCK, data: p.tok.data, line: p.tok.line})
 		p.nextToken()
@@ -1432,13 +1433,13 @@ func (p *Parser) complexType() *Node {
 		// lexer, but here, we can finally
 		// change it to a type
 		if p.tok.kind != T_IDENTIFIER && p.tok.kind != T_TYPE {
-			throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "identifier (but really a type)", p.tok)
+			p.throwError(FUNC_NAME, p.tok.line, "identifier (but really a type)", p.tok)
 		}
 		n.children = append(n.children, &Node{kind: N_TYPE, data: p.tok.data, line: p.tok.line})
 		p.nextToken()
 
 		if p.tok.kind != T_R_BLOCK {
-			throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "right block", p.tok)
+			p.throwError(FUNC_NAME, p.tok.line, "right block", p.tok)
 		}
 		n.children = append(n.children, &Node{kind: N_R_BLOCK, data: p.tok.data, line: p.tok.line})
 
@@ -1481,13 +1482,13 @@ func (p *Parser) emptyBlock() *Node {
 	n := Node{kind: N_EMPTY_BLOCK, line: p.tok.line}
 
 	if p.tok.kind != T_L_BLOCK {
-		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "left block", p.tok)
+		p.throwError(FUNC_NAME, p.tok.line, "left block", p.tok)
 	}
 	n.children = append(n.children, &Node{kind: N_L_BLOCK, data: p.tok.data, line: p.tok.line})
 	p.nextToken()
 
 	if p.tok.kind != T_R_BLOCK {
-		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "right block", p.tok)
+		p.throwError(FUNC_NAME, p.tok.line, "right block", p.tok)
 	}
 	n.children = append(n.children, &Node{kind: N_R_BLOCK, data: p.tok.data, line: p.tok.line})
 
@@ -1500,19 +1501,19 @@ func (p *Parser) property() *Node {
 	n := Node{kind: N_PROPERTY, line: p.tok.line}
 
 	if p.tok.kind != T_IDENTIFIER {
-		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "identifier", p.tok)
+		p.throwError(FUNC_NAME, p.tok.line, "identifier", p.tok)
 	}
 	n.children = append(n.children, &Node{kind: N_IDENTIFIER, data: p.tok.data, line: p.tok.line})
 	p.nextToken()
 
 	if p.tok.kind != T_ACCESS {
-		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "access", p.tok)
+		p.throwError(FUNC_NAME, p.tok.line, "access", p.tok)
 	}
 	n.children = append(n.children, &Node{kind: N_ACCESS, data: p.tok.data, line: p.tok.line})
 	p.nextToken()
 
 	if p.tok.kind != T_IDENTIFIER {
-		throwError(JOB_PARSER, FUNC_NAME, p.tok.line, "identifier", p.tok)
+		p.throwError(FUNC_NAME, p.tok.line, "identifier", p.tok)
 	}
 
 	if p.peekToken().kind == T_ACCESS {
@@ -1522,4 +1523,13 @@ func (p *Parser) property() *Node {
 	}
 
 	return &n
+}
+
+func (p *Parser) throwError(caller string, line int, expected string, got Token) {
+	panic("Error in the " + JOB_PARSER + "!\n" +
+		"When the " + JOB_PARSER + " was trying to decipher: " + caller + "\n" +
+		"Error found on line " + strconv.Itoa(line) + "\n" +
+		"Expected: " + expected + "\n" +
+		"Got: " + fmt.Sprint(got),
+	)
 }

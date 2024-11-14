@@ -1,5 +1,10 @@
 package main
 
+import (
+	"fmt"
+	"strconv"
+)
+
 const JOB_ANALYSER = "Analyser"
 
 type Analyser struct {
@@ -130,17 +135,17 @@ func (a *Analyser) analyseType(n *Node) {
 		// already exist
 		v := a.checkForMatch(typeName)
 		if v != nil {
-			throwError(JOB_ANALYSER, FUNC_NAME, n.line, "the identifier to not exist", v.data+" exists")
+			a.throwError(FUNC_NAME, n.line, "the identifier to not exist", v.data+" exists")
 		}
 
 		// Make sure the type to alias exists
 		v = a.checkForMatch(aliasName)
 		if v == nil {
-			throwError(JOB_ANALYSER, FUNC_NAME, n.line, "the specified type to exist", aliasName+" doesn't exist")
+			a.throwError(FUNC_NAME, n.line, "the specified type to exist", aliasName+" doesn't exist")
 		}
 
 		if v.kind != V_TYPE {
-			throwError(JOB_ANALYSER, FUNC_NAME, n.line, "the specified type isn't a type", aliasName+" is actually a "+v.kind.String())
+			a.throwError(FUNC_NAME, n.line, "the specified type isn't a type", aliasName+" is actually a "+v.kind.String())
 		}
 
 		a.varStack.push(&Var{kind: V_TYPE, datatype: aliasName, data: typeName, ref: n.children[1]})
@@ -170,7 +175,7 @@ func (a *Analyser) analyseType(n *Node) {
 			a.varStack.push(&Var{kind: V_VAR, datatype: typeName, data: n.children[i].data, ref: n.children[i]})
 		}
 	default:
-		throwError(JOB_ANALYSER, FUNC_NAME, n.line, "Invalid statement went through type check", n.kind)
+		a.throwError(FUNC_NAME, n.line, "Invalid statement went through type check", n.kind)
 	}
 }
 
@@ -184,7 +189,7 @@ func (a *Analyser) analyseFunc(n *Node) {
 	const FUNC_NAME = "analyse func"
 
 	if n.kind != N_FUNC_DEF {
-		throwError(JOB_ANALYSER, FUNC_NAME, n.line, "Invalid statement went through func check", n.kind)
+		a.throwError(FUNC_NAME, n.line, "Invalid statement went through func check", n.kind)
 		return
 	}
 
@@ -233,7 +238,7 @@ func (a *Analyser) analyseNode(n *Node) {
 
 	switch n.kind {
 	case N_ILLEGAL:
-		throwError(JOB_ANALYSER, FUNC_NAME, n.line, "illegal found!", n.kind)
+		a.throwError(FUNC_NAME, n.line, "illegal found!", n.kind)
 	case N_PROGRAM:
 		for i := range n.children {
 			a.analyseNode(n.children[i])
@@ -268,7 +273,7 @@ func (a *Analyser) analyseNode(n *Node) {
 		a.checkBlock(n)
 
 	default:
-		throwError(JOB_ANALYSER, FUNC_NAME, n.line, "any other start to node", n)
+		a.throwError(FUNC_NAME, n.line, "any other start to node", n)
 	}
 }
 
@@ -432,7 +437,7 @@ func (a *Analyser) checkValue(n *Node) {
 	case N_L_PAREN:
 		a.checkBracketedValue(n)
 	default:
-		throwError(JOB_ANALYSER, FUNC_NAME, n.line, "value", n.kind)
+		a.throwError(FUNC_NAME, n.line, "value", n.kind)
 	}
 }
 
@@ -454,11 +459,11 @@ func (a *Analyser) checkAssignment(n *Node) {
 	if n.children[1].kind != N_COMPLEX_TYPE {
 		v := a.checkForMatch(n.children[0].data)
 		if v == nil {
-			throwError(JOB_ANALYSER, FUNC_NAME, n.line, "existing variable", n)
+			a.throwError(FUNC_NAME, n.line, "existing variable", n)
 		}
 
 		if v.kind != V_VAR {
-			throwError(JOB_ANALYSER, FUNC_NAME, n.line, "variable", n)
+			a.throwError(FUNC_NAME, n.line, "variable", n)
 		}
 		return
 	}
@@ -467,7 +472,7 @@ func (a *Analyser) checkAssignment(n *Node) {
 	// variable, and need to check it
 	// doesn't already exist
 	if a.checkForMatch(n.children[0].data) != nil {
-		throwError(JOB_ANALYSER, FUNC_NAME, n.line, "that variable to not already exist", n.children[0])
+		a.throwError(FUNC_NAME, n.line, "that variable to not already exist", n.children[0])
 	}
 
 	typeName, isArray := a.checkValidComplexType(n.children[1])
@@ -498,11 +503,11 @@ func (a *Analyser) checkStructNew(n *Node) {
 
 	v := a.checkForMatch(n.children[1].data)
 	if v == nil {
-		throwError(JOB_ANALYSER, FUNC_NAME, n.line, "existing type", n)
+		a.throwError(FUNC_NAME, n.line, "existing type", n)
 	}
 
 	if v.kind != V_TYPE {
-		throwError(JOB_ANALYSER, FUNC_NAME, n.line, "valid type", n)
+		a.throwError(FUNC_NAME, n.line, "valid type", n)
 	}
 
 	for i := 3; i < len(n.children)-1; i += 2 {
@@ -592,7 +597,7 @@ func (a *Analyser) checkLoneInc(n *Node) {
 	} else if n.children[1].kind == N_PROPERTY {
 		a.checkProperty(n.children[1])
 	} else {
-		throwError(JOB_ANALYSER, FUNC_NAME, n.line, "property or identifier", n)
+		a.throwError(FUNC_NAME, n.line, "property or identifier", n)
 	}
 }
 
@@ -602,17 +607,17 @@ func (a *Analyser) checkProperty(n *Node) {
 	v := a.checkForMatch(n.children[0].data)
 
 	if v == nil {
-		throwError(JOB_ANALYSER, FUNC_NAME, n.line, "existing variable", n)
+		a.throwError(FUNC_NAME, n.line, "existing variable", n)
 	}
 
 	if v.kind != V_VAR {
-		throwError(JOB_ANALYSER, FUNC_NAME, n.line, "valid variable", n)
+		a.throwError(FUNC_NAME, n.line, "valid variable", n)
 	}
 
 	// Type of the variable
 	parent := a.checkForMatch(v.datatype)
 	if parent == nil {
-		throwError(JOB_ANALYSER, FUNC_NAME, n.line, "valid variable type", v)
+		a.throwError(FUNC_NAME, n.line, "valid variable type", v)
 	}
 
 	for n.children[2].kind == N_PROPERTY {
@@ -631,7 +636,7 @@ func (a *Analyser) checkProperty(n *Node) {
 		}
 
 		if prop == nil {
-			throwError(JOB_ANALYSER, FUNC_NAME, n.line, "existing property", n)
+			a.throwError(FUNC_NAME, n.line, "existing property", n)
 		}
 
 		v = prop
@@ -639,7 +644,7 @@ func (a *Analyser) checkProperty(n *Node) {
 		// Type of the variable
 		parent = a.checkForMatch(v.datatype)
 		if parent == nil {
-			throwError(JOB_ANALYSER, FUNC_NAME, n.line, "valid variable type", v)
+			a.throwError(FUNC_NAME, n.line, "valid variable type", v)
 		}
 	}
 
@@ -657,7 +662,7 @@ func (a *Analyser) checkProperty(n *Node) {
 
 	if prop == nil {
 		if !(v.isArray && propName == "len") {
-			throwError(JOB_ANALYSER, FUNC_NAME, n.line, "existing property", n)
+			a.throwError(FUNC_NAME, n.line, "existing property", n)
 		}
 	}
 }
@@ -685,7 +690,7 @@ func (a *Analyser) checkValidComplexType(n *Node) (string, bool) {
 	const FUNC_NAME = "check valid complex type"
 
 	if n.kind != N_COMPLEX_TYPE {
-		throwError(JOB_ANALYSER, FUNC_NAME, n.line, "complex type", n.kind)
+		a.throwError(FUNC_NAME, n.line, "complex type", n.kind)
 		return "", false
 	}
 
@@ -698,12 +703,12 @@ func (a *Analyser) checkValidComplexType(n *Node) (string, bool) {
 
 	v := a.checkForMatch(n.children[0].data)
 	if v == nil {
-		throwError(JOB_ANALYSER, FUNC_NAME, n.line, "valid type", n.children[0])
+		a.throwError(FUNC_NAME, n.line, "valid type", n.children[0])
 		return "", false
 	}
 
 	if v.kind != V_TYPE {
-		throwError(JOB_ANALYSER, FUNC_NAME, n.line, "valid type", n.children[0])
+		a.throwError(FUNC_NAME, n.line, "valid type", n.children[0])
 		return "", false
 	}
 
@@ -719,11 +724,11 @@ func (a *Analyser) checkValidIdentifier(FUNC_NAME string, n *Node) {
 	v := a.checkForMatch(n.data)
 
 	if v == nil {
-		throwError(JOB_ANALYSER, FUNC_NAME, n.line, "existing variable", n)
+		a.throwError(FUNC_NAME, n.line, "existing variable", n)
 	}
 
 	if v.kind != V_VAR {
-		throwError(JOB_ANALYSER, FUNC_NAME, n.line, "variable", n)
+		a.throwError(FUNC_NAME, n.line, "variable", n)
 	}
 }
 
@@ -731,10 +736,19 @@ func (a *Analyser) checkValidFunction(FUNC_NAME string, n *Node) {
 	v := a.checkForMatch(n.data)
 
 	if v == nil {
-		throwError(JOB_ANALYSER, FUNC_NAME, n.line, "existing variable", n)
+		a.throwError(FUNC_NAME, n.line, "existing variable", n)
 	}
 
 	if v.kind != V_VAR {
-		throwError(JOB_ANALYSER, FUNC_NAME, n.line, "variable", n)
+		a.throwError(FUNC_NAME, n.line, "variable", n)
 	}
+}
+
+func (a *Analyser) throwError(caller string, line int, expected string, got any) {
+	panic("Error in the " + JOB_ANALYSER + "!\n" +
+		"When the " + JOB_ANALYSER + " was trying to decipher: " + caller + "\n" +
+		"Error found on line " + strconv.Itoa(line) + "\n" +
+		"Expected: " + expected + "\n" +
+		"Got: " + fmt.Sprint(got),
+	)
 }

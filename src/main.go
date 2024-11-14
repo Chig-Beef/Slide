@@ -110,7 +110,7 @@ func compile(source []byte) {
 	hoister.ast = parsed
 	types, consts, funcs, ast := hoister.hoist()
 	// fmt.Println("types: ", types)
-	// fmt.Println()
+	// fmt.Println(
 	// fmt.Println("funcs: ", funcs)
 	// fmt.Println()
 	// fmt.Println("consts: ", funcs)

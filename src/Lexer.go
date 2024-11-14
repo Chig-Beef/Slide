@@ -1,5 +1,7 @@
 package main
 
+import "strconv"
+
 const JOB_LEXER = "Lexer"
 
 type Lexer struct {
@@ -189,21 +191,21 @@ func (l *Lexer) lex() []Token {
 			if l.peekChar() == '\\' {
 				l.index += 3
 				if l.index >= len(l.source) {
-					throwError(JOB_LEXER, "character", l.line, "more source", "end of source")
+					l.throwError("character", l.line, "more source", "end of source")
 				}
 
 				if l.source[l.index] != '\'' {
-					throwError(JOB_LEXER, "character", l.line, "' (single quote)", string(l.source[l.index]))
+					l.throwError("character", l.line, "' (single quote)", string(l.source[l.index]))
 				}
 				token.data += string(l.source[l.index-2]) + string(l.source[l.index-1]) + string(l.source[l.index])
 			} else {
 				l.index += 2
 				if l.index >= len(l.source) {
-					throwError(JOB_LEXER, "character", l.line, "more source", "end of source")
+					l.throwError("character", l.line, "more source", "end of source")
 				}
 
 				if l.source[l.index] != '\'' {
-					throwError(JOB_LEXER, "character", l.line, "' (single quote)", string(l.source[l.index]))
+					l.throwError("character", l.line, "' (single quote)", string(l.source[l.index]))
 				}
 				token.data += string(l.source[l.index-1]) + string(l.source[l.index])
 			}
@@ -223,7 +225,7 @@ func (l *Lexer) lex() []Token {
 			}
 
 			if l.peekChar() != '"' {
-				throwError(JOB_LEXER, "string", l.line, "\" (end of string)", "end of source")
+				l.throwError("string", l.line, "\" (end of string)", "end of source")
 			}
 
 			l.index++
@@ -369,11 +371,20 @@ func (l *Lexer) lex() []Token {
 		}
 
 		if token.kind == T_ILLEGAL {
-			throwError(JOB_LEXER, "lexing", l.line, "anything else", "ILLEGAL ("+string(l.source[l.index])+")")
+			l.throwError("lexing", l.line, "anything else", "ILLEGAL ("+string(l.source[l.index])+")")
 		}
 
 		tokens = append(tokens, token)
 	}
 
 	return tokens
+}
+
+func (l *Lexer) throwError(caller string, line int, expected string, got string) {
+	panic("Error in the " + JOB_LEXER + "!\n" +
+		"When the " + JOB_LEXER + " was trying to decipher: " + caller + "\n" +
+		"Error found on line " + strconv.Itoa(line) + "\n" +
+		"Expected: " + expected + "\n" +
+		"Got: " + got,
+	)
 }

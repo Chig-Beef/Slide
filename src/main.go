@@ -92,16 +92,21 @@ func compile(source []byte) {
 	analyser := Analyser{}
 	emitter := GoEmitter{}
 
+	dt := time.Now()
 	lexer.source = source
 	lexed := lexer.lex()
 	// fmt.Println(lexed)
 	// fmt.Println()
+	fmt.Println("Lexer Time", time.Now().Sub(dt))
 
+	dt = time.Now()
 	parser.source = lexed
 	parsed := parser.parse()
 	// fmt.Println(parsed)
 	// fmt.Println()
+	fmt.Println("Parser Time", time.Now().Sub(dt))
 
+	dt = time.Now()
 	hoister.ast = parsed
 	types, consts, funcs, ast := hoister.hoist()
 	// fmt.Println("types: ", types)
@@ -112,20 +117,24 @@ func compile(source []byte) {
 	// fmt.Println()
 	// fmt.Println("ast: ", ast)
 	// fmt.Println()
+	fmt.Println("Hoister Time", time.Now().Sub(dt))
 
+	dt = time.Now()
 	analyser.types = types
 	analyser.consts = consts
 	analyser.funcs = funcs
 	analyser.ast = ast
 	analyser.analyse()
+	fmt.Println("Analyser Time", time.Now().Sub(dt))
 
+	dt = time.Now()
 	emitter.types = types
 	emitter.consts = consts
 	emitter.funcs = funcs
 	emitter.ast = ast
-
 	emitted := emitter.emit()
 	emitter.dump(emitted)
+	fmt.Println("Emitter Time", time.Now().Sub(dt))
 
 	fmt.Println()
 	fmt.Println("Compilation ended in", time.Now().Sub(t))

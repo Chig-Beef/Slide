@@ -17,7 +17,7 @@ methodReceiver -> '(' IDENTIFIER complexType ')'
 block -> '{' {statement} '}'
 expression -> value {OPERATOR value}
 value -> VALUE | (UNARY value) | makeArray | bracketedValue | funcCall | structNew
-loneIncrement -> ('++' | '--') IDENTIFIER {'.' IDENTIFIER} ';'
+loneIncrement -> ('++' | '--') PROPERTY ';'
 switchStatement
 
 funcCall -> 'call'  IDENTIFIER '(' [expression [{',' expression}]] ')' ';'

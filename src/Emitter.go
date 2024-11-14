@@ -44,45 +44,43 @@ func (ge *GoEmitter) prePass(n *Node) {
 			ge.prePass(n.children[i])
 		}
 	case N_VAR_DECLARATION:
-		for i := 0; i < len(n.children); i++ {
-			ge.prePass(n.children[i])
-		}
+		// Only need to do the assignment
+		ge.prePass(n.children[0])
 	case N_IF_BLOCK:
-		for i := 0; i < len(n.children); i++ {
+		// Skip over that first if keyword
+		for i := 1; i < len(n.children); i++ {
 			ge.prePass(n.children[i])
 		}
 	case N_FOREVER_LOOP:
-		for i := 0; i < len(n.children); i++ {
-			ge.prePass(n.children[i])
-		}
+		// Only do the block
+		ge.prePass(n.children[1])
 	case N_RANGE_LOOP:
-		for i := 0; i < len(n.children); i++ {
-			ge.prePass(n.children[i])
-		}
+		// Expression
+		ge.prePass(n.children[1])
+		// Block
+		ge.prePass(n.children[2])
 	case N_FOR_LOOP:
-		for i := 0; i < len(n.children); i++ {
+		for i := 1; i < len(n.children); i++ {
 			ge.prePass(n.children[i])
 		}
 	case N_WHILE_LOOP:
-		for i := 0; i < len(n.children); i++ {
-			ge.prePass(n.children[i])
-		}
+		// Condition
+		ge.prePass(n.children[1])
+		// Block
+		ge.prePass(n.children[2])
 	case N_FUNC_DEF:
 		for i := 0; i < len(n.children); i++ {
 			ge.prePass(n.children[i])
 		}
 	case N_RET_STATE:
-		for i := 0; i < len(n.children); i++ {
-			ge.prePass(n.children[i])
-		}
+		// Expression
+		ge.prePass(n.children[1])
 	case N_BREAK_STATE:
-		for i := 0; i < len(n.children); i++ {
-			ge.prePass(n.children[i])
-		}
+		// Value
+		ge.prePass(n.children[1])
 	case N_CONT_STATE:
-		for i := 0; i < len(n.children); i++ {
-			ge.prePass(n.children[i])
-		}
+		// Value
+		ge.prePass(n.children[1])
 	case N_CONDITION:
 		for i := 0; i < len(n.children); i++ {
 			ge.prePass(n.children[i])
@@ -92,9 +90,10 @@ func (ge *GoEmitter) prePass(n *Node) {
 			ge.prePass(n.children[i])
 		}
 	case N_ASSIGNMENT:
-		for i := 0; i < len(n.children); i++ {
-			ge.prePass(n.children[i])
-		}
+		// Everything but the assign
+		ge.prePass(n.children[0])
+		ge.prePass(n.children[1])
+		ge.prePass(n.children[len(n.children)-1])
 	case N_LONE_CALL:
 		// Using append?
 		curr := n.children[0].children[1]
@@ -143,30 +142,27 @@ func (ge *GoEmitter) prePass(n *Node) {
 			*n = finalParent
 		}
 
-		for i := 0; i < len(n.children); i++ {
-			ge.prePass(n.children[i])
-		}
+		// In both the regular lone call case
+		// and the append case this works
+		ge.prePass(n.children[0])
 	case N_FUNC_CALL:
-		for i := 0; i < len(n.children); i++ {
+		// Trim first and last
+		for i := 1; i < len(n.children)-1; i++ {
 			ge.prePass(n.children[i])
 		}
 	case N_BLOCK:
-		for i := 0; i < len(n.children); i++ {
+		// Trim first and last
+		for i := 1; i < len(n.children)-1; i++ {
 			ge.prePass(n.children[i])
 		}
 	case N_NEW_TYPE:
-		for i := 0; i < len(n.children); i++ {
-			ge.prePass(n.children[i])
-		}
+		// Only check the type that we are
+		// aliasing
+		ge.prePass(n.children[2])
 	case N_UNARY_OPERATION:
-		for i := 0; i < len(n.children); i++ {
-			ge.prePass(n.children[i])
-		}
+		ge.prePass(n.children[0])
+		ge.prePass(n.children[1])
 	case N_MAKE_ARRAY:
-		for i := 0; i < len(n.children); i++ {
-			ge.prePass(n.children[i])
-		}
-	case N_EMPTY_BLOCK:
 		for i := 0; i < len(n.children); i++ {
 			ge.prePass(n.children[i])
 		}
@@ -175,47 +171,40 @@ func (ge *GoEmitter) prePass(n *Node) {
 			ge.prePass(n.children[i])
 		}
 	case N_SWITCH_STATE:
-		for i := 0; i < len(n.children); i++ {
+		for i := 1; i < len(n.children)-1; i++ {
 			ge.prePass(n.children[i])
 		}
 	case N_CASE_STATE:
-		for i := 0; i < len(n.children); i++ {
-			ge.prePass(n.children[i])
-		}
+		// Only check thingy and case block
+		ge.prePass(n.children[1])
+		ge.prePass(n.children[3])
 	case N_DEFAULT_STATE:
-		for i := 0; i < len(n.children); i++ {
-			ge.prePass(n.children[i])
-		}
+		// Only case block
+		ge.prePass(n.children[2])
 	case N_CASE_BLOCK:
 		for i := 0; i < len(n.children); i++ {
 			ge.prePass(n.children[i])
 		}
 	case N_LONE_INC:
-		for i := 0; i < len(n.children); i++ {
-			ge.prePass(n.children[i])
-		}
+		ge.prePass(n.children[1])
 	case N_METHOD_RECEIVER:
-		for i := 0; i < len(n.children); i++ {
-			ge.prePass(n.children[i])
-		}
+		ge.prePass(n.children[1])
+		ge.prePass(n.children[2])
 	case N_ENUM_DEF:
-		for i := 0; i < len(n.children); i++ {
+		for i := 1; i < len(n.children)-1; i++ {
 			ge.prePass(n.children[i])
 		}
 	case N_STRUCT_NEW:
-		for i := 0; i < len(n.children); i++ {
+		for i := 1; i < len(n.children)-1; i++ {
 			ge.prePass(n.children[i])
 		}
 	case N_BRACKETED_VALUE:
-		for i := 0; i < len(n.children); i++ {
-			ge.prePass(n.children[i])
-		}
+		ge.prePass(n.children[1])
 	case N_ELEMENT_ASSIGNMENT:
-		for i := 0; i < len(n.children); i++ {
-			ge.prePass(n.children[i])
-		}
+		ge.prePass(n.children[0])
+		ge.prePass(n.children[1])
 	case N_STRUCT_DEF:
-		for i := 0; i < len(n.children); i++ {
+		for i := 1; i < len(n.children)-1; i++ {
 			ge.prePass(n.children[i])
 		}
 	case N_PROPERTY:
@@ -251,15 +240,20 @@ func (ge *GoEmitter) prePass(n *Node) {
 
 			// Place the new node back in the AST
 			*n = p
+
+			// Retry as the correct type
+			ge.prePass(n)
+			return
 		}
+
+		ge.prePass(n.children[0])
+		ge.prePass(n.children[2])
+
 	case N_CONSTANT:
-		for i := 0; i < len(n.children); i++ {
-			ge.prePass(n.children[i])
-		}
+		ge.prePass(n.children[1])
 	case N_INDEX:
-		for i := 0; i < len(n.children); i++ {
-			ge.prePass(n.children[i])
-		}
+		ge.prePass(n.children[1])
+	case N_EMPTY_BLOCK:
 	case N_CONST:
 	case N_FOR:
 	case N_RANGE:
@@ -382,10 +376,7 @@ func (ge *GoEmitter) recEmit(n *Node) string {
 			output += ge.recEmit(n.children[i])
 		}
 	case N_VAR_DECLARATION:
-		for i := 0; i < len(n.children); i++ {
-			output += ge.recEmit(n.children[i])
-		}
-		output += "\n"
+		output = ge.recEmit(n.children[0]) + ge.recEmit(n.children[1]) + "\n"
 	case N_IF_BLOCK:
 		output = "\n"
 		for i := 0; i < len(n.children); i++ {
@@ -393,25 +384,21 @@ func (ge *GoEmitter) recEmit(n *Node) string {
 		}
 		output += "\n"
 	case N_FOREVER_LOOP:
-		for i := range n.children {
-			output += ge.recEmit(n.children[i]) + " "
-		}
-		output += "\n"
+		output = ge.recEmit(n.children[0]) + " " +
+			ge.recEmit(n.children[1]) + "\n"
 	case N_RANGE_LOOP:
 		output = ge.recEmit(n.children[0]) + " range " +
 			ge.recEmit(n.children[1]) + " " +
-			ge.recEmit(n.children[2])
-		output += "\n"
+			ge.recEmit(n.children[2]) + "\n"
 	case N_FOR_LOOP:
 		for i := range n.children {
 			output += ge.recEmit(n.children[i]) + " "
 		}
 		output += "\n"
 	case N_WHILE_LOOP:
-		for i := range n.children {
-			output += ge.recEmit(n.children[i]) + " "
-		}
-		output += "\n"
+		output = ge.recEmit(n.children[0]) + " " +
+			ge.recEmit(n.children[1]) + " " +
+			ge.recEmit(n.children[2]) + "\n"
 	case N_FUNC_DEF:
 		for i := range n.children {
 			output += ge.recEmit(n.children[i]) + " "
@@ -464,9 +451,8 @@ func (ge *GoEmitter) recEmit(n *Node) string {
 			}
 		}
 	case N_LONE_CALL:
-		for i := range n.children {
-			output += ge.recEmit(n.children[i]) + " "
-		}
+		output += ge.recEmit(n.children[0]) + " " +
+			ge.recEmit(n.children[1])
 	case N_FUNC_CALL:
 		for i := range n.children {
 			output += ge.recEmit(n.children[i]) + " "
@@ -476,20 +462,17 @@ func (ge *GoEmitter) recEmit(n *Node) string {
 			output += ge.recEmit(n.children[i])
 		}
 	case N_NEW_TYPE:
-		for i := range n.children {
-			output += ge.recEmit(n.children[i]) + " "
-		}
-		output += "\n"
+		output = ge.recEmit(n.children[0]) + " " +
+			ge.recEmit(n.children[1]) + " " +
+			ge.recEmit(n.children[2]) + " " +
+			ge.recEmit(n.children[3]) + "\n"
 	case N_UNARY_OPERATION:
 		if n.children[0].kind == N_INC || n.children[0].kind == N_DINC || n.children[0].kind == N_INDEX {
-			for i := 1; i < len(n.children); i++ {
-				output += ge.recEmit(n.children[i])
-			}
-			output += ge.recEmit(n.children[0])
+			output = ge.recEmit(n.children[1]) +
+				ge.recEmit(n.children[0])
 		} else {
-			for i := range n.children {
-				output += ge.recEmit(n.children[i])
-			}
+			output = ge.recEmit(n.children[0]) +
+				ge.recEmit(n.children[1])
 		}
 	case N_MAKE_ARRAY:
 		output = ge.recEmit(ge.varType)
@@ -500,9 +483,7 @@ func (ge *GoEmitter) recEmit(n *Node) string {
 		}
 		output += "}"
 	case N_EMPTY_BLOCK:
-		for i := 0; i < len(n.children); i++ {
-			output += ge.recEmit(n.children[i])
-		}
+		output = "[]"
 	case N_COMPLEX_TYPE:
 		if n.children[0].kind == N_MAP {
 			output = "map" +
@@ -520,24 +501,22 @@ func (ge *GoEmitter) recEmit(n *Node) string {
 			output += ge.recEmit(n.children[i]) + " "
 		}
 	case N_CASE_STATE:
-		for i := 0; i < len(n.children); i++ {
-			output += ge.recEmit(n.children[i]) + " "
-		}
+		output += ge.recEmit(n.children[0]) + " " +
+			ge.recEmit(n.children[1]) +
+			":\n" +
+			ge.recEmit(n.children[3])
 	case N_DEFAULT_STATE:
-		for i := 0; i < len(n.children); i++ {
-			output += ge.recEmit(n.children[i])
-		}
+		output += ge.recEmit(n.children[0]) + " " +
+			":\n" +
+			ge.recEmit(n.children[2])
 	case N_CASE_BLOCK:
 		for i := 0; i < len(n.children); i++ {
 			output += ge.recEmit(n.children[i])
 		}
 	case N_LONE_INC:
-		for i := 1; i < len(n.children)-1; i++ {
-			output += ge.recEmit(n.children[i])
-		}
-		output += ge.recEmit(n.children[0])
-		output += ge.recEmit(n.children[len(n.children)-1])
-		output += "\n"
+		output += ge.recEmit(n.children[0]) +
+			ge.recEmit(n.children[1]) +
+			ge.recEmit(n.children[2]) + "\n"
 	case N_METHOD_RECEIVER:
 		output = ge.recEmit(n.children[0]) +
 			ge.recEmit(n.children[1]) + " " +
@@ -562,15 +541,13 @@ func (ge *GoEmitter) recEmit(n *Node) string {
 
 		output += "}"
 	case N_BRACKETED_VALUE:
-		for i := 0; i < len(n.children); i++ {
-			output += ge.recEmit(n.children[i])
-		}
+		output = ge.recEmit(n.children[0]) +
+			ge.recEmit(n.children[1]) +
+			ge.recEmit(n.children[2])
 	case N_ELEMENT_ASSIGNMENT:
-		output = ge.recEmit(n.children[1].children[0]) + " " + ge.recEmit(n.children[0])
-		for i := 1; i < len(n.children[1].children); i++ {
-			output += " " + ge.recEmit(n.children[1].children[i])
-		}
-		output += "\n"
+		output = ge.recEmit(n.children[0]) + " " +
+			ge.recEmit(n.children[1]) +
+			ge.recEmit(n.children[2]) + "\n"
 	case N_STRUCT_DEF:
 		// First line
 		output = "type " + ge.recEmit(n.children[1]) + " struct {"
@@ -581,24 +558,18 @@ func (ge *GoEmitter) recEmit(n *Node) string {
 		// Closing
 		output += "\n}\n\n"
 	case N_PROPERTY:
-		// Check for a len property
-		if n.children[2].data == "len" {
-			output += "len(" + ge.recEmit(n.children[0]) + ")"
-		} else {
-			for i := 0; i < len(n.children); i++ {
-				output += ge.recEmit(n.children[i])
-			}
-		}
+		output = ge.recEmit(n.children[0]) +
+			ge.recEmit(n.children[1]) +
+			ge.recEmit(n.children[2])
 	case N_CONSTANT:
 		ge.inConst = true
-		for i := 0; i < len(n.children); i++ {
-			output += ge.recEmit(n.children[i]) + " "
-		}
+		output += ge.recEmit(n.children[0]) + " " +
+			ge.recEmit(n.children[1])
 		ge.inConst = false
 	case N_INDEX:
-		for i := 0; i < len(n.children); i++ {
-			output += ge.recEmit(n.children[i])
-		}
+		output = ge.recEmit(n.children[0]) +
+			ge.recEmit(n.children[1]) +
+			ge.recEmit(n.children[2])
 	case N_CONST:
 		output = "const"
 	case N_FOR:

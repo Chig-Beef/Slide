@@ -1,4 +1,80 @@
-typedef TokenType byte;
+enum TokenType {
+	T_ILLEGAL,
+
+// Keywords
+	T_FOR,
+	T_RANGE,
+	T_FOREVER,
+	T_WHILE,
+	T_IF,
+	T_ELIF,
+	T_ELSE,
+	T_CALL,
+	T_STRUCT,
+	T_FUN,
+	T_RET,
+	T_BREAK,
+	T_CONT,
+	T_ENUM,
+	T_TYPEDEF,
+	T_NEW,
+	T_MAKE,
+	T_MAP,
+	T_SWITCH,
+	T_CASE,
+	T_DEFAULT,
+	T_CONST,
+
+// Various symbols
+	T_SEMICOLON,
+	T_ASSIGN,
+	T_SEP,
+	T_COLON,
+
+// Operators
+	T_ADD,
+	T_SUB,
+	T_MUL,
+	T_DIV,
+	T_OR,
+	T_AND,
+	T_OROR,
+	T_ANDAND,
+	T_EQ,
+	T_LT,
+	T_GT,
+	T_LTEQ,
+	T_GTEQ,
+	T_NEQ,
+	T_MOD,
+	T_XOR,
+	T_ACCESS,
+	T_NOT,
+	T_INC,
+	T_DINC,
+	T_REF,
+	T_DEREF,
+	T_L_SHIFT,
+	T_R_SHIFT,
+
+// Paired symbols
+	T_L_SQUIRLY,
+	T_R_SQUIRLY,
+	T_L_BLOCK,
+	T_R_BLOCK,
+	T_L_PAREN,
+	T_R_PAREN,
+
+// Values
+	T_TYPE,
+	T_IDENTIFIER,
+	T_INT,
+	T_FLOAT,
+	T_STRING,
+	T_CHAR,
+	T_BOOL,
+	T_NIL,
+}
 
 struct Token {
 	// What is looks like in the actual source
@@ -10,82 +86,6 @@ struct Token {
 	// What line this token comes from
 	line int
 }
-
-const T_ILLEGAL TokenType = 0;
-
-// Keywords
-const T_FOR TokenType = 1;
-const T_RANGE TokenType = 2;
-const T_FOREVER TokenType = 3;
-const T_WHILE TokenType = 4;
-const T_IF TokenType = 5;
-const T_ELIF TokenType = 6;
-const T_ELSE TokenType = 7;
-const T_CALL TokenType = 8;
-const T_STRUCT TokenType = 9;
-const T_FUN TokenType = 10;
-const T_RET TokenType = 11;
-const T_BREAK TokenType = 12;
-const T_CONT TokenType = 13;
-const T_ENUM TokenType = 14;
-const T_TYPEDEF TokenType = 15;
-const T_NEW TokenType = 16;
-const T_MAKE TokenType = 17;
-const T_MAP TokenType = 18;
-const T_SWITCH TokenType = 19;
-const T_CASE TokenType = 20;
-const T_DEFAULT TokenType = 21;
-const T_CONST TokenType = 22;
-
-// Various symbols
-const T_SEMICOLON TokenType = 23;
-const T_ASSIGN TokenType = 24;
-const T_SEP TokenType = 25;
-const T_COLON TokenType = 26;
-
-// Operators
-const T_ADD TokenType = 27;
-const T_SUB TokenType = 28;
-const T_MUL TokenType = 29;
-const T_DIV TokenType = 30;
-const T_OR TokenType = 31;
-const T_AND TokenType = 32;
-const T_OROR TokenType = 33;
-const T_ANDAND TokenType = 34;
-const T_EQ TokenType = 35;
-const T_LT TokenType = 36;
-const T_GT TokenType = 37;
-const T_LTEQ TokenType = 38;
-const T_GTEQ TokenType = 39;
-const T_NEQ TokenType = 40;
-const T_MOD TokenType = 41;
-const T_XOR TokenType = 42;
-const T_ACCESS TokenType = 43;
-const T_NOT TokenType = 44;
-const T_INC TokenType = 45;
-const T_DINC TokenType = 46;
-const T_REF TokenType = 47;
-const T_DEREF TokenType = 48;
-const T_L_SHIFT TokenType = 49;
-const T_R_SHIFT TokenType = 50;
-
-// Paired symbols
-const T_L_SQUIRLY TokenType = 51;
-const T_R_SQUIRLY TokenType = 52;
-const T_L_BLOCK TokenType = 53;
-const T_R_BLOCK TokenType = 54;
-const T_L_PAREN TokenType = 55;
-const T_R_PAREN TokenType = 56;
-
-// Values
-const T_TYPE TokenType = 57;
-const T_IDENTIFIER TokenType = 58;
-const T_INT TokenType = 59;
-const T_FLOAT TokenType = 60;
-const T_STRING TokenType = 61;
-const T_CHAR TokenType = 62;
-const T_BOOL TokenType = 63;
-const T_NIL TokenType = 64;
 
 fun (t TokenType) String() string {
 	switch t {

@@ -1,0 +1,1534 @@
+const JOB_PARSER string = "Parser";
+
+// TODO: Turn the function last called
+// in the compiler into a stack so that
+// recursion debuggins isn't do bad
+
+struct Parser {
+	source Token[]
+	tok Token
+	index int
+}
+
+fun (p Parser^) nextToken() {
+	t Token;
+
+	if p.index < p.source.len {
+		t = [p.index]p.source;
+	}
+
+	++p.index;
+
+	p.tok = t;
+}
+
+fun (p Parser^) peekToken() Token {
+	if p.index < p.source.len {
+		return [p.index]p.source;
+	}
+
+	// Illegal token
+	return new Token();
+}
+
+// The main program
+fun (p Parser^) parse() Node^ {
+	FUNC_CALL string = "program";
+
+	program Node = new Node(N_PROGRAM);
+
+	n Node^;
+
+	call p.nextToken();
+
+	// TODO: When calling these functions,
+	// we already assert that the first
+	// token is correct, so it might be
+	// alright to change the code and
+	// make that assumption in the
+	// functions
+
+	while p.tok.kind != T_ILLEGAL {
+
+		switch p.tok.kind {
+		case T_IDENTIFIER: // Variable declaration
+			n = call p.variableDeclaration();
+			call program.children.append(n);
+
+		case T_DINC: // Lone increment
+			n = call p.loneIncrement();
+			call program.children.append(n);
+
+		case T_INC: // Lone increment
+			n = call p.loneIncrement();
+			call program.children.append(n);
+
+		case T_IF: // If block
+			n = call p.ifBlock();
+			call program.children.append(n);
+
+		case T_FOREVER: // Forever loop
+			n = call p.foreverLoop();
+			call program.children.append(n);
+
+		case T_RANGE: // Range loop
+			n = call p.rangeLoop();
+			call program.children.append(n);
+
+		case T_FOR: // For loop
+			n = call p.forLoop();
+			call program.children.append(n);
+
+		case T_WHILE: // While loop
+			n = call p.whileLoop();
+			call program.children.append(n);
+
+		case T_CALL: // Empty call
+			n = call p.loneCall();
+			call program.children.append(n);
+
+		case T_STRUCT: // Struct definition
+			n = call p.structDef();
+			call program.children.append(n);
+
+		case T_FUN: // Function definition
+			n = call p.funcDef();
+			call program.children.append(n);
+
+		case T_RET: // Return statement
+			n = call p.retStatement();
+			call program.children.append(n);
+
+		case T_BREAK: // Break statement
+			n = call p.breakStatement();
+			call program.children.append(n);
+
+		case T_CONT: // Continue statement
+			n = call p.contStatement();
+			call program.children.append(n);
+
+		case T_ENUM: // Enum definition
+			n = call p.enumDef();
+			call program.children.append(n);
+
+		case T_TYPEDEF: // Type definition
+			n = call p.typeDef();
+			call program.children.append(n);
+
+		case T_L_BLOCK: // Assigning to an element in an array (or map?)
+			n = call p.elementAssignment();
+			call program.children.append(n);
+
+		case T_SWITCH: // Switch statement
+			n = call p.switchStatement();
+			call program.children.append(n);
+
+		case T_CONST: //  Constant definition
+			n = call p.constantStatement();
+			call program.children.append(n);
+
+		default:
+			call panic("Bad start to statement: " + call p.tok.kind.String() + " on line " + call tostring(p.tok.line));
+		}
+
+		call p.nextToken();
+	}
+
+	return `program;
+}
+
+fun (p Parser^) loneIncrement() Node^ {
+	FUNC_CALL string = "lone increment";
+
+	n Node = new Node(N_LONE_INC, p.tok.line);
+
+	if p.tok.kind == T_INC {
+		call n.children.append(`new Node(N_INC, p.tok.data, p.tok.line));
+	} elif p.tok.kind == T_DINC {
+		call n.children.append(`new Node(N_DINC, p.tok.data, p.tok.line));
+	} else {
+		call p.throwError(FUNC_NAME, p.tok.line, "inc or dinc", p.tok);
+	}
+	call p.nextToken();
+
+	if p.tok.kind != T_IDENTIFIER {
+		call p.throwError(FUNC_NAME, p.tok.line, "identifier", p.tok);
+	}
+
+	if call p.peekToken().kind == T_ACCESS {
+		// Property
+		call n.children.append(call p.property());
+		call p.nextToken();
+	} else {
+		// Standalone
+		call n.children.append(`new Node(N_IDENTIFIER, p.tok.data, p.tok.line));
+		call p.nextToken();
+	}
+
+	if p.tok.kind != T_SEMICOLON {
+		call p.throwError(FUNC_NAME, p.tok.line, "semicolon", p.tok);
+	}
+	call n.children.append(`new Node(N_SEMICOLON, p.tok.data, p.tok.line));
+
+	return `n;
+}
+
+fun (p Parser^) constantStatement() Node^ {
+	FUNC_CALL string = "constant statement";
+
+	n Node = new Node(N_CONSTANT, p.tok.line);
+
+	if p.tok.kind != T_CONST {
+		call p.throwError(FUNC_NAME, p.tok.line, "const", p.tok);
+	}
+	call n.children.append(`new Node(N_CONST, p.tok.data, p.tok.line));
+	call p.nextToken();
+
+	call n.children.append(call p.variableDeclaration());
+
+	return `n;
+}
+
+fun (p Parser^) variableDeclaration() Node^ {
+	FUNC_CALL string = "variable declaration";
+
+	n Node = new Node(N_VAR_DECLARATION, p.tok.line);
+
+	call n.children.append(call p.assignment());
+
+	call p.nextToken();
+	if p.tok.kind != T_SEMICOLON {
+		call p.throwError(FUNC_NAME, p.tok.line, "semicolon", p.tok);
+	}
+	call n.children.append(`new Node(N_SEMICOLON, p.tok.data, p.tok.line));
+
+	return `n;
+}
+
+fun (p Parser^) switchStatement() Node^ {
+	FUNC_CALL string = "switch statement";
+
+	n Node = new Node(N_SWITCH_STATE, p.tok.line);
+
+	if p.tok.kind != T_SWITCH {
+		call p.throwError(FUNC_NAME, p.tok.line, "switch", p.tok);
+	}
+	call n.children.append(`new Node(N_SWITCH, p.tok.data, p.tok.line));
+	call p.nextToken();
+
+	call n.children.append(call p.expression());
+	call p.nextToken();
+
+	if p.tok.kind != T_L_SQUIRLY {
+		call p.throwError(FUNC_NAME, p.tok.line, "left squirly", p.tok);
+	}
+	call n.children.append(`new Node(N_L_SQUIRLY, p.tok.data, p.tok.line));
+	call p.nextToken();
+
+	// Cases here
+	while p.tok.kind == T_CASE {
+		call n.children.append(call p.caseStatement());
+		call p.nextToken();
+	}
+
+	if p.tok.kind == T_DEFAULT {
+		call n.children.append(call p.defaultStatement());
+		call p.nextToken();
+	}
+
+	// End switch
+	if p.tok.kind != T_R_SQUIRLY {
+		call p.throwError(FUNC_NAME, p.tok.line, "right squirly", p.tok);
+	}
+	call n.children.append(`new Node(N_R_SQUIRLY, p.tok.data, p.tok.line));
+
+	return `n;
+}
+
+fun (p Parser^) caseStatement() Node^ {
+	FUNC_CALL string = "case statement";
+
+	n Node = new Node(N_CASE_STATE, p.tok.line);
+
+	if p.tok.kind != T_CASE {
+		call p.throwError(FUNC_NAME, p.tok.line, "case", p.tok);
+	}
+	call n.children.append(`new Node(N_CASE, p.tok.data, p.tok.line));
+	call p.nextToken();
+
+	call n.children.append(call p.expression());
+	call p.nextToken();
+
+	while p.tok.kind == T_SEP {
+		call n.children.append(`new Node(N_SEP, p.tok.data, p.tok.line));
+		call p.nextToken();
+
+		call n.children.append(call p.expression());
+		call p.nextToken();
+	}
+
+	if p.tok.kind != T_COLON {
+		call p.throwError(FUNC_NAME, p.tok.line, "colon", p.tok);
+	}
+	call n.children.append(`new Node(N_COLON, p.tok.data, p.tok.line));
+	call p.nextToken();
+
+	call n.children.append(call p.caseBlock());
+
+	return `n;
+}
+
+fun (p Parser^) defaultStatement() Node^ {
+	FUNC_CALL string = "default statement";
+
+	n Node = new Node(N_DEFAULT_STATE, p.tok.line);
+
+	if p.tok.kind != T_DEFAULT {
+		call p.throwError(FUNC_NAME, p.tok.line, "default", p.tok);
+	}
+	call n.children.append(`new Node(N_DEFAULT, p.tok.data, p.tok.line));
+	call p.nextToken();
+
+	if p.tok.kind != T_COLON {
+		call p.throwError(FUNC_NAME, p.tok.line, "colon", p.tok);
+	}
+	call n.children.append(`new Node(N_COLON, p.tok.data, p.tok.line));
+	call p.nextToken();
+
+	call n.children.append(call p.caseBlock());
+
+	return `n;
+}
+
+// NOTE: Is also used for default
+fun (p Parser^) caseBlock() Node^ {
+	FUNC_CALL string = "case block";
+
+	block Node = new Node(N_CASE_BLOCK, p.tok.line);
+
+	n Node^;
+
+	while p.tok.kind != T_ILLEGAL && p.tok.kind != T_CASE && p.tok.kind != T_DEFAULT && p.tok.kind != T_R_SQUIRLY {
+		switch p.tok.kind {
+		case T_IDENTIFIER: // Variable declaration
+			n = call p.variableDeclaration();
+			call block.children.append(n);
+
+		case T_INC, T_DINC: // Lone increment
+			n = call p.loneIncrement();
+			call block.children.append(n);
+
+		case T_IF: // If block
+			n = call p.ifBlock();
+			call block.children.append(n);
+
+		case T_FOREVER: // Forever loop
+			n = call p.foreverLoop();
+			call block.children.append(n);
+
+		case T_RANGE: // Range loop
+			n = call p.rangeLoop();
+			call block.children.append(n);
+
+		case T_FOR: // For loop
+			n = call p.forLoop();
+			call block.children.append(n);
+
+		case T_WHILE: // While loop
+			n = call p.whileLoop();
+			call block.children.append(n);
+
+		case T_CALL: // Empty call
+			n = call p.loneCall();
+			call block.children.append(n);
+
+		case T_STRUCT: // Struct definition
+			n = call p.structDef();
+			call block.children.append(n);
+
+		case T_FUN: // Function definition
+			n = call p.funcDef();
+			call block.children.append(n);
+
+		case T_RET: // Return statement
+			n = call p.retStatement();
+			call block.children.append(n);
+
+		case T_BREAK: // Break statement
+			n = call p.breakStatement();
+			call block.children.append(n);
+
+		case T_CONT: // Continue statement
+			n = call p.contStatement();
+			call block.children.append(n);
+
+		case T_ENUM: // Enum definition
+			n = call p.enumDef();
+			call block.children.append(n);
+
+		case T_TYPEDEF: // Type definition
+			n = call p.typeDef();
+			call block.children.append(n);
+
+		case T_L_BLOCK: // Assigning to an element in an array (or map?)
+			n = call p.elementAssignment();
+			call block.children.append(n);
+
+		case T_SWITCH: // Switch statement
+			n = call p.switchStatement();
+			call block.children.append(n);
+
+		default:
+			call panic("Bad start to statement: " + call p.tok.kind.String() + " on line " + call tostring(p.tok.line));
+		}
+
+		call p.nextToken();
+	}
+
+	// We end on a case, default, or
+	// whatever, we want to move back one
+	// so that the outer function can
+	// discover it themselves
+	--p.index;
+
+	return `block;
+}
+
+fun (p Parser^) elementAssignment() Node^ {
+	FUNC_CALL string = "element assignment";
+
+	n Node = new Node(N_ELEMENT_ASSIGNMENT, p.tok.line);
+
+	call n.children.append(call p.indexUnary());
+	call p.nextToken();
+
+	call n.children.append(call p.assignment());
+	call p.nextToken();
+
+	if p.tok.kind != T_SEMICOLON {
+		call p.throwError(FUNC_NAME, p.tok.line, "semicolon", p.tok);
+	}
+	call n.children.append(`new Node(N_SEMICOLON, p.tok.data, p.tok.line));
+
+	return `n;
+}
+
+fun (p Parser^) ifBlock() Node^ {
+	FUNC_CALL string = "if block";
+
+	n Node = new Node(N_IF_BLOCK, p.tok.line);
+
+	if p.tok.kind != T_IF {
+		call p.throwError(FUNC_NAME, p.tok.line, "if", p.tok);
+	}
+	call n.children.append(`new Node(N_IF, p.tok.data, p.tok.line));
+	call p.nextToken();
+
+	call n.children.append(call p.condition());
+	call p.nextToken();
+
+	call n.children.append(call p.block());
+	call p.nextToken();
+
+	while p.tok.kind == T_ELIF {
+		call n.children.append(`new Node(N_ELIF, p.tok.data, p.tok.line));
+		call p.nextToken();
+
+		call n.children.append(call p.condition());
+		call p.nextToken();
+
+		call n.children.append(call p.block());
+		call p.nextToken();
+	}
+
+	if p.tok.kind == T_ELSE {
+		call n.children.append(`new Node(N_ELSE, p.tok.data, p.tok.line));
+		call p.nextToken();
+
+		call n.children.append(call p.block());
+	} else {
+		// Rather do this than mess around with
+		// a whole bunch of peeks
+		--p.index;
+	}
+
+	return `n;
+}
+
+fun (p Parser^) foreverLoop() Node^ {
+	FUNC_CALL string = "forever loop";
+
+	n Node = new Node(N_FOREVER_LOOP, p.tok.line);
+
+	if p.tok.kind != T_FOREVER {
+		call p.throwError(FUNC_NAME, p.tok.line, "forever", p.tok);
+	}
+	call n.children.append(`new Node(N_FOREVER, p.tok.line));
+	call p.nextToken();
+
+	call n.children.append(call p.block());
+
+	return `n;
+}
+
+fun (p Parser^) rangeLoop() Node^ {
+	FUNC_CALL string = "range loop";
+
+	n Node = new Node(N_RANGE_LOOP, p.tok.line);
+
+	if p.tok.kind != T_RANGE {
+		call p.throwError(FUNC_NAME, p.tok.line, "range", p.tok);
+	}
+	call n.children.append(`new Node(N_RANGE, p.tok.line));
+	call p.nextToken();
+
+	call n.children.append(call p.expression());
+	call p.nextToken();
+
+	call n.children.append(call p.block());
+
+	return `n;
+}
+
+fun (p Parser^) forLoop() Node^ {
+	FUNC_CALL string = "for loop";
+
+	n Node = new Node(N_FOR_LOOP, p.tok.line);
+
+	// for
+	if p.tok.kind != T_FOR {
+		call p.throwError(FUNC_NAME, p.tok.line, "for", p.tok);
+	}
+	call n.children.append(`new Node(N_FOR, p.tok.line));
+	call p.nextToken();
+
+	// for i int = 0
+	if p.tok.kind != T_SEMICOLON {
+		call n.children.append(call p.assignment());
+		call p.nextToken();
+	}
+
+	// for i int = 0;
+	if p.tok.kind != T_SEMICOLON {
+		call p.throwError(FUNC_NAME, p.tok.line, "semicolon", p.tok);
+	}
+	call n.children.append(`new Node(N_SEMICOLON, p.tok.line));
+	call p.nextToken();
+
+	// for i int = 0; i < 10
+	if p.tok.kind != T_SEMICOLON {
+		call n.children.append(call p.expression());
+		call p.nextToken();
+	}
+
+	// for i int = 0; i < 10;
+	if p.tok.kind != T_SEMICOLON {
+		call p.throwError(FUNC_NAME, p.tok.line, "semicolon", p.tok);
+	}
+	call n.children.append(`new Node(N_SEMICOLON, p.tok.line));
+	call p.nextToken();
+
+	// for i int = 0; i < 10; i = i + 1
+	if p.tok.kind != T_L_SQUIRLY {
+		if p.tok.kind == T_INC || p.tok.kind == T_DINC {
+			inc Node = new Node(N_UNARY_OPERATION, p.tok.line);
+
+			if p.tok.kind == T_INC {
+				call inc.children.append(`new Node(N_INC, p.tok.data, p.tok.line));
+			} elif p.tok.kind == T_DINC {
+				call inc.children.append(`new Node(N_DINC, p.tok.data, p.tok.line));
+			} else {
+				call p.throwError(FUNC_NAME, p.tok.line, "inc or dinc", p.tok);
+			}
+			call p.nextToken();
+
+			if call p.peekToken().kind == T_ACCESS {
+				call inc.children.append(call p.property());
+			} else {
+				call inc.children.append(`new Node(N_IDENTIFIER, p.tok.data, p.tok.line));
+			}
+			call inc.children.append(`new Node(N_IDENTIFIER, p.tok.data, p.tok.line));
+			call n.children.append(`inc);
+		} else {
+			call n.children.append(call p.assignment());
+		}
+		call p.nextToken();
+	}
+
+	// for i int = 0; i < 10; i = i + 1 {}
+	call n.children.append(call p.block());
+
+	return `n;
+}
+
+fun (p Parser^) whileLoop() Node^ {
+	FUNC_CALL string = "while loop";
+
+	n Node = new Node(N_WHILE_LOOP, p.tok.line);
+
+	// while
+	if p.tok.kind != T_WHILE {
+		call p.throwError(FUNC_NAME, p.tok.line, "while", p.tok);
+	}
+	call n.children.append(`new Node(N_WHILE, p.tok.line));
+	call p.nextToken();
+
+	// while i < 10
+	call n.children.append(call p.condition());
+	call p.nextToken();
+
+	// while i < 10 {}
+	call n.children.append(call p.block());
+
+	return `n;
+}
+
+fun (p Parser^) structDef() Node^ {
+	FUNC_CALL string = "struct definition";
+
+	n Node = new Node(N_STRUCT_DEF, p.tok.line);
+
+	if p.tok.kind != T_STRUCT {
+		call p.throwError(FUNC_NAME, p.tok.line, "struct", p.tok);
+	}
+	call n.children.append(`new Node(N_STRUCT, p.tok.data, p.tok.line));
+	call p.nextToken();
+
+	// NOTE: The lexer has figured out for
+	// the parser that the name for the
+	// struct is a type, and therefore we
+	// check for type (over identifier)
+	if p.tok.kind != T_TYPE {
+		call p.throwError(FUNC_NAME, p.tok.line, "type", p.tok);
+	}
+	call n.children.append(`new Node(N_TYPE, p.tok.data, p.tok.line));
+	call p.nextToken();
+
+	if p.tok.kind != T_L_SQUIRLY {
+		call p.throwError(FUNC_NAME, p.tok.line, "left squirly", p.tok);
+	}
+	call n.children.append(`new Node(N_L_SQUIRLY, p.tok.data, p.tok.line));
+	call p.nextToken();
+
+	while p.tok.kind != T_R_SQUIRLY && p.tok.kind != T_ILLEGAL {
+		if p.tok.kind != T_IDENTIFIER {
+			call p.throwError(FUNC_NAME, p.tok.line, "identifier", p.tok);
+		}
+		call n.children.append(`new Node(N_IDENTIFIER, p.tok.data, p.tok.line));
+		call p.nextToken();
+
+		call n.children.append(call p.complexType());
+		call p.nextToken();
+	}
+
+	if p.tok.kind != T_R_SQUIRLY {
+		call p.throwError(FUNC_NAME, p.tok.line, "right squirly", p.tok);
+	}
+	call n.children.append(`new Node(N_R_SQUIRLY, p.tok.data, p.tok.line));
+
+	return `n;
+}
+
+fun (p Parser^) funcDef() Node^ {
+	FUNC_CALL string = "function definition";
+
+	n Node = new Node(N_FUNC_DEF, p.tok.line);
+
+	if p.tok.kind != T_FUN {
+		call p.throwError(FUNC_NAME, p.tok.line, "fun", p.tok);
+	}
+	call n.children.append(`new Node(N_FUN, p.tok.data, p.tok.line));
+	call p.nextToken();
+
+	// Method on struct
+	if p.tok.kind == T_L_PAREN {
+		call n.children.append(call p.methodReceiver());
+		call p.nextToken();
+	}
+
+	if p.tok.kind != T_IDENTIFIER {
+		call p.throwError(FUNC_NAME, p.tok.line, "identifier", p.tok);
+	}
+	call n.children.append(`new Node(N_IDENTIFIER, p.tok.data, p.tok.line));
+	call p.nextToken();
+
+	if p.tok.kind != T_L_PAREN {
+		call p.throwError(FUNC_NAME, p.tok.line, "left paren", p.tok);
+	}
+	call n.children.append(`new Node(N_L_PAREN, p.tok.data, p.tok.line));
+	call p.nextToken();
+
+	if p.tok.kind == T_IDENTIFIER {
+		call n.children.append(`new Node(N_IDENTIFIER, p.tok.data, p.tok.line));
+		call p.nextToken();
+
+		call n.children.append(call p.complexType());
+		call p.nextToken();
+
+		while p.tok.kind == T_SEP {
+			call n.children.append(`new Node(N_SEP, p.tok.data, p.tok.line));
+			call p.nextToken();
+
+			if p.tok.kind != T_IDENTIFIER {
+				call p.throwError(FUNC_NAME, p.tok.line, "identifier", p.tok);
+			}
+			call n.children.append(`new Node(N_IDENTIFIER, p.tok.data, p.tok.line));
+			call p.nextToken();
+
+			call n.children.append(call p.complexType());
+			call p.nextToken();
+		}
+	}
+
+	if p.tok.kind != T_R_PAREN {
+		call p.throwError(FUNC_NAME, p.tok.line, "right paren", p.tok);
+	}
+	call n.children.append(`new Node(N_R_PAREN, p.tok.data, p.tok.line));
+	call p.nextToken();
+
+	// Return type?
+	if p.tok.kind != T_L_SQUIRLY {
+		call n.children.append(call p.complexType());
+		call p.nextToken();
+	}
+
+	call n.children.append(call p.block());
+
+	return `n;
+}
+
+fun (p Parser^) methodReceiver() Node^ {
+	FUNC_CALL string = "method receiver";
+
+	n Node = new Node(N_METHOD_RECEIVER, p.tok.line);
+
+	if p.tok.kind != T_L_PAREN {
+		call p.throwError(FUNC_NAME, p.tok.line, "left paren", p.tok);
+	}
+	call n.children.append(`new Node(N_L_PAREN, p.tok.data, p.tok.line));
+	call p.nextToken();
+
+	if p.tok.kind != T_IDENTIFIER {
+		call p.throwError(FUNC_NAME, p.tok.line, "identifier", p.tok);
+	}
+	call n.children.append(`new Node(N_IDENTIFIER, p.tok.data, p.tok.line));
+	call p.nextToken();
+
+	call n.children.append(call p.complexType());
+	call p.nextToken();
+
+	if p.tok.kind != T_R_PAREN {
+		call p.throwError(FUNC_NAME, p.tok.line, "right paren", p.tok);
+	}
+	call n.children.append(`new Node(N_R_PAREN, p.tok.data, p.tok.line));
+
+	return `n;
+}
+
+fun (p Parser^) retStatement() Node^ {
+	FUNC_CALL string = "return statement";
+
+	n Node = new Node(N_RET_STATE, p.tok.line);
+
+	if p.tok.kind != T_RET {
+		call p.throwError(FUNC_NAME, p.tok.line, "return", p.tok);
+	}
+	call n.children.append(`new Node(N_RET, p.tok.data, p.tok.line));
+	call p.nextToken();
+
+	// don't do the extra value
+	if p.tok.kind == T_SEMICOLON {
+		call n.children.append(`new Node(N_SEMICOLON, p.tok.data, p.tok.line));
+		return `n;
+	}
+
+	call n.children.append(call p.expression());
+	call p.nextToken();
+
+	if p.tok.kind != T_SEMICOLON {
+		call p.throwError(FUNC_NAME, p.tok.line, "semicolon", p.tok);
+	}
+	call n.children.append(`new Node(N_SEMICOLON, p.tok.data, p.tok.line));
+
+	return `n;
+}
+
+fun (p Parser^) breakStatement() Node^ {
+	FUNC_CALL string = "break statement";
+
+	n Node = new Node(N_BREAK_STATE, p.tok.line);
+
+	if p.tok.kind != T_BREAK {
+		call p.throwError(FUNC_NAME, p.tok.line, "break", p.tok);
+	}
+	call n.children.append(`new Node(N_BREAK, p.tok.data, p.tok.line));
+	call p.nextToken();
+
+	// don't do the extra value
+	if p.tok.kind == T_SEMICOLON {
+		call n.children.append(`new Node(N_SEMICOLON, p.tok.data, p.tok.line));
+		return `n;
+	}
+
+	call n.children.append(call p.expression());
+	call p.nextToken();
+
+	if p.tok.kind != T_SEMICOLON {
+		call p.throwError(FUNC_NAME, p.tok.line, "semicolon", p.tok);
+	}
+	call n.children.append(`new Node(N_SEMICOLON, p.tok.data, p.tok.line));
+
+	return `n;
+}
+
+fun (p Parser^) contStatement() Node^ {
+	FUNC_CALL string = "continue statement";
+
+	n Node = new Node(N_CONT_STATE, p.tok.line);
+
+	if p.tok.kind != T_CONT {
+		call p.throwError(FUNC_NAME, p.tok.line, "continue", p.tok);
+	}
+	call n.children.append(`new Node(N_CONT, p.tok.data, p.tok.line));
+	call p.nextToken();
+
+	// don't do the extra value
+	// (same as "continue 0")
+	if p.tok.kind == T_SEMICOLON {
+		call n.children.append(`new Node(N_SEMICOLON, p.tok.data, p.tok.line));
+		return `n;
+	}
+
+	call n.children.append(call p.expression());
+	call p.nextToken();
+
+	if p.tok.kind != T_SEMICOLON {
+		call p.throwError(FUNC_NAME, p.tok.line, "semicolon", p.tok);
+	}
+	call n.children.append(`new Node(N_SEMICOLON, p.tok.data, p.tok.line));
+
+	return `n;
+}
+
+fun (p Parser^) enumDef() Node^ {
+	FUNC_CALL string = "enum definition";
+
+	n Node = new Node(N_ENUM_DEF, p.tok.line);
+
+	if p.tok.kind != T_ENUM {
+		call p.throwError(FUNC_NAME, p.tok.line, "enum", p.tok);
+	}
+	call n.children.append(`new Node(N_ENUM, p.tok.data, p.tok.line));
+	call p.nextToken();
+
+	if p.tok.kind != T_IDENTIFIER {
+		call p.throwError(FUNC_NAME, p.tok.line, "identifier", p.tok);
+	}
+	call n.children.append(`new Node(N_IDENTIFIER, p.tok.data, p.tok.line));
+	call p.nextToken();
+
+	if p.tok.kind != T_L_SQUIRLY {
+		call p.throwError(FUNC_NAME, p.tok.line, "left squirly", p.tok);
+	}
+	call n.children.append(`new Node(N_L_SQUIRLY, p.tok.data, p.tok.line));
+	call p.nextToken();
+
+	while p.tok.kind != T_R_SQUIRLY && p.tok.kind != T_ILLEGAL {
+		if p.tok.kind != T_IDENTIFIER {
+			call p.throwError(FUNC_NAME, p.tok.line, "identifier", p.tok);
+		}
+		call n.children.append(`new Node(N_IDENTIFIER, p.tok.data, p.tok.line));
+		call p.nextToken();
+
+		if p.tok.kind != T_SEP {
+			call p.throwError(FUNC_NAME, p.tok.line, "separator", p.tok);
+		}
+		call n.children.append(`new Node(N_SEP, p.tok.data, p.tok.line));
+		call p.nextToken();
+	}
+
+	if p.tok.kind != T_R_SQUIRLY {
+		call p.throwError(FUNC_NAME, p.tok.line, "right squirly", p.tok);
+	}
+	call n.children.append(`new Node(N_R_SQUIRLY, p.tok.data, p.tok.line));
+
+	return `n;
+}
+
+// For now they are identical, but
+// further logic will be applied later
+fun (p Parser^) condition() Node^ {
+	FUNC_CALL string = "condition";
+
+	return call p.expression();
+}
+
+fun (p Parser^) expression() Node^ {
+	FUNC_CALL string = "expression";
+
+	//var t Token
+	v Node^;
+
+	n Node = new Node(N_EXPRESSION, p.tok.line);
+
+	// 7
+	call n.children.append(call p.value());
+	call p.nextToken();
+
+	v = call p.operator();
+	while v != nil {
+		call n.children.append(v);
+		call p.nextToken();
+		call n.children.append(call p.value());
+		call p.nextToken();
+		v = call p.operator();
+	}
+
+	--p.index;
+
+	return `n;
+}
+
+fun (p Parser^) assignment() Node^ {
+	FUNC_CALL string = "assignment";
+
+	n Node = new Node(N_ASSIGNMENT, p.tok.line);
+
+	// x
+	if p.tok.kind != T_IDENTIFIER {
+		call p.throwError(FUNC_NAME, p.tok.line, "identifier", p.tok);
+	}
+
+	if call p.peekToken().kind == T_ACCESS {
+		call n.children.append(call p.property());
+		call p.nextToken();
+	} else {
+		call n.children.append(`new Node(N_IDENTIFIER, p.tok.data, p.tok.line));
+		call p.nextToken();
+	}
+
+	isMap bool = p.tok.kind == T_MAP;
+
+	// We have a type?
+	if p.tok.kind != T_ASSIGN {
+		call n.children.append(call p.complexType());
+
+		if isMap {
+			return `n;
+		}
+
+		call p.nextToken();
+	}
+
+	// Now we MUST have an assign
+	if p.tok.kind != T_ASSIGN {
+		if p.tok.kind != T_SEMICOLON {
+			call p.throwError(FUNC_NAME, p.tok.line, "assign or semicolon", p.tok);
+		}
+
+		--p.index;
+
+		return `n;
+	}
+
+	call n.children.append(`new Node(N_ASSIGN, p.tok.data, p.tok.line));
+	call p.nextToken();
+
+	// x int = 3 + 7
+	call n.children.append(call p.expression());
+
+	return `n;
+}
+
+fun (p Parser^) loneCall() Node^ {
+	FUNC_CALL string = "lone call";
+
+	n Node = new Node(N_LONE_CALL, p.tok.line);
+
+	call n.children.append(call p.funcCall());
+	call p.nextToken();
+
+	if p.tok.kind != T_SEMICOLON {
+		call p.throwError(FUNC_NAME, p.tok.line, "semicolon", p.tok);
+	}
+	call n.children.append(`new Node(N_SEMICOLON, p.tok.data, p.tok.line));
+
+	return `n;
+}
+
+fun (p Parser^) funcCall() Node^ {
+	FUNC_CALL string = "function call";
+
+	n Node = new Node(N_FUNC_CALL, p.tok.line);
+
+	if p.tok.kind != T_CALL {
+		call p.throwError(FUNC_NAME, p.tok.line, "call", p.tok);
+	}
+	call n.children.append(`new Node(N_CALL, p.tok.data, p.tok.line));
+	call p.nextToken();
+
+	if p.tok.kind != T_IDENTIFIER {
+		call p.throwError(FUNC_NAME, p.tok.line, "identifier", p.tok);
+	}
+
+	if call p.peekToken().kind == T_ACCESS {
+		call n.children.append(call p.property());
+		call p.nextToken();
+	} else {
+		call n.children.append(`new Node(N_IDENTIFIER, p.tok.data, p.tok.line));
+		call p.nextToken();
+	}
+
+	if p.tok.kind != T_L_PAREN {
+		call p.throwError(FUNC_NAME, p.tok.line, "left paren", p.tok);
+	}
+	call n.children.append(`new Node(N_L_PAREN, p.tok.data, p.tok.line));
+	call p.nextToken();
+
+	if p.tok.kind != T_R_PAREN {
+		call n.children.append(call p.expression());
+		call p.nextToken();
+
+		while p.tok.kind == T_SEP {
+			call n.children.append(`new Node(N_SEP, p.tok.data, p.tok.line));
+			call p.nextToken();
+
+			call n.children.append(call p.expression());
+			call p.nextToken();
+		}
+	}
+
+	if p.tok.kind != T_R_PAREN {
+		call p.throwError(FUNC_NAME, p.tok.line, "right paren", p.tok);
+	}
+	call n.children.append(`new Node(N_R_PAREN, p.tok.data, p.tok.line));
+
+	return `n;
+}
+
+fun (p Parser^) structNew() Node^ {
+	FUNC_CALL string = "new struct";
+
+	n Node = new Node(N_STRUCT_NEW, p.tok.line);
+
+	if p.tok.kind != T_NEW {
+		call p.throwError(FUNC_NAME, p.tok.line, "new", p.tok);
+	}
+	call n.children.append(`new Node(N_NEW, p.tok.data, p.tok.line));
+	call p.nextToken();
+
+	if p.tok.kind != T_TYPE {
+		call p.throwError(FUNC_NAME, p.tok.line, "type", p.tok);
+	}
+	call n.children.append(`new Node(N_TYPE, p.tok.data, p.tok.line));
+	call p.nextToken();
+
+	if p.tok.kind != T_L_PAREN {
+		call p.throwError(FUNC_NAME, p.tok.line, "left paren", p.tok);
+	}
+	call n.children.append(`new Node(N_L_PAREN, p.tok.data, p.tok.line));
+	call p.nextToken();
+
+	if p.tok.kind != T_R_PAREN {
+		call n.children.append(call p.expression());
+		call p.nextToken();
+
+		while p.tok.kind == T_SEP {
+			call n.children.append(`new Node(N_SEP, p.tok.data, p.tok.line));
+			call p.nextToken();
+
+			call n.children.append(call p.expression());
+			call p.nextToken();
+		}
+	}
+
+	if p.tok.kind != T_R_PAREN {
+		call p.throwError(FUNC_NAME, p.tok.line, "right paren", p.tok);
+	}
+	call n.children.append(`new Node(N_R_PAREN, p.tok.data, p.tok.line));
+
+	return `n;
+}
+
+fun (p Parser^) block() Node^ {
+	FUNC_CALL string = "block";
+
+	block Node = new Node(N_BLOCK, p.tok.line);
+
+	n Node^;
+
+	if p.tok.kind != T_L_SQUIRLY {
+		call p.throwError(FUNC_NAME, p.tok.line, "left squirly", p.tok);
+	}
+	call block.children.append(`new Node(N_L_SQUIRLY, p.tok.data, p.tok.line));
+	call p.nextToken();
+
+	while p.tok.kind != T_ILLEGAL && p.tok.kind != T_R_SQUIRLY {
+		switch p.tok.kind {
+		case T_IDENTIFIER: // Variable declaration
+			n = call p.variableDeclaration();
+			call block.children.append(n);
+
+		case T_INC, T_DINC: // Lone increment
+			n = call p.loneIncrement();
+			call block.children.append(n);
+
+		case T_IF: // If block
+			n = call p.ifBlock();
+			call block.children.append(n);
+
+		case T_FOREVER: // Forever loop
+			n = call p.foreverLoop();
+			call block.children.append(n);
+
+		case T_RANGE: // Range loop
+			n = call p.rangeLoop();
+			call block.children.append(n);
+
+		case T_FOR: // For loop
+			n = call p.forLoop();
+			call block.children.append(n);
+
+		case T_WHILE: // While loop
+			n = call p.whileLoop();
+			call block.children.append(n);
+
+		case T_CALL: // Empty call
+			n = call p.loneCall();
+			call block.children.append(n);
+
+		case T_STRUCT: // Struct definition
+			n = call p.structDef();
+			call block.children.append(n);
+
+		case T_FUN: // Function definition
+			n = call p.funcDef();
+			call block.children.append(n);
+
+		case T_RET: // Return statement
+			n = call p.retStatement();
+			call block.children.append(n);
+
+		case T_BREAK: // Break statement
+			n = call p.breakStatement();
+			call block.children.append(n);
+
+		case T_CONT: // Continue statement
+			n = call p.contStatement();
+			call block.children.append(n);
+
+		case T_ENUM: // Enum definition
+			n = call p.enumDef();
+			call block.children.append(n);
+
+		case T_TYPEDEF: // Type definition
+			n = call p.typeDef();
+			call block.children.append(n);
+
+		case T_L_BLOCK: // Assigning to an element in an array (or map?)
+			n = call p.elementAssignment();
+			call block.children.append(n);
+
+		case T_SWITCH: // Switch statement
+			n = call p.switchStatement();
+			call block.children.append(n);
+
+		default:
+			call panic("Bad start to statement: " + call p.tok.kind.String() + " on line " + call tostring(p.tok.line));
+		}
+
+		call p.nextToken();
+	}
+
+	if p.tok.kind != T_R_SQUIRLY {
+		call p.throwError(FUNC_NAME, p.tok.line, "right squirly", p.tok);
+	}
+	call block.children.append(`new Node(N_R_SQUIRLY, p.tok.data, p.tok.line));
+
+	return `block;
+}
+
+fun (p Parser^) typeDef() Node^ {
+	FUNC_CALL string = "type definition";
+
+	n Node = new Node(N_NEW_TYPE, p.tok.line);
+
+	if p.tok.kind != T_TYPEDEF {
+		call p.throwError(FUNC_NAME, p.tok.line, "typedef", p.tok);
+	}
+	call n.children.append(`new Node(N_TYPEDEF, p.tok.line));
+	call p.nextToken();
+
+	if p.tok.kind != T_TYPE {
+		call p.throwError(FUNC_NAME, p.tok.line, "type", p.tok);
+	}
+	call n.children.append(`new Node(N_TYPE, p.tok.data, p.tok.line));
+	call p.nextToken();
+
+	if p.tok.kind != T_TYPE {
+		call p.throwError(FUNC_NAME, p.tok.line, "type", p.tok);
+	}
+	call n.children.append(`new Node(N_TYPE, p.tok.data, p.tok.line));
+	call p.nextToken();
+
+	if p.tok.kind != T_SEMICOLON {
+		call p.throwError(FUNC_NAME, p.tok.line, "semicolon", p.tok);
+	}
+	call n.children.append(`new Node(N_SEMICOLON, p.tok.line));
+
+	return `n;
+}
+
+// TODO: Dealing with unary -?
+// TODO: What happens with p.x (accessors)
+fun (p Parser^) value() Node^ {
+	FUNC_CALL string = "value";
+
+	n Node;
+
+	switch p.tok.kind {
+	case T_IDENTIFIER:
+		if call p.peekToken().kind == T_ACCESS {
+			return call p.property();
+		} else {
+			return `new Node(N_IDENTIFIER, p.tok.data, p.tok.line);
+		}
+	case T_INT:
+		return `new Node(N_INT, p.tok.data, p.tok.line);
+	case T_FLOAT:
+		return `new Node(N_FLOAT, p.tok.data, p.tok.line);
+	case T_STRING:
+		return `new Node(N_STRING, p.tok.data, p.tok.line);
+	case T_CHAR:
+		return `new Node(N_CHAR, p.tok.data, p.tok.line);
+	case T_BOOL:
+		return `new Node(N_BOOL, p.tok.data, p.tok.line);
+	case T_NIL:
+		return `new Node(N_NIL, p.tok.data, p.tok.line);
+
+		// Unary cases
+	case T_NOT:
+		n = new Node(N_UNARY_OPERATION, p.tok.data, p.tok.line);
+		call n.children.append(`new Node(N_NOT, p.tok.data, p.tok.line));
+		call p.nextToken();
+
+		call n.children.append(call p.value());
+		return `n;
+
+	case T_INC:
+		n = new Node(N_UNARY_OPERATION, p.tok.data, p.tok.line);
+		call n.children.append(`new Node(N_INC, p.tok.data, p.tok.line));
+		call p.nextToken();
+
+		call n.children.append(call p.value());
+		return `n;
+
+	case T_DINC:
+		n = new Node(N_UNARY_OPERATION, p.tok.data, p.tok.line);
+		call n.children.append(`new Node(N_DINC, p.tok.data, p.tok.line));
+		call p.nextToken();
+
+		call n.children.append(call p.value());
+		return `n;
+
+	case T_REF:
+		n = new Node(N_UNARY_OPERATION, p.tok.data, p.tok.line);
+		call n.children.append(`new Node(N_REF, p.tok.data, p.tok.line));
+		call p.nextToken();
+
+		call n.children.append(call p.value());
+		return `n;
+
+	case T_DEREF:
+		n = new Node(N_UNARY_OPERATION, p.tok.data, p.tok.line);
+		call n.children.append(`new Node(N_DEREF, p.tok.data, p.tok.line));
+		call p.nextToken();
+
+		call n.children.append(call p.value());
+		return `n;
+
+	case T_L_BLOCK:
+		n = new Node(N_UNARY_OPERATION, p.tok.data, p.tok.line);
+		call n.children.append(call p.indexUnary());
+		call p.nextToken();
+
+		call n.children.append(call p.value());
+		return `n;
+
+		// We're using an array or slice
+	case T_MAKE:
+		return call p.makeArray();
+
+		// Someones trying to do some bedmas
+	case T_L_PAREN:
+		n = new Node(N_BRACKETED_VALUE, p.tok.line);
+
+		call n.children.append(`new Node(N_L_PAREN, p.tok.data, p.tok.line));
+		call p.nextToken();
+
+		call n.children.append(call p.expression());
+		call p.nextToken();
+
+		if p.tok.kind != T_R_PAREN {
+			call p.throwError(FUNC_NAME, p.tok.line, "right paren", p.tok);
+		}
+		call n.children.append(`new Node(N_R_PAREN, p.tok.data, p.tok.line));
+		return `n;
+
+		// Calling a function to use as a value
+	case T_CALL:
+		return call p.funcCall();
+
+		// Creating a new struct
+	case T_NEW:
+		return call p.structNew();
+
+	default:
+		call p.throwError(FUNC_NAME, p.tok.line, "unary or value", p.tok);
+
+		// This never executes because
+		// throwError panics
+		return nil;
+	}
+}
+
+// Operator doesn't panic but returns
+// nil, making it an unsafe operation,
+// however, this is necessary to signal
+// to expression that the expression is
+// continued
+fun (p Parser^) operator() Node^ {
+	FUNC_CALL string = "operator";
+
+	switch p.tok.kind {
+	case T_ADD:
+		return `new Node(N_ADD, p.tok.data, p.tok.line);
+	case T_XOR:
+		return `new Node(N_XOR, p.tok.data, p.tok.line);
+	case T_ACCESS:
+		return `new Node(N_ACCESS, p.tok.data, p.tok.line);
+	case T_NEQ:
+		return `new Node(N_NEQ, p.tok.data, p.tok.line);
+	case T_MOD:
+		return `new Node(N_MOD, p.tok.data, p.tok.line);
+	case T_EQ:
+		return `new Node(N_EQ, p.tok.data, p.tok.line);
+	case T_LT:
+		return `new Node(N_LT, p.tok.data, p.tok.line);
+	case T_GT:
+		return `new Node(N_GT, p.tok.data, p.tok.line);
+	case T_LTEQ:
+		return `new Node(N_LTEQ, p.tok.data, p.tok.line);
+	case T_GTEQ:
+		return `new Node(N_GTEQ, p.tok.data, p.tok.line);
+	case T_SUB:
+		return `new Node(N_SUB, p.tok.data, p.tok.line);
+	case T_MUL:
+		return `new Node(N_MUL, p.tok.data, p.tok.line);
+	case T_DIV:
+		return `new Node(N_DIV, p.tok.data, p.tok.line);
+	case T_OR:
+		return `new Node(N_OR, p.tok.data, p.tok.line);
+	case T_AND:
+		return `new Node(N_AND, p.tok.data, p.tok.line);
+	case T_OROR:
+		return `new Node(N_OROR, p.tok.data, p.tok.line);
+	case T_ANDAND:
+		return `new Node(N_ANDAND, p.tok.data, p.tok.line);
+	case T_L_SHIFT:
+		return `new Node(N_L_SHIFT, p.tok.data, p.tok.line);
+	case T_R_SHIFT:
+		return `new Node(N_R_SHIFT, p.tok.data, p.tok.line);
+
+	default:
+		return nil;
+	}
+}
+
+fun (p Parser^) indexUnary() Node^ {
+	FUNC_CALL string = "index unary";
+
+	n Node = new Node(N_INDEX, p.tok.line);
+
+	if p.tok.kind != T_L_BLOCK {
+		call p.throwError(FUNC_NAME, p.tok.line, "left block", p.tok);
+	}
+	call n.children.append(`new Node(N_L_BLOCK, p.tok.data, p.tok.line));
+	call p.nextToken();
+
+	call n.children.append(call p.expression());
+	call p.nextToken();
+
+	if p.tok.kind != T_R_BLOCK {
+		call p.throwError(FUNC_NAME, p.tok.line, "right block", p.tok);
+	}
+	call n.children.append(`new Node(N_R_BLOCK, p.tok.data, p.tok.line));
+
+	return `n;
+}
+
+fun (p Parser^) makeArray() Node^ {
+	FUNC_CALL string = "make array";
+
+	n Node = new Node(N_MAKE_ARRAY, p.tok.line);
+
+	if p.tok.kind != T_MAKE {
+		call p.throwError(FUNC_NAME, p.tok.line, "make", p.tok);
+	}
+	call n.children.append(`new Node(N_MAKE, p.tok.data, p.tok.line));
+	call p.nextToken();
+
+	if p.tok.kind != T_L_BLOCK {
+		call p.throwError(FUNC_NAME, p.tok.line, "left block", p.tok);
+	}
+	call n.children.append(`new Node(N_L_BLOCK, p.tok.data, p.tok.line));
+	call p.nextToken();
+
+	while p.tok.kind != T_R_BLOCK {
+		call n.children.append(call p.expression());
+		call p.nextToken();
+
+		if p.tok.kind != T_SEP {
+			break; // Last element
+		}
+		call n.children.append(`new Node(N_SEP, p.tok.data, p.tok.line));
+		call p.nextToken();
+	}
+
+	if p.tok.kind != T_R_BLOCK {
+		call p.throwError(FUNC_NAME, p.tok.line, "right block", p.tok);
+	}
+	call n.children.append(`new Node(N_R_BLOCK, p.tok.data, p.tok.line));
+
+	return `n;
+}
+
+fun (p Parser^) complexType() Node^ {
+	FUNC_CALL string = "complex type";
+
+	n Node = new Node(N_COMPLEX_TYPE, p.tok.line);
+
+	// First check if we're making a map
+	if p.tok.kind == T_MAP {
+		call n.children.append(`new Node(N_MAP, p.tok.data, p.tok.line));
+		call p.nextToken();
+
+		if p.tok.kind != T_TYPE {
+			call p.throwError(FUNC_NAME, p.tok.line, "type", p.tok);
+		}
+		call n.children.append(`new Node(N_TYPE, p.tok.data, p.tok.line));
+		call p.nextToken();
+
+		if p.tok.kind != T_L_BLOCK {
+			call p.throwError(FUNC_NAME, p.tok.line, "left block", p.tok);
+		}
+		call n.children.append(`new Node(N_L_BLOCK, p.tok.data, p.tok.line));
+		call p.nextToken();
+
+		// NOTE: The logic for determining
+		// if an identifier inside the brackets
+		// is a type or not isn't so clean, so
+		// we left it as an identifier in the
+		// lexer, but here, we can finally
+		// change it to a type
+		if p.tok.kind != T_IDENTIFIER && p.tok.kind != T_TYPE {
+			call p.throwError(FUNC_NAME, p.tok.line, "identifier (but really a type)", p.tok);
+		}
+		call n.children.append(`new Node(N_TYPE, p.tok.data, p.tok.line));
+		call p.nextToken();
+
+		if p.tok.kind != T_R_BLOCK {
+			call p.throwError(FUNC_NAME, p.tok.line, "right block", p.tok);
+		}
+		call n.children.append(`new Node(N_R_BLOCK, p.tok.data, p.tok.line));
+
+		// Can't assign to map straight away
+		// (for now because bruh)
+		return `n;
+
+		// Otherwise we might have a more normal type
+	} elif p.tok.kind == T_TYPE || p.tok.kind == T_IDENTIFIER {
+		call n.children.append(`new Node(N_TYPE, p.tok.data, p.tok.line));
+
+		pt Token = call p.peekToken();
+
+		// Is it a pointer type?
+		if pt.kind == T_DEREF {
+			call p.nextToken();
+
+			call n.children.append(`new Node(N_DEREF, p.tok.data, p.tok.line));
+			pt = call p.peekToken();
+		}
+
+		if pt.kind == T_L_BLOCK { // Some larger type
+			call p.nextToken();
+
+			// ArrayList
+			if call p.peekToken().kind == T_R_BLOCK {
+				call n.children.append(call p.emptyBlock());
+			} else { // Array
+				call n.children.append(call p.indexUnary());
+			}
+		}
+	}
+
+	return `n;
+}
+
+fun (p Parser^) emptyBlock() Node^ {
+	FUNC_CALL string = "empty block";
+
+	n Node = new Node(N_EMPTY_BLOCK, p.tok.line);
+
+	if p.tok.kind != T_L_BLOCK {
+		call p.throwError(FUNC_NAME, p.tok.line, "left block", p.tok);
+	}
+	call n.children.append(`new Node(N_L_BLOCK, p.tok.data, p.tok.line));
+	call p.nextToken();
+
+	if p.tok.kind != T_R_BLOCK {
+		call p.throwError(FUNC_NAME, p.tok.line, "right block", p.tok);
+	}
+	call n.children.append(`new Node(N_R_BLOCK, p.tok.data, p.tok.line));
+
+	return `n;
+}
+
+fun (p Parser^) property() Node^ {
+	FUNC_CALL string = "property";
+
+	n Node = new Node(N_PROPERTY, p.tok.line);
+
+	if p.tok.kind != T_IDENTIFIER {
+		call p.throwError(FUNC_NAME, p.tok.line, "identifier", p.tok);
+	}
+	call n.children.append(`new Node(N_IDENTIFIER, p.tok.data, p.tok.line));
+	call p.nextToken();
+
+	if p.tok.kind != T_ACCESS {
+		call p.throwError(FUNC_NAME, p.tok.line, "access", p.tok);
+	}
+	call n.children.append(`new Node(N_ACCESS, p.tok.data, p.tok.line));
+	call p.nextToken();
+
+	if p.tok.kind != T_IDENTIFIER {
+		call p.throwError(FUNC_NAME, p.tok.line, "identifier", p.tok);
+	}
+
+	if call p.peekToken().kind == T_ACCESS {
+		call n.children.append(call p.property());
+	} else {
+		call n.children.append(`new Node(N_IDENTIFIER, p.tok.data, p.tok.line));
+	}
+
+	return `n;
+}
+
+fun (p Parser^) throwError(caller string, line int, expected string, got Token) {
+	call panic("Error in the " + JOB_PARSER + "!\n" +
+		"When the " + JOB_PARSER + " was trying to decipher: " + caller + "\n" +
+		"Error found on line " + call tostring(line) + "\n" +
+		"Expected: " + expected + "\n" +
+		"Got: " + call got.String()
+	);
+}

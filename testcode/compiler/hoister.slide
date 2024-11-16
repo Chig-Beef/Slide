@@ -1,0 +1,55 @@
+const JOB_HOISTER string = "Hoister";
+
+struct Hoister {
+	ast Node^
+}
+
+// Takes new types (struct, typedef)
+// and hoists them first, then it
+// hoists function definitions, lastly,
+// it returns the rest of the program.
+// Even though an ast is a tree, since
+// all definitions should be on the
+// global scope, we only have to check
+// the program's children
+fun (h Hoister^) hoist() Node^[] {
+	types Node^ = `new Node(N_PROGRAM);
+	consts Node^ = `new Node(N_PROGRAM);
+	funcs Node^ = `new Node(N_PROGRAM);
+
+	for i int = 0; i < h.ast.children.len; ++i {
+		c Node^ = [i]h.ast.children;
+
+		if c.kind == N_NEW_TYPE {
+			// Add the child to types
+			call types.children.append(c);
+
+		} elif c.kind == N_STRUCT_DEF {
+			// Add the child to types
+			call types.children.append(c);
+
+		} elif c.kind == N_ENUM_DEF {
+			// Add the child to types
+			call types.children.append(c);
+
+		} elif c.kind == N_FUNC_DEF {
+			// Add the child to funcs
+			call funcs.children.append(c);
+
+		} elif c.kind == N_CONSTANT {
+			// Add the child to consts
+			call consts.children.append(c);
+
+		} else {
+			continue;
+		}
+
+		// Remove the child from the ast
+		h.ast.children = call slices.Delete(h.ast.children, i, i+1);
+
+		// Cancel out the ++ later
+		--i;
+	}
+
+	return make [types, consts, funcs, h.ast];
+}

@@ -1,0 +1,746 @@
+const JOB_ANALYSER string = "Analyser";
+
+struct Analyser {
+	types  Node^
+	funcs  Node^
+	consts Node^
+	ast    Node^
+
+	// The stack that all variables are on,
+	// all types and functions are added
+	// first, and then each variable is
+	// pushed and popped as needed
+	varStack VarStack^
+}
+
+fun (a Analyser^) analyse() {
+	a.varStack = `new VarStack();
+
+	call a.initVarStack();
+
+	for i int = 0; i < a.types.children.len; ++i {
+		call a.analyseType([i]a.types.children);
+	}
+
+	for i int = 0; i < a.consts.children.len; ++i {
+		call a.analyseConst([i]a.consts.children);
+	}
+
+	for i int = 0; i < a.funcs.children.len; ++i {
+		call a.analyseFunc([i]a.funcs.children);
+	}
+
+	call a.analyseNode(a.ast);
+}
+
+fun (a Analyser^) initVarStack() {
+	// Basic types are added so that we can
+	// use them
+	call a.varStack.push(`new Var(V_TYPE, "byte"));
+	call a.varStack.push(`new Var(V_TYPE, "word"));
+	call a.varStack.push(`new Var(V_TYPE, "dword"));
+	call a.varStack.push(`new Var(V_TYPE, "qword"));
+	call a.varStack.push(`new Var(V_TYPE, "uint8"));
+	call a.varStack.push(`new Var(V_TYPE, "uint16"));
+	call a.varStack.push(`new Var(V_TYPE, "uint32"));
+	call a.varStack.push(`new Var(V_TYPE, "uint64"));
+	call a.varStack.push(`new Var(V_TYPE, "uint"));
+	call a.varStack.push(`new Var(V_TYPE, "int8"));
+	call a.varStack.push(`new Var(V_TYPE, "int16"));
+	call a.varStack.push(`new Var(V_TYPE, "int32"));
+	call a.varStack.push(`new Var(V_TYPE, "int64"));
+	call a.varStack.push(`new Var(V_TYPE, "sint"));
+	call a.varStack.push(`new Var(V_TYPE, "int"));
+	call a.varStack.push(`new Var(V_TYPE, "char"));
+	call a.varStack.push(`new Var(V_TYPE, "string"));
+	call a.varStack.push(`new Var(V_TYPE, "float32"));
+	call a.varStack.push(`new Var(V_TYPE, "float64"));
+	call a.varStack.push(`new Var(V_TYPE, "double"));
+	call a.varStack.push(`new Var(V_TYPE, "float"));
+	call a.varStack.push(`new Var(V_TYPE, "bool"));
+	call a.varStack.push(`new Var(V_TYPE, "any"));
+
+	// Conversion functions
+	call a.varStack.push(`new Var(V_FUNC, "tobyte"));
+	call a.varStack.push(`new Var(V_FUNC, "toword"));
+	call a.varStack.push(`new Var(V_FUNC, "todword"));
+	call a.varStack.push(`new Var(V_FUNC, "toqword"));
+	call a.varStack.push(`new Var(V_FUNC, "touint8"));
+	call a.varStack.push(`new Var(V_FUNC, "touint16"));
+	call a.varStack.push(`new Var(V_FUNC, "touint32"));
+	call a.varStack.push(`new Var(V_FUNC, "touint64"));
+	call a.varStack.push(`new Var(V_FUNC, "touint"));
+	call a.varStack.push(`new Var(V_FUNC, "toint8"));
+	call a.varStack.push(`new Var(V_FUNC, "toint16"));
+	call a.varStack.push(`new Var(V_FUNC, "toint32"));
+	call a.varStack.push(`new Var(V_FUNC, "toint64"));
+	call a.varStack.push(`new Var(V_FUNC, "tosint"));
+	call a.varStack.push(`new Var(V_FUNC, "toint"));
+	call a.varStack.push(`new Var(V_FUNC, "tochar"));
+	call a.varStack.push(`new Var(V_FUNC, "tostring"));
+	call a.varStack.push(`new Var(V_FUNC, "tofloat32"));
+	call a.varStack.push(`new Var(V_FUNC, "tofloat64"));
+	call a.varStack.push(`new Var(V_FUNC, "todouble"));
+	call a.varStack.push(`new Var(V_FUNC, "tofloat"));
+	call a.varStack.push(`new Var(V_FUNC, "tobool"));
+
+	// Other
+	call a.varStack.push(`new Var(V_FUNC, "print"));
+	call a.varStack.push(`new Var(V_FUNC, "println"));
+}
+
+// Searches the stack until a match for
+// an identifier is found
+fun (a Analyser^) checkForMatch(query string) Var^ {
+	curr VarFrame^ = a.varStack.tail;
+
+	for i int = 0; i < a.varStack.length; ++i {
+		// Match?
+		if curr.value.data == query {
+			return curr.value;
+		}
+
+		// Shouldn't really happen, but still
+		// important I guess
+		if curr.prev == nil {
+			return nil;
+		}
+
+		curr = curr.prev;
+	}
+
+	// Not found
+	return nil;
+}
+
+fun (a Analyser^) analyseType(n Node^) {
+	FUNC_NAME string = "analyse type";
+
+	typeName string;
+	aliasName string;
+
+	switch n.kind {
+	case N_NEW_TYPE:
+		typeName = [1]n.children.data;
+		aliasName = [2]n.children.data;
+
+		// Make sure the identifier doesn't
+		// already exist
+		v Var^ = call a.checkForMatch(typeName);
+		if v != nil {
+			call a.throwError(FUNC_NAME, n.line, "the identifier to not exist", v.data+" exists");
+		}
+
+		// Make sure the type to alias exists
+		v = call a.checkForMatch(aliasName);
+		if v == nil {
+			call a.throwError(FUNC_NAME, n.line, "the specified type to exist", aliasName+" doesn't exist");
+		}
+
+		if v.kind != V_TYPE {
+			call a.throwError(FUNC_NAME, n.line, "the specified type isn't a type", aliasName+" is actually a "+call v.kind.String());
+		}
+
+		call a.varStack.push(`new Var(V_TYPE, aliasName, typeName, [1]n.children));
+
+	case N_STRUCT_DEF:
+		typeName = [1]n.children.data;
+		call a.varStack.push(`new Var(V_TYPE, typeName, [1]n.children));
+
+		// We need to modify the props of the
+		// struct first
+		s Var^ = a.varStack.tail.value;
+
+		// Attributes
+		for i int = 3; i < n.children.len-1; i=i+2 {
+			typeName, isArray = call a.checkValidComplexType(n.children[i+1]);
+			call s.props.append(`new Var(V_VAR, typeName, isArray, [i]n.children.data, [i]n.children));
+		}
+
+	case N_ENUM_DEF:
+		typeName = [1]n.children.data;
+
+		// The enum type
+		call a.varStack.push(`new Var(V_TYPE, typeName, [1]n.children));
+
+		// The identifiers based on this type
+		for i int = 3; i < n.children.len-1; i=i+2 {
+			call a.varStack.push(`new Var(V_VAR, typeName, [i]n.children.data, [i]n.children));
+		}
+	default:
+		call a.throwError(FUNC_NAME, n.line, "Invalid statement went through type check", n.kind);
+	}
+}
+
+fun (a Analyser^) analyseConst(n Node^) {
+	FUNC_NAME string = "analyse const";
+
+	call a.checkVarDeclaration([1]n.children);
+}
+
+fun (a Analyser^) analyseFunc(n Node^) {
+	FUNC_NAME string = "analyse func";
+
+	if n.kind != N_FUNC_DEF {
+		call a.throwError(FUNC_NAME, n.line, "Invalid statement went through func check", n.kind):
+		return;
+	}
+
+	// At the end of this function, the
+	// stack should be one larger than it's
+	// original size, 1 being the function
+	endSize int = a.varStack.length + 1;
+
+	if [1]n.children.kind == N_METHOD_RECEIVER {
+		receiver string = a.checkMethodReceiver([1]n.children);
+
+		s Var^ = `new Var(V_FUNC, [2]n.children.data, n);
+
+		// Parameters
+		for i int = 4; i < n.children.len-3; i=i+3 {
+			typeName, isArray = call a.checkValidComplexType([i+1]n.children);
+			call a.varStack.push(`new Var(V_VAR, [i]n.children.data, typeName, [i]n.children, isArray));
+		}
+
+		// Chuck this method as a prop of the
+		// receiver
+		parent Var^ = call a.checkForMatch(receiver);
+		call parent.props.append(s);
+
+	} else {
+		call a.varStack.push(`new Var(V_FUNC, [1]n.children.data, n));
+
+		// Parameters
+		for i int = 3; i < n.children.len-3; i=i+3 {
+			typeName, isArray = call a.checkValidComplexType([i+1]n.children);
+			call a.varStack.push(`new Var(V_VAR, [i]n.children.data, typeName, [i]n.children, isArray));
+		}
+	}
+
+	// The function body
+	call a.analyseNode([n.children.len-1]n.children);
+
+	// Unrolling everything
+	while a.varStack.length > endSize {
+		call a.varStack.pop();
+	}
+}
+
+fun (a Analyser^) analyseNode(n Node^) {
+	FUNC_NAME string = "analyse node";
+
+	switch n.kind {
+	case N_ILLEGAL:
+		call a.throwError(FUNC_NAME, n.line, "illegal found!", n.kind);
+	case N_PROGRAM:
+		for i int = 0; i < n.children.len; i++ {
+			call a.analyseNode([i]n.children);
+		}
+	case N_VAR_DECLARATION:
+		call a.checkVarDeclaration(n);
+	case N_ELEMENT_ASSIGNMENT:
+		call a.checkElementAssignment(n);
+	case N_IF_BLOCK:
+		call a.checkIfBlock(n);
+	case N_FOREVER_LOOP:
+		call a.checkForeverLoop(n);
+	case N_RANGE_LOOP:
+		call a.checkRangeLoop(n);
+	case N_FOR_LOOP:
+		call a.checkForLoop(n);
+	case N_WHILE_LOOP:
+		call a.checkWhileLoop(n);
+	case N_RET_STATE:
+		call a.checkRetState(n);
+	case N_BREAK_STATE:
+		call a.checkBreakState(n);
+	case N_CONT_STATE:
+		call a.checkContState(n);
+	case N_LONE_CALL:
+		call a.checkLoneCall(n);
+	case N_SWITCH_STATE:
+		call a.checkSwitchState(n);
+	case N_LONE_INC:
+		call a.checkLoneInc(n);
+	case N_BLOCK:
+		call a.checkBlock(n);
+
+	default:
+		call a.throwError(FUNC_NAME, n.line, "any other start to node", n);
+	}
+}
+
+fun (a Analyser^) checkVarDeclaration(n Node^) {
+	FUNC_NAME string = "check var declaration";
+
+	call a.checkAssignment([0]n.children);
+}
+
+fun (a Analyser^) checkElementAssignment(n Node^) {
+	FUNC_NAME string = "check element assignment";
+
+	call a.checkIndexUnary([0]n.children);
+	call a.checkAssignment([1]n.children);
+}
+
+fun (a Analyser^) checkIndexUnary(n Node^) {
+	FUNC_NAME string = "check index unary";
+
+	call a.checkExpression([1]n.children);
+}
+
+fun (a Analyser^) checkIfBlock(n Node^) {
+	FUNC_NAME string = "check if block";
+
+	call a.checkExpression([1]n.children);
+	call a.checkBlock([2]n.children);
+
+	for i int = 3; i < n.children.len; i=i+3 {
+		if [i]n.children.kind == N_ELIF {
+			call a.checkExpression([i+1]n.children);
+			call a.checkBlock([i+2]n.children);
+		}
+	}
+
+	i int = n.children.len - 2;
+
+	if [i]n.children.kind == N_ELSE {
+		call a.checkBlock([i+1]n.children);
+	}
+}
+
+fun (a Analyser&) checkForeverLoop(n Node^) {
+	FUNC_NAME string = "check forever loop";
+
+	call a.checkBlock([n.children.len-1]n.children);
+}
+
+fun (a Analyser^) checkRangeLoop(n Node^) {
+	FUNC_NAME = "check range loop";
+
+	call a.checkExpression([1]n.children);
+
+	call a.checkBlock([n.children.len-1]n.children);
+}
+
+fun (a Analyser^) checkForLoop(n Node^) {
+	FUNC_NAME string = "check for loop";
+
+	i int = 1;
+
+	if [i]n.children.kind != N_SEMICOLON {
+		call a.checkAssignment([i]n.children);
+		++i;
+	}
+	++i;
+
+	if [i]n.children.kind != N_SEMICOLON {
+		call a.checkCondition([i]n.children);
+		++i;
+	}
+	++i;
+
+	if [i]n.children.kind != N_BLOCK {
+		if [i]n.children.kind == N_UNARY_OPERATION {
+			call a.checkUnaryOperation([i]n.children);
+		} else {
+			call a.checkAssignment([i]n.children);
+		}
+	}
+
+	call a.checkBlock([n.children.len-1]n.children);
+}
+
+fun (a Analyser^) checkWhileLoop(n Node^) {
+	FUNC_NAME string = "check while loop";
+
+	call a.checkCondition([1]n.children);
+
+	call a.checkBlock([n.children.len-1]n.children);
+}
+
+// TODO: Check in function
+fun (a Analyser^) checkRetState(n Node^) {
+	FUNC_NAME string = "check ret state";
+
+	if [1]n.children.kind != N_SEMICOLON {
+		call a.checkExpression([1]n.children);
+	}
+}
+
+// TODO: Check in loop
+fun (a Analyser^) checkBreakState(n Node^) {
+	FUNC_NAME string = "check break state";
+
+	if [1]n.children.kind != N_SEMICOLON {
+		call a.checkValue([1]n.children);
+	}
+}
+
+// TODO: Check in loop
+fun (a Analyser^) checkContState(n Node^) {
+	FUNC_NAME string = "check cont state";
+
+	if [1]n.children.kind != N_SEMICOLON {
+		call a.checkValue([1]n.children);
+	}
+}
+
+fun (a Analyser^) checkCondition(n Node^) {
+	FUNC_NAME string = "check condition";
+
+	call a.checkExpression(n);
+}
+
+fun (a Analyser^) checkExpression(n Node^) {
+	FUNC_NAME string = "check expression";
+
+	// TODO: Check operators make sense
+
+	for i int = 0; i < n.children.len; i=i+2 {
+		call a.checkValue([i]n.children);
+	}
+}
+
+fun (a Analyser^) checkValue(n Node^) {
+	FUNC_NAME string = "check value";
+
+	switch n.kind {
+	case N_INT:
+	case N_FLOAT:
+	case N_STRING:
+	case N_CHAR:
+	case N_BOOL:
+	case N_NIL:
+
+	case N_BRACKETED_VALUE:
+		call a.checkBracketedValue(n);
+	case N_FUNC_CALL:
+		call a.checkFuncCall(n);
+	case N_PROPERTY:
+		call a.checkProperty(n);
+	case N_STRUCT_NEW:
+		call a.checkStructNew(n);
+	case N_IDENTIFIER:
+		call a.checkValidIdentifier(FUNC_NAME, n);
+	case N_UNARY_OPERATION:
+		call a.checkUnaryOperation(n);
+	case N_MAKE_ARRAY:
+		call a.checkMakeArray(n);
+	case N_L_PAREN:
+		call a.checkBracketedValue(n);
+	default:
+		call a.throwError(FUNC_NAME, n.line, "value", n.kind);
+	}
+}
+
+fun (a Analyser^) checkAssignment(n Node^) {
+	FUNC_NAME string = "check assignment";
+
+	// Assigning to property
+	if [0]n.children.kind == N_PROPERTY {
+		call a.checkProperty([0]n.children);
+		return;
+	}
+
+	// Has somthing assigned to it
+	if n.children.len > 2 {
+		call a.checkExpression([n.children.len-1]n.children);
+	}
+
+	// Modifying an existing variable
+	if [1]n.children.kind != N_COMPLEX_TYPE {
+		v Var^ = call a.checkForMatch([0]n.children.data);
+		if v == nil {
+			call a.throwError(FUNC_NAME, n.line, "existing variable", n);
+		}
+
+		if v.kind != V_VAR {
+			call a.throwError(FUNC_NAME, n.line, "variable", n);
+		}
+		return;
+	}
+
+	// This means we're making a new
+	// variable, and need to check it
+	// doesn't already exist
+	if call a.checkForMatch([0]n.children.data) != nil {
+		a.throwError(FUNC_NAME, n.line, "that variable to not already exist", [0]n.children);
+	}
+
+	typeName, isArray = a.checkValidComplexType([1]n.children);
+
+	// Add the variable to the stack
+	call a.varStack.push(`new Var(V_VAR, [0]n.children.data, typeName, [0]n.children, isArray));
+}
+
+fun (a Analyser^) checkLoneCall(n Node^) {
+	FUNC_NAME string = "check lone call";
+
+	call a.checkFuncCall([0]n.children);
+}
+
+fun (a Analyser^) checkFuncCall(n Node^) {
+	FUNC_NAME string = "check func call";
+
+	if [1]n.children.kind == N_PROPERTY {
+		// a.checkProperty(n.children[1])
+		// panic("not implemented " + FUNC_NAME)
+	}
+
+	// panic("not implemented " + FUNC_NAME)
+}
+
+fun (a Analyser^) checkStructNew(n Node^) {
+	FUNC_NAME string = "check struct new";
+
+	v Var^ = call a.checkForMatch([1]n.children.data);
+	if v == nil {
+		call a.throwError(FUNC_NAME, n.line, "existing type", n);
+	}
+
+	if v.kind != V_TYPE {
+		call a.throwError(FUNC_NAME, n.line, "valid type", n);
+	}
+
+	for i int = 3; i < n.children.len-1; i=i+2 {
+		call a.checkExpression([i]n.children);
+	}
+}
+
+fun (a Analyser^) checkBlock(n Node^) {
+	FUNC_NAME string = "check block";
+
+	endSize int = a.varStack.length;
+
+	for i int = 1; i < n.children.len-1; ++i {
+		call a.analyseNode([i]n.children);
+	}
+
+	while a.varStack.length > endSize {
+		call a.varStack.pop();
+	}
+}
+
+fun (a Analyser^) checkUnaryOperation(n Node^) {
+	FUNC_NAME string = "check unary operation";
+
+}
+
+fun (a Analyser^) checkBracketedValue(n Node^) {
+	FUNC_NAME string = "check bracketed value";
+
+	call a.checkExpression([1]n.children);
+}
+
+fun (a Analyser^) checkMakeArray(n Node^) {
+	FUNC_NAME string = "check make array";
+
+}
+
+fun (a Analyser^) checkSwitchState(n Node^) {
+	FUNC_NAME string = "check switch state";
+
+	call a.checkExpression([1]n.children);
+
+	// TODO: Don't do default check on every
+	// single one for performance?
+	for i int = 3; i < n.children.len-1; ++i {
+		if [i]n.children.kind == N_DEFAULT_STATE {
+			call a.checkDefaultState([i]n.children);
+		} else {
+			call a.checkCaseState([i]n.children);
+		}
+	}
+}
+
+// TODO: More checks on expression
+fun (a Analyse^) checkCaseState(n Node^) {
+	FUNC_NAME string = "check case state";
+
+	call a.checkExpression([1]n.children);
+
+	call a.checkCaseBlock([3]n.children);
+}
+
+fun (a Analyser^) checkDefaultState(n Node^) {
+	FUNC_NAME string = "check default state";
+	call a.checkCaseBlock([2]n.children);
+}
+
+fun (a Analyser^) checkCaseBlock(n Node^) {
+	FUNC_NAME string = "check case block";
+
+	endSize int = a.varStack.length;
+
+	for i int = 0; i < n.children.len; i++ {
+		call a.analyseNode([i]n.children);
+	}
+
+	while a.varStack.length > endSize {
+		call a.varStack.pop();
+	}
+}
+
+fun (a Analyser^) checkLoneInc(n Node^) {
+	FUNC_NAME string = "check lone inc";
+
+	if [1]n.children.kind == N_IDENTIFIER {
+		call a.checkValidIdentifier(FUNC_NAME, [1]n.children);
+	} else if [1]n.children.kind == N_PROPERTY {
+		call a.checkProperty([1]n.children);
+	} else {
+		call a.throwError(FUNC_NAME, n.line, "property or identifier", n);
+	}
+}
+
+fun (a Analyser^) checkProperty(n Node^) {
+	FUNC_NAME string = "check property";
+
+	v Var^ = call a.checkForMatch([0]n.children.data);
+
+	if v == nil {
+		call a.throwError(FUNC_NAME, n.line, "existing variable", n);
+	}
+
+	if v.kind != V_VAR {
+		call a.throwError(FUNC_NAME, n.line, "valid variable", n);
+	}
+
+	// Type of the variable
+	parent Var^ = call a.checkForMatch(v.datatype);
+	if parent == nil {
+		call a.throwError(FUNC_NAME, n.line, "valid variable type", v);
+	}
+
+	while [2]n.children.kind == N_PROPERTY {
+		n = [2]n.children;
+
+		propName string;
+		propName = [0]n.children.data;
+
+		prop Var^;
+
+		for i int = 0; i < parent.props.len; ++i { 
+			if [i]parent.props.data == propName {
+				prop = [i]parent.props;
+				break;
+			}
+		}
+
+		if prop == nil {
+			call a.throwError(FUNC_NAME, n.line, "existing property", n);
+		}
+
+		v = prop;
+
+		// Type of the variable
+		parent = call a.checkForMatch(v.datatype);
+		if parent == nil {
+			call a.throwError(FUNC_NAME, n.line, "valid variable type", v);
+		}
+	}
+
+	// At this point n.children[2] should be an identifier
+	propName string = [2]n.children.data
+
+	prop Var^;
+
+	for i int = 0; i < parent.props.len; ++i {
+		if [i]parent.props.data == propName {
+			prop = [i]parent.props;
+			break;
+		}
+	}
+
+	if prop == nil {
+		if !(v.isArray && propName == "len") {
+			call a.throwError(FUNC_NAME, n.line, "existing property", n);
+		}
+	}
+}
+
+fun (a Analyser^) checkMethodReceiver(n Node^) string {
+	FUNC_NAME string = "check method receiver";
+
+	typeName, isArray = call a.checkValidComplexType([2]n.children):
+
+	if isArray {
+		call panic("not implemented " + FUNC_NAME + " with array receiver");
+	}
+
+	// Add the variable to the stack. This
+	// will be popped by the function
+	// definition
+	call a.varStack.push(`new Var(V_VAR, [1]n.children.data, typeName, isArray));
+
+	return typeName;
+}
+
+// TODO: Flesh this out into doing actual complex types
+// TODO: Map
+fun (a Analyser^) checkValidComplexType(n Node^) (string, bool) {
+	FUNC_NAME string = "check valid complex type";
+
+	if n.kind != N_COMPLEX_TYPE {
+		call a.throwError(FUNC_NAME, n.line, "complex type", n.kind);
+		return "", false;
+	}
+
+	typeName string = "";
+
+	if [0]n.children.kind == N_MAP {
+		return "map", false;
+	}
+
+	v Var^ = call a.checkForMatch([0]n.children.data)
+	if v == nil {
+		call a.throwError(FUNC_NAME, n.line, "valid type", [0]n.children);
+		return "", false;
+	}
+
+	if v.kind != V_TYPE {
+		call a.throwError(FUNC_NAME, n.line, "valid type", [0]n.children);
+		return "", false;
+	}
+
+	typeName string = [0]n.children.data;
+
+	// For isArray check
+	l NodeType = [n.children.len-1]n.children.kind
+
+	return typeName, l == N_EMPTY_BLOCK || l == N_INDEX;
+}
+
+fun (a Analyser^) checkValidIdentifier(FUNC_NAME string, n Node^) {
+	v Var^ = call a.checkForMatch(n.data);
+
+	if v == nil {
+		call a.throwError(FUNC_NAME, n.line, "existing variable", n);
+	}
+
+	if v.kind != V_VAR {
+		call a.throwError(FUNC_NAME, n.line, "variable", n);
+	}
+}
+
+fun (a Analyser^) checkValidFunction(FUNC_NAME string, n Node^) {
+	v Var^ = call a.checkForMatch(n.data);
+
+	if v == nil {
+		call a.throwError(FUNC_NAME, n.line, "existing variable", n);
+	}
+
+	if v.kind != V_VAR {
+		call a.throwError(FUNC_NAME, n.line, "variable", n);
+	}
+}
+
+fun (a Analyser^) throwError(caller string, line int, expected string, got any) {
+	call panic("Error in the " + JOB_ANALYSER + "!\n" +
+		"When the " + JOB_ANALYSER + " was trying to decipher: " + caller + "\n" +
+		"Error found on line " + call tostring(line) + "\n" +
+		"Expected: " + expected + "\n" +
+		"Got: " + call tostring(got)
+	);
+}

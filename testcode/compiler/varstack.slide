@@ -1,0 +1,50 @@
+struct VarFrame {
+	value Var^
+	prev VarFrame^
+}
+
+struct VarStack {
+	tail VarFrame^
+	length int
+}
+
+fun (vs VarStack^) push(n Var^) {
+	vf VarFrame^ = `new VarFrame(n, nil);
+
+	++vs.length;
+
+	if vs.length == 1 {
+		vs.tail = vf;
+		return;
+	}
+
+	vf.prev = vs.tail;
+	vs.tail = vf;
+}
+
+fun (vs VarStack^) pop() Var^ {
+	if vs.length == 0 {
+		return nil;
+	}
+
+	--vs.length;
+
+	if vs.length == 0 {
+		tail VarFrame^ = vs.tail;
+		vs.tail = nil;
+		return tail.value;
+	}
+
+	tail VarFrame^ = vs.tail;
+	vs.tail = vs.tail.prev;
+	return tail.value;
+}
+
+fun (vs VarStack^) peek() Var^ {
+	// Length == 0
+	if vs.tail == nil {
+		return nil;
+	}
+
+	return vs.tail.value;
+}

@@ -1,0 +1,37 @@
+enum VarType {
+	V_VAR,
+	V_TYPE,
+	V_FUNC,
+	V_MAP,
+}
+
+struct Var {
+	kind VarType // Overarching type (identifier, func, etc)
+	data string // Name of it
+	datatype string // The actual type of the variable
+	ref Node^ // Where is this from?
+	props Var^[] // For structs, their properties
+	key Var^ // For maps, the type for the key
+	value Var^ // For maps, the type for the value
+	isArray bool // Will have length property
+}
+
+fun (v Var^) String() string {
+	return call v.kind.String() + " " + v.data + " " + v.datatype + " " + call tostring(v.isArray);
+}
+
+
+fun (v VarType) String() string {
+	switch v {
+	case V_VAR:
+		return "VAR";
+	case V_TYPE:
+		return "TYPE";
+	case V_FUNC:
+		return "FUNC";
+	case V_MAP:
+		return "MAP";
+	default:
+		return "UNKNOWN";
+	}
+}

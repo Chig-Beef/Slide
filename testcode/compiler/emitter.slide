@@ -1,0 +1,710 @@
+const JOB_GO_EMITTER string = "Go Emitter";
+
+struct GoEmitter {
+	types  Node^
+	consts Node^
+	funcs  Node^
+	ast    Node^
+
+	varType Node^ // Used on making arrays
+	inConst bool  // Used to not use the walrus operator when assigning to const
+}
+
+fun (ge GoEmitter^) emit() string {
+	// Translate things, to the correct
+	// thing for Golang
+	call ge.prePass(ge.funcs);
+	call ge.prePass(ge.ast);
+
+	output string = "package main\n\n";
+
+	output = output + call ge.recEmit(ge.types);
+	output = output + call ge.recEmit(ge.funcs);
+	output = output + call ge.recEmit(ge.consts);
+
+	output = output + "\ntype float = float64\n";
+
+	output = output + "\nfunc main() {\n";
+	output = output + call ge.recEmit(ge.ast);
+	output = output + "\n}\n";
+
+	return output;
+}
+
+fun (ge GoEmitter^) prePass(n Node^) {
+	switch n.kind {
+	case N_PROGRAM:
+		for i int = 0; i < n.children.len; ++i {
+			call ge.prePass([i]n.children);
+		}
+	case N_VAR_DECLARATION:
+		// Only need to do the assignment
+		call ge.prePass([0]n.children);
+	case N_IF_BLOCK:
+		// Skip over that first if keyword
+		for i int = 1; i < n.children.len; ++i {
+			call ge.prePass([i]n.children);
+		}
+	case N_FOREVER_LOOP:
+		// Only do the block
+		call ge.prePass([1]n.children);
+	case N_RANGE_LOOP:
+		// Expression
+		call ge.prePass([1]n.children);
+		// Block
+		call ge.prePass([2]n.children);
+	case N_FOR_LOOP:
+		for i int = 1; i < n.children.len; ++i {
+			call ge.prePass([i]n.children);
+		}
+	case N_WHILE_LOOP:
+		// Condition
+		call ge.prePass([1]n.children);
+		// Block
+		call ge.prePass([2]n.children);
+	case N_FUNC_DEF:
+		for i int = 0; i < n.children.len; ++i {
+			call ge.prePass([i]n.children);
+		}
+	case N_RET_STATE:
+		// Expression
+		call ge.prePass([1]n.children);
+	case N_BREAK_STATE:
+		// Value
+		call ge.prePass([1]n.children);
+	case N_CONT_STATE:
+		// Value
+		call ge.prePass([1]n.children);
+	case N_CONDITION:
+		for i int = 0; i < n.children.len; ++i {
+			call ge.prePass([i]n.children);
+		}
+	case N_EXPRESSION:
+		for i int = 0; i < n.children.len; ++i {
+			call ge.prePass([i]n.children);
+		}
+	case N_ASSIGNMENT:
+		// Everything but the assign
+		call ge.prePass([0]n.children);
+		call ge.prePass([1]n.children);
+		call ge.prePass([n.children.len-1]n.children);
+	case N_LONE_CALL:
+		// Using append?
+		curr Node^ = [1][0]n.children.children;
+		while curr.children.len == 3 {
+			curr = [2]curr.children;
+		}
+
+		// TODO: What if it's var.property.append?
+		if curr.data == "append" {
+			fc Node = ^[0]n.children;
+			p Node = ^[1]fc.children;
+
+			// Start constructing new tree
+			line int = n.line;
+
+			// Move the item into the correct position
+			fc.children = [:fc.children.len-1]fc.children;
+			fc.children.append(`new Node(line, N_SEP, ","));
+			fc.children.append([3]fc.children);
+			fc.children.append(`new Node(line, N_R_PAREN, ")"));
+
+			// Move the list into the correct positino
+			[3]fc.children = `new Node(line, N_EXPRESSION, make [
+				[0][1]fc.children.children
+			]);
+
+			// Move the append into the correct position
+			[1]fc.children = [2][1]fc.children.children;
+
+			finalParent Node = new Node(line, N_VAR_DECLARATION);
+			assign Node = new Node(line, N_ASSIGNMENT);
+			finalParent.children = make [
+				`assign,
+				`new Node(line, N_SEMICOLON, ";")
+			];
+
+			assign.children = make [
+				[0]p.children,
+				`new Node(line, N_ASSIGN, "="),
+				`new Node(line, N_EXPRESSION, make [`fc]
+			];
+
+			// Apply the changes
+			^n = finalParent;
+		}
+
+		// In both the regular lone call case
+		// and the append case this works
+		call ge.prePass([0]n.children);
+	case N_FUNC_CALL:
+		// Trim first and last
+		for i int = 1; i < n.children.len-1; ++i {
+			call ge.prePass([i]n.children);
+		}
+	case N_BLOCK:
+		// Trim first and last
+		for i int = 1; i < n.children.len-1; ++i {
+			call ge.prePass([i]n.children);
+		}
+	case N_NEW_TYPE:
+		// Only check the type that we are
+		// aliasing
+		call ge.prePass([2]n.children);
+	case N_UNARY_OPERATION:
+		call ge.prePass([0]n.children);
+		call ge.prePass([1]n.children);
+	case N_MAKE_ARRAY:
+		for i int = 0; i < n.children.len; ++i {
+			call ge.prePass([i]n.children);
+		}
+	case N_COMPLEX_TYPE:
+		for i int = 0; i < n.children.len; ++i {
+			call ge.prePass([i]n.children);
+		}
+	case N_SWITCH_STATE:
+		for i int = 1; i < n.children.len-1; ++i {
+			call ge.prePass([i]n.children);
+		}
+	case N_CASE_STATE:
+		// Only check thingy and case block
+		call ge.prePass([1]n.children);
+		call ge.prePass([3]n.children);
+	case N_DEFAULT_STATE:
+		// Only case block
+		call ge.prePass([2]n.children);
+	case N_CASE_BLOCK:
+		for i int = 0; i < n.children.len; ++i {
+			call ge.prePass([i]n.children);
+		}
+	case N_LONE_INC:
+		call ge.prePass([1]n.children);
+	case N_METHOD_RECEIVER:
+		call ge.prePass([1]n.children);
+		call ge.prePass([2]n.children);
+	case N_ENUM_DEF:
+		for i int = 1; i < n.children.len-1; ++i {
+			call ge.prePass([i]n.children);
+		}
+	case N_STRUCT_NEW:
+		for i int = 1; i < n.children.len-1; ++i {
+			call ge.prePass([i]n.children);
+		}
+	case N_BRACKETED_VALUE:
+		call ge.prePass([1]n.children);
+	case N_ELEMENT_ASSIGNMENT:
+		call ge.prePass([0]n.children);
+		call ge.prePass([1]n.children);
+	case N_STRUCT_DEF:
+		for i int = 1; i < n.children.len-1; ++i {
+			call ge.prePass([i]n.children);
+		}
+	case N_PROPERTY:
+		line int = n.line;
+		parent Node^;
+		curr Node^ = n;
+		while curr.children.len == 3 {
+			parent = curr;
+			curr = [2]curr.children;
+		}
+
+		// Now curr should be the identifier at
+		// the end
+		if curr.data == "len" {
+			// Get rid of ".len"
+			parent.children = [:1]parent.children;
+			// Is a single identifier rather than a
+			// property, so just clean up the tree
+			// a bit
+			^parent = ^[0]parent.children;
+
+			value Node = ^n;
+
+			// The function call that will be used
+			p Node = new Node(N_FUNC_CALL, line);
+			p.children = make [
+				`new Node(line, N_CALL, "call"),
+				`new Node(line, N_IDENTIFIER, "len"),
+				`new Node(line, N_L_PAREN, "("),
+				`new Node(line, N_EXPRESSION, make [`value]),
+				`new Node(line, N_R_PAREN, ")"),
+			];
+
+			// Place the new node back in the AST
+			^n = p;
+
+			// Retry as the correct type
+			call ge.prePass(n);
+			return;
+		}
+
+		call ge.prePass([0]n.children);
+		call ge.prePass([2]n.children);
+
+	case N_CONSTANT:
+		call ge.prePass([1]n.children);
+	case N_INDEX:
+		call ge.prePass([1]n.children);
+	case N_EMPTY_BLOCK:
+	case N_CONST:
+	case N_FOR:
+	case N_RANGE:
+	case N_FOREVER:
+	case N_WHILE:
+	case N_IF:
+	case N_ELIF:
+	case N_ELSE:
+	case N_CALL:
+	case N_STRUCT:
+	case N_FUN:
+	case N_RET:
+	case N_BREAK:
+	case N_CONT:
+	case N_ENUM:
+	case N_TYPEDEF:
+	case N_NEW:
+	case N_MAKE:
+	case N_MAP:
+	case N_SWITCH:
+	case N_CASE:
+	case N_DEFAULT:
+	case N_SEMICOLON:
+	case N_ASSIGN:
+	case N_SEP:
+	case N_COLON:
+	case N_L_SQUIRLY:
+	case N_R_SQUIRLY:
+	case N_L_BLOCK:
+	case N_R_BLOCK:
+	case N_L_PAREN:
+	case N_R_PAREN:
+	case N_ADD:
+	case N_SUB:
+	case N_MUL:
+	case N_DIV:
+	case N_OR:
+	case N_AND:
+	case N_OROR:
+	case N_ANDAND:
+	case N_EQ:
+	case N_LT:
+	case N_GT:
+	case N_LTEQ:
+	case N_GTEQ:
+	case N_NEQ:
+	case N_MOD:
+	case N_ACCESS:
+	case N_XOR:
+	case N_L_SHIFT:
+	case N_R_SHIFT:
+	case N_INC:
+	case N_DINC:
+	case N_NOT:
+	case N_REF:
+	case N_DEREF:
+	case N_TYPE:
+	case N_IDENTIFIER:
+		switch n.data {
+		case "tobyte":
+			n.data = "byte";
+		case "toword":
+			n.data = "word";
+		case "todword":
+			n.data = "dword";
+		case "toqword":
+			n.data = "qword";
+		case "touint8":
+			n.data = "uint8";
+		case "touint16":
+			n.data = "uint16";
+		case "touint32":
+			n.data = "uint32";
+		case "touint64":
+			n.data = "uint64";
+		case "touint":
+			n.data = "uint";
+		case "toint8":
+			n.data = "int8";
+		case "toint16":
+			n.data = "int16";
+		case "toint32":
+			n.data = "int32";
+		case "toint64":
+			n.data = "int64";
+		case "tosint":
+			n.data = "sint";
+		case "toint":
+			n.data = "int";
+		case "tochar":
+			n.data = "char";
+		case "tostring":
+			n.data = "string";
+		case "tofloat32":
+			n.data = "float32";
+		case "tofloat64":
+			n.data = "float64";
+		case "todouble":
+			n.data = "double";
+		case "tofloat":
+			n.data = "float";
+		case "tobool":
+			n.data = "bool";
+		}
+	case N_INT:
+	case N_FLOAT:
+	case N_STRING:
+	case N_CHAR:
+	case N_BOOL:
+	case N_NIL:
+	}
+}
+
+fun (ge GoEmitter^) recEmit(n Node^) string {
+	// Faster string manipulation, instead
+	// of creating a copy on each iteration
+	// of a loop, it just mutates the
+	// slice.
+	output string;
+
+	switch n.kind {
+	case N_PROGRAM:
+		for i int = 0; i < n.children.len; ++i {
+			output = output + call ge.recEmit([i]n.children);
+		}
+	case N_VAR_DECLARATION:
+		output = output + call ge.recEmit([0]n.children) + call ge.recEmit([1]n.children) + "\n";
+	case N_IF_BLOCK:
+		output = output + "\n";
+		for i int = 0; i < n.children.len; ++i {
+			output = output + call ge.recEmit([i]n.children) + " ";
+		}
+		output = output + "\n";
+	case N_FOREVER_LOOP:
+		output = output + call ge.recEmit([0]n.children) + " " +
+			call ge.recEmit([1]n.children) + "\n";
+	case N_RANGE_LOOP:
+		output = output + call ge.recEmit([0]n.children) + " range " +
+			call ge.recEmit([1]n.children) + " " +
+			call ge.recEmit([2]n.children) + "\n";
+	case N_FOR_LOOP:
+		for i int = 0; i < n.children.len; ++i {
+			output = output + call ge.recEmit([i]n.children) + " ";
+		}
+		output = output + "\n";
+	case N_WHILE_LOOP:
+		output = output + call ge.recEmit([0]n.children) + " " +
+			call ge.recEmit([1]n.children) + " " +
+			call ge.recEmit([2]n.children) + "\n";
+	case N_FUNC_DEF:
+		for i int = 0; i < n.children.len; ++i {
+			output = output + call ge.recEmit([i]n.children) + " ";
+		}
+		output = output + "\n\n";
+	case N_RET_STATE:
+		for i int = 0; i < n.children.len; ++i {
+			output = output + call ge.recEmit([i]n.children) + " ";
+		}
+		output = output + "\n";
+	case N_BREAK_STATE:
+		for i int = 0; i < n.children.len; ++i {
+			output = output + call ge.recEmit([i]n.children) + " ";
+		}
+		output = output + "\n";
+	case N_CONT_STATE:
+		for i int = 0; i < n.children.len; ++i {
+			output = output + call ge.recEmit([i]n.children) + " ";
+		}
+		output = output + "\n";
+	case N_CONDITION:
+		for i int = 0; i < n.children.len; ++i {
+			output = output + call ge.recEmit([i]n.children) + " ";
+		}
+	case N_EXPRESSION:
+		for i int = 0; i < n.children.len; ++i {
+			output = output + call ge.recEmit([i]n.children) + " ";
+		}
+	case N_ASSIGNMENT:
+		isFirstShow bool = false;
+
+		if n.children.len == 2 {
+			// No definition, just declaration
+			output = output + "var " + call ge.recEmit([0]n.children) + " " + call ge.recEmit([1]n.children);
+
+		} else {
+			for i int = 0; i < n.children.len; ++i {
+				if [i]n.children.kind == N_COMPLEX_TYPE {
+					isFirstShow = true;
+					ge.varType = [i]n.children;
+				} elif [i]n.children.kind == N_ASSIGN && isFirstShow {
+					if ge.inConst {
+						output = output + "= ";
+					} else {
+						output = output + ":= ";
+					}
+				} else {
+					output = output + call ge.recEmit([i]n.children) + " ";
+				}
+			}
+		}
+	case N_LONE_CALL:
+		output = output + call ge.recEmit([0]n.children) + " " +
+			call ge.recEmit([1]n.children);
+	case N_FUNC_CALL:
+		for i int = 0; i < n.children.len; ++i {
+			output = output + call ge.recEmit([i]n.children) + " ";
+		}
+	case N_BLOCK:
+		for i int = 0; i < n.children.len; ++i {
+			output = output + call ge.recEmit([i]n.children);
+		}
+	case N_NEW_TYPE:
+		output = output + call ge.recEmit([0]n.children) + " " +
+			call ge.recEmit([1]n.children) + " " +
+			call ge.recEmit([2]n.children) + " " +
+			call ge.recEmit([3]n.children) + "\n";
+	case N_UNARY_OPERATION:
+		if [0]n.children.kind == N_INC || [0]n.children.kind == N_DINC || [0]n.children.kind == N_INDEX {
+			output = output + call ge.recEmit([1]n.children) +
+				call ge.recEmit([0]n.children);
+		} else {
+			output = output + call ge.recEmit([0]n.children) +
+				call ge.recEmit([1]n.children);
+		}
+	case N_MAKE_ARRAY:
+		output = output + call ge.recEmit(ge.varType);
+
+		output = output + "{";
+		for i int = 2; i < n.children.len-1; ++i {
+			output = output + call ge.recEmit([i]n.children);
+		}
+		output = output + "}";
+	case N_EMPTY_BLOCK:
+		output = output + "[]";
+	case N_COMPLEX_TYPE:
+		if [0]n.children.kind == N_MAP {
+			output = "map" +
+				call ge.recEmit([2]n.children) +
+				call ge.recEmit([3]n.children) +
+				call ge.recEmit([4]n.children) +
+				call ge.recEmit([1]n.children);
+		} else {
+			for i int = n.children.len-1; i >= 0; --i {
+				output = output + ge.recEmit([i]n.children);
+			}
+		}
+	case N_SWITCH_STATE:
+		for i int = 0; i < n.children.len; ++i {
+			output = output + call ge.recEmit([i]n.children) + " ";
+		}
+	case N_CASE_STATE:
+		output = output + call ge.recEmit([0]n.children) + " " +
+			call ge.recEmit([1]n.children) +
+			":\n" +
+			call ge.recEmit([3]n.children);
+	case N_DEFAULT_STATE:
+		output = output + call ge.recEmit([0]n.children) + " " +
+			":\n" +
+			call ge.recEmit([2]n.children);
+	case N_CASE_BLOCK:
+		for i int = 0; i < n.children.len; ++i {
+			output = output + call ge.recEmit([i]n.children);
+		}
+	case N_LONE_INC:
+		output = output + call ge.recEmit([1]n.children) +
+			call ge.recEmit([0]n.children) +
+			call ge.recEmit([2]n.children) + "\n";
+	case N_METHOD_RECEIVER:
+		output = output + call ge.recEmit([0]n.children) +
+			call ge.recEmit([1]n.children) + " " +
+			call ge.recEmit([2]n.children) +
+			call ge.recEmit([3]n.children);
+	case N_ENUM_DEF: // TODO: What happens when we get an empty enum?
+		typeName string = call ge.recEmit([1]n.children);
+		output = output + "type " + typeName + " int\n";
+
+		output = output + "\nconst (\n";
+		output = output + call ge.recEmit([3]n.children) + " " + typeName + " = iota\n";
+		for i int = 5; i < n.children.len-1; i=i+2 {
+			output = output + call ge.recEmit([i]n.children) + "\n";
+		}
+		output = output + ")\n";
+	case N_STRUCT_NEW:
+		output = output + call ge.recEmit([1]n.children) + "{";
+
+		for i int = 3; i < n.children.len-1; ++i {
+			output = output + call ge.recEmit([i]n.children);
+		}
+
+		output = output + "}";
+	case N_BRACKETED_VALUE:
+		output = output + call ge.recEmit([0]n.children) +
+			call ge.recEmit([1]n.children) +
+			call ge.recEmit([2]n.children);
+	case N_ELEMENT_ASSIGNMENT:
+		output = output + call ge.recEmit([0]n.children) + " " +
+			call ge.recEmit([1]n.children) +
+			call ge.recEmit([2]n.children) + "\n";
+	case N_STRUCT_DEF:
+		// First line
+		output = output + "type " + call ge.recEmit([1]n.children) + " struct {";
+		// Props
+		for i int = 3; i < n.children.len-1; i=i+2 {
+			output = output + "\n" + call ge.recEmit([i]n.children) + " " + call ge.recEmit([i+1]n.children);
+		}
+		// Closing
+		output = output + "\n}\n\n";
+	case N_PROPERTY:
+		output = output + call ge.recEmit([0]n.children) +
+			call ge.recEmit([1]n.children) +
+			call ge.recEmit([2]n.children);
+	case N_CONSTANT:
+		ge.inConst = true;
+		output = output + call ge.recEmit([0]n.children) + " " +
+			call ge.recEmit([1]n.children);
+		ge.inConst = false;
+	case N_INDEX:
+		output = output + call ge.recEmit([0]n.children) +
+			call ge.recEmit([1]n.children) +
+			call ge.recEmit([2]n.children);
+	case N_CONST:
+		output = output + "const";
+	case N_FOR:
+		output = output + "for";
+	case N_RANGE:
+		output = output + "for";
+	case N_FOREVER:
+		output = output + "for";
+	case N_WHILE:
+		output = output + "for";
+	case N_IF:
+		output = output + "if";
+	case N_ELIF:
+		output = output + "else if";
+	case N_ELSE:
+		output = output + "else";
+	case N_CALL:
+		output = output + "";
+	case N_STRUCT:
+		output = output + "struct";
+	case N_FUN:
+		output = output + "func";
+	case N_RET:
+		output = output + "return";
+	case N_BREAK:
+		output = output + "break";
+	case N_CONT:
+		output = output + "continue";
+	case N_ENUM:
+		output = output + "enum";
+	case N_TYPEDEF:
+		output = output + "type";
+	case N_NEW:
+		output = output + "new";
+	case N_MAKE:
+		output = output + "make";
+	case N_MAP:
+		output = output + "map";
+	case N_SWITCH:
+		output = output + "switch";
+	case N_CASE:
+		output = output + "case";
+	case N_DEFAULT:
+		output = output + "default";
+	case N_SEMICOLON:
+		output = output + ";";
+	case N_ASSIGN:
+		output = output + "=";
+	case N_SEP:
+		output = output + ",";
+	case N_COLON:
+		output = output + ":";
+	case N_L_SQUIRLY:
+		output = output + "{";
+	case N_R_SQUIRLY:
+		output = output + "}";
+	case N_L_BLOCK:
+		output = output + "[";
+	case N_R_BLOCK:
+		output = output + "]";
+	case N_L_PAREN:
+		output = output + "(";
+	case N_R_PAREN:
+		output = output + ")";
+	case N_ADD:
+		output = output + "+";
+	case N_SUB:
+		output = output + "-";
+	case N_MUL:
+		output = output + "*";
+	case N_DIV:
+		output = output + "/";
+	case N_OR:
+		output = output + "|";
+	case N_AND:
+		output = output + "&";
+	case N_OROR:
+		output = output + "||";
+	case N_ANDAND:
+		output = output + "&&";
+	case N_EQ:
+		output = output + "==";
+	case N_LT:
+		output = output + "<";
+	case N_GT:
+		output = output + ">";
+	case N_LTEQ:
+		output = output + "<=";
+	case N_GTEQ:
+		output = output + ">=";
+	case N_NEQ:
+		output = output + "!=";
+	case N_MOD:
+		output = output + "%";
+	case N_ACCESS:
+		output = output + ".";
+	case N_XOR:
+		output = output + "^";
+	case N_L_SHIFT:
+		output = output + "<<";
+	case N_R_SHIFT:
+		output = output + ">>";
+	case N_INC:
+		output = output + "++";
+	case N_DINC:
+		output = output + "--";
+	case N_NOT:
+		output = output + "!";
+	case N_REF:
+		output = output + "&";
+	case N_DEREF:
+		output = output + "*";
+	case N_TYPE:
+		output = output + n.data;
+	case N_IDENTIFIER:
+		output = output + n.data;
+	case N_INT:
+		output = output + n.data;
+	case N_FLOAT:
+		output = output + n.data;
+	case N_STRING:
+		output = output + n.data;
+	case N_CHAR:
+		output = output + n.data;
+	case N_BOOL:
+		output = output + n.data;
+	case N_NIL:
+		output = output + "nil";
+
+	default:
+		call panic("Bad node in emitter?");
+	}
+
+	return call output.String();
+}
+
+fun (ge GoEmitter^) dump(emitted string) {
+	err error = call os.WriteFile("../output/main.go", emitted, 0644);
+	if err != nil {
+		call panic(err);
+	}
+}

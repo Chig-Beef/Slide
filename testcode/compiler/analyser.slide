@@ -309,7 +309,7 @@ fun (a Analyser^) checkIfBlock(n Node^) {
 	}
 }
 
-fun (a Analyser&) checkForeverLoop(n Node^) {
+fun (a Analyser^) checkForeverLoop(n Node^) {
 	FUNC_NAME string = "check forever loop";
 
 	call a.checkBlock([n.children.len-1]n.children);
@@ -465,10 +465,10 @@ fun (a Analyser^) checkAssignment(n Node^) {
 	// variable, and need to check it
 	// doesn't already exist
 	if call a.checkForMatch([0]n.children.data) != nil {
-		a.throwError(FUNC_NAME, n.line, "that variable to not already exist", [0]n.children);
+		call a.throwError(FUNC_NAME, n.line, "that variable to not already exist", [0]n.children);
 	}
 
-	typeName, isArray = a.checkValidComplexType([1]n.children);
+	typeName, isArray = call a.checkValidComplexType([1]n.children);
 
 	// Add the variable to the stack
 	call a.varStack.push(`new Var(V_VAR, [0]n.children.data, typeName, [0]n.children, isArray));

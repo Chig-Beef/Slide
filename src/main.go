@@ -81,6 +81,8 @@ func help(args []string) {
 }
 
 func compile(source []byte) {
+	errorSource = source
+
 	fmt.Println("Compilation started")
 	fmt.Println()
 
@@ -89,7 +91,7 @@ func compile(source []byte) {
 	lexer := Lexer{line: 1}
 	parser := Parser{}
 	hoister := Hoister{}
-	analyser := Analyser{}
+	// analyser := Analyser{}
 	emitter := GoEmitter{}
 
 	dt := time.Now()
@@ -119,13 +121,13 @@ func compile(source []byte) {
 	// fmt.Println()
 	fmt.Println("Hoister Time", time.Now().Sub(dt))
 
-	dt = time.Now()
-	analyser.types = types
-	analyser.consts = consts
-	analyser.funcs = funcs
-	analyser.ast = ast
-	analyser.analyse()
-	fmt.Println("Analyser Time", time.Now().Sub(dt))
+	// dt = time.Now()
+	// analyser.types = types
+	// analyser.consts = consts
+	// analyser.funcs = funcs
+	// analyser.ast = ast
+	// analyser.analyse()
+	// fmt.Println("Analyser Time", time.Now().Sub(dt))
 
 	dt = time.Now()
 	emitter.types = types

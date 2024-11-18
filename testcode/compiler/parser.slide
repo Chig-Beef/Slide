@@ -33,8 +33,6 @@ fun (p Parser^) peekToken() Token {
 
 // The main program
 fun (p Parser^) parse() Node^ {
-	FUNC_CALL string = "program";
-
 	program Node = new Node(N_PROGRAM);
 
 	n Node^;
@@ -138,7 +136,7 @@ fun (p Parser^) parse() Node^ {
 }
 
 fun (p Parser^) loneIncrement() Node^ {
-	FUNC_CALL string = "lone increment";
+	FUNC_NAME string = "lone increment";
 
 	n Node = new Node(N_LONE_INC, p.tok.line);
 
@@ -174,7 +172,7 @@ fun (p Parser^) loneIncrement() Node^ {
 }
 
 fun (p Parser^) constantStatement() Node^ {
-	FUNC_CALL string = "constant statement";
+	FUNC_NAME string = "constant statement";
 
 	n Node = new Node(N_CONSTANT, p.tok.line);
 
@@ -190,7 +188,7 @@ fun (p Parser^) constantStatement() Node^ {
 }
 
 fun (p Parser^) variableDeclaration() Node^ {
-	FUNC_CALL string = "variable declaration";
+	FUNC_NAME string = "variable declaration";
 
 	n Node = new Node(N_VAR_DECLARATION, p.tok.line);
 
@@ -206,7 +204,7 @@ fun (p Parser^) variableDeclaration() Node^ {
 }
 
 fun (p Parser^) switchStatement() Node^ {
-	FUNC_CALL string = "switch statement";
+	FUNC_NAME string = "switch statement";
 
 	n Node = new Node(N_SWITCH_STATE, p.tok.line);
 
@@ -246,7 +244,7 @@ fun (p Parser^) switchStatement() Node^ {
 }
 
 fun (p Parser^) caseStatement() Node^ {
-	FUNC_CALL string = "case statement";
+	FUNC_NAME string = "case statement";
 
 	n Node = new Node(N_CASE_STATE, p.tok.line);
 
@@ -279,7 +277,7 @@ fun (p Parser^) caseStatement() Node^ {
 }
 
 fun (p Parser^) defaultStatement() Node^ {
-	FUNC_CALL string = "default statement";
+	FUNC_NAME string = "default statement";
 
 	n Node = new Node(N_DEFAULT_STATE, p.tok.line);
 
@@ -302,8 +300,6 @@ fun (p Parser^) defaultStatement() Node^ {
 
 // NOTE: Is also used for default
 fun (p Parser^) caseBlock() Node^ {
-	FUNC_CALL string = "case block";
-
 	block Node = new Node(N_CASE_BLOCK, p.tok.line);
 
 	n Node^;
@@ -314,7 +310,11 @@ fun (p Parser^) caseBlock() Node^ {
 			n = call p.variableDeclaration();
 			call block.children.append(n);
 
-		case T_INC, T_DINC: // Lone increment
+		case T_INC: // Lone increment
+			n = call p.loneIncrement();
+			call block.children.append(n);
+
+		case T_DINC: // Lone increment
 			n = call p.loneIncrement();
 			call block.children.append(n);
 
@@ -395,7 +395,7 @@ fun (p Parser^) caseBlock() Node^ {
 }
 
 fun (p Parser^) elementAssignment() Node^ {
-	FUNC_CALL string = "element assignment";
+	FUNC_NAME string = "element assignment";
 
 	n Node = new Node(N_ELEMENT_ASSIGNMENT, p.tok.line);
 
@@ -414,7 +414,7 @@ fun (p Parser^) elementAssignment() Node^ {
 }
 
 fun (p Parser^) ifBlock() Node^ {
-	FUNC_CALL string = "if block";
+	FUNC_NAME string = "if block";
 
 	n Node = new Node(N_IF_BLOCK, p.tok.line);
 
@@ -456,7 +456,7 @@ fun (p Parser^) ifBlock() Node^ {
 }
 
 fun (p Parser^) foreverLoop() Node^ {
-	FUNC_CALL string = "forever loop";
+	FUNC_NAME string = "forever loop";
 
 	n Node = new Node(N_FOREVER_LOOP, p.tok.line);
 
@@ -472,7 +472,7 @@ fun (p Parser^) foreverLoop() Node^ {
 }
 
 fun (p Parser^) rangeLoop() Node^ {
-	FUNC_CALL string = "range loop";
+	FUNC_NAME string = "range loop";
 
 	n Node = new Node(N_RANGE_LOOP, p.tok.line);
 
@@ -491,7 +491,7 @@ fun (p Parser^) rangeLoop() Node^ {
 }
 
 fun (p Parser^) forLoop() Node^ {
-	FUNC_CALL string = "for loop";
+	FUNC_NAME string = "for loop";
 
 	n Node = new Node(N_FOR_LOOP, p.tok.line);
 
@@ -562,7 +562,7 @@ fun (p Parser^) forLoop() Node^ {
 }
 
 fun (p Parser^) whileLoop() Node^ {
-	FUNC_CALL string = "while loop";
+	FUNC_NAME string = "while loop";
 
 	n Node = new Node(N_WHILE_LOOP, p.tok.line);
 
@@ -584,7 +584,7 @@ fun (p Parser^) whileLoop() Node^ {
 }
 
 fun (p Parser^) structDef() Node^ {
-	FUNC_CALL string = "struct definition";
+	FUNC_NAME string = "struct definition";
 
 	n Node = new Node(N_STRUCT_DEF, p.tok.line);
 
@@ -630,7 +630,7 @@ fun (p Parser^) structDef() Node^ {
 }
 
 fun (p Parser^) funcDef() Node^ {
-	FUNC_CALL string = "function definition";
+	FUNC_NAME string = "function definition";
 
 	n Node = new Node(N_FUNC_DEF, p.tok.line);
 
@@ -698,7 +698,7 @@ fun (p Parser^) funcDef() Node^ {
 }
 
 fun (p Parser^) methodReceiver() Node^ {
-	FUNC_CALL string = "method receiver";
+	FUNC_NAME string = "method receiver";
 
 	n Node = new Node(N_METHOD_RECEIVER, p.tok.line);
 
@@ -726,7 +726,7 @@ fun (p Parser^) methodReceiver() Node^ {
 }
 
 fun (p Parser^) retStatement() Node^ {
-	FUNC_CALL string = "return statement";
+	FUNC_NAME string = "return statement";
 
 	n Node = new Node(N_RET_STATE, p.tok.line);
 
@@ -754,7 +754,7 @@ fun (p Parser^) retStatement() Node^ {
 }
 
 fun (p Parser^) breakStatement() Node^ {
-	FUNC_CALL string = "break statement";
+	FUNC_NAME string = "break statement";
 
 	n Node = new Node(N_BREAK_STATE, p.tok.line);
 
@@ -782,7 +782,7 @@ fun (p Parser^) breakStatement() Node^ {
 }
 
 fun (p Parser^) contStatement() Node^ {
-	FUNC_CALL string = "continue statement";
+	FUNC_NAME string = "continue statement";
 
 	n Node = new Node(N_CONT_STATE, p.tok.line);
 
@@ -811,7 +811,7 @@ fun (p Parser^) contStatement() Node^ {
 }
 
 fun (p Parser^) enumDef() Node^ {
-	FUNC_CALL string = "enum definition";
+	FUNC_NAME string = "enum definition";
 
 	n Node = new Node(N_ENUM_DEF, p.tok.line);
 
@@ -858,14 +858,10 @@ fun (p Parser^) enumDef() Node^ {
 // For now they are identical, but
 // further logic will be applied later
 fun (p Parser^) condition() Node^ {
-	FUNC_CALL string = "condition";
-
 	return call p.expression();
 }
 
 fun (p Parser^) expression() Node^ {
-	FUNC_CALL string = "expression";
-
 	//var t Token
 	v Node^;
 
@@ -890,7 +886,7 @@ fun (p Parser^) expression() Node^ {
 }
 
 fun (p Parser^) assignment() Node^ {
-	FUNC_CALL string = "assignment";
+	FUNC_NAME string = "assignment";
 
 	n Node = new Node(N_ASSIGNMENT, p.tok.line);
 
@@ -941,7 +937,7 @@ fun (p Parser^) assignment() Node^ {
 }
 
 fun (p Parser^) loneCall() Node^ {
-	FUNC_CALL string = "lone call";
+	FUNC_NAME string = "lone call";
 
 	n Node = new Node(N_LONE_CALL, p.tok.line);
 
@@ -957,9 +953,9 @@ fun (p Parser^) loneCall() Node^ {
 }
 
 fun (p Parser^) funcCall() Node^ {
-	FUNC_CALL string = "function call";
+	FUNC_NAME string = "function call";
 
-	n Node = new Node(N_FUNC_CALL, p.tok.line);
+	n Node = new Node(N_FUNC_NAME, p.tok.line);
 
 	if p.tok.kind != T_CALL {
 		call p.throwError(FUNC_NAME, p.tok.line, "call", p.tok);
@@ -1007,7 +1003,7 @@ fun (p Parser^) funcCall() Node^ {
 }
 
 fun (p Parser^) structNew() Node^ {
-	FUNC_CALL string = "new struct";
+	FUNC_NAME string = "new struct";
 
 	n Node = new Node(N_STRUCT_NEW, p.tok.line);
 
@@ -1051,7 +1047,7 @@ fun (p Parser^) structNew() Node^ {
 }
 
 fun (p Parser^) block() Node^ {
-	FUNC_CALL string = "block";
+	FUNC_NAME string = "block";
 
 	block Node = new Node(N_BLOCK, p.tok.line);
 
@@ -1069,7 +1065,11 @@ fun (p Parser^) block() Node^ {
 			n = call p.variableDeclaration();
 			call block.children.append(n);
 
-		case T_INC, T_DINC: // Lone increment
+		case T_INC: // Lone increment
+			n = call p.loneIncrement();
+			call block.children.append(n);
+
+		case T_DINC: // Lone increment
 			n = call p.loneIncrement();
 			call block.children.append(n);
 
@@ -1149,7 +1149,7 @@ fun (p Parser^) block() Node^ {
 }
 
 fun (p Parser^) typeDef() Node^ {
-	FUNC_CALL string = "type definition";
+	FUNC_NAME string = "type definition";
 
 	n Node = new Node(N_NEW_TYPE, p.tok.line);
 
@@ -1182,7 +1182,7 @@ fun (p Parser^) typeDef() Node^ {
 // TODO: Dealing with unary -?
 // TODO: What happens with p.x (accessors)
 fun (p Parser^) value() Node^ {
-	FUNC_CALL string = "value";
+	FUNC_NAME string = "value";
 
 	n Node;
 
@@ -1298,8 +1298,6 @@ fun (p Parser^) value() Node^ {
 // to expression that the expression is
 // continued
 fun (p Parser^) operator() Node^ {
-	FUNC_CALL string = "operator";
-
 	switch p.tok.kind {
 	case T_ADD:
 		return `new Node(N_ADD, p.tok.data, p.tok.line);
@@ -1346,7 +1344,7 @@ fun (p Parser^) operator() Node^ {
 }
 
 fun (p Parser^) indexUnary() Node^ {
-	FUNC_CALL string = "index unary";
+	FUNC_NAME string = "index unary";
 
 	n Node = new Node(N_INDEX, p.tok.line);
 
@@ -1368,7 +1366,7 @@ fun (p Parser^) indexUnary() Node^ {
 }
 
 fun (p Parser^) makeArray() Node^ {
-	FUNC_CALL string = "make array";
+	FUNC_NAME string = "make array";
 
 	n Node = new Node(N_MAKE_ARRAY, p.tok.line);
 
@@ -1404,7 +1402,7 @@ fun (p Parser^) makeArray() Node^ {
 }
 
 fun (p Parser^) complexType() Node^ {
-	FUNC_CALL string = "complex type";
+	FUNC_NAME string = "complex type";
 
 	n Node = new Node(N_COMPLEX_TYPE, p.tok.line);
 
@@ -1476,7 +1474,7 @@ fun (p Parser^) complexType() Node^ {
 }
 
 fun (p Parser^) emptyBlock() Node^ {
-	FUNC_CALL string = "empty block";
+	FUNC_NAME string = "empty block";
 
 	n Node = new Node(N_EMPTY_BLOCK, p.tok.line);
 
@@ -1495,7 +1493,7 @@ fun (p Parser^) emptyBlock() Node^ {
 }
 
 fun (p Parser^) property() Node^ {
-	FUNC_CALL string = "property";
+	FUNC_NAME string = "property";
 
 	n Node = new Node(N_PROPERTY, p.tok.line);
 

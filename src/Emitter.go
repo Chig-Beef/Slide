@@ -46,7 +46,9 @@ func (ge *GoEmitter) prePass(n *Node) {
 		}
 	case N_VAR_DECLARATION:
 		// Only need to do the assignment
-		ge.prePass(n.children[0])
+		for i := 0; i < 2; i++ {
+			ge.prePass(n.children[i])
+		}
 	case N_IF_BLOCK:
 		// Skip over that first if keyword
 		for i := 1; i < len(n.children); i++ {
@@ -200,9 +202,6 @@ func (ge *GoEmitter) prePass(n *Node) {
 			ge.prePass(n.children[i])
 		}
 	case N_BRACKETED_VALUE:
-		ge.prePass(n.children[1])
-	case N_ELEMENT_ASSIGNMENT:
-		ge.prePass(n.children[0])
 		ge.prePass(n.children[1])
 	case N_STRUCT_DEF:
 		for i := 1; i < len(n.children)-1; i++ {
@@ -377,12 +376,14 @@ func (ge *GoEmitter) recEmit(n *Node) string {
 
 	switch n.kind {
 	case N_PROGRAM:
-		output.Grow(20)
 		for i := 0; i < len(n.children); i++ {
 			output.WriteString(ge.recEmit(n.children[i]))
 		}
 	case N_VAR_DECLARATION:
-		output.WriteString(ge.recEmit(n.children[0]) + ge.recEmit(n.children[1]) + "\n")
+		for i := 0; i < len(n.children); i++ {
+			output.WriteString(ge.recEmit(n.children[i]) + " ")
+		}
+		output.WriteString("\n")
 	case N_IF_BLOCK:
 		output.WriteString("\n")
 		for i := 0; i < len(n.children); i++ {
@@ -506,6 +507,7 @@ func (ge *GoEmitter) recEmit(n *Node) string {
 		for i := 0; i < len(n.children); i++ {
 			output.WriteString(ge.recEmit(n.children[i]) + " ")
 		}
+		output.WriteString("\n")
 	case N_CASE_STATE:
 		output.WriteString(ge.recEmit(n.children[0]) + " " +
 			ge.recEmit(n.children[1]) +
@@ -550,10 +552,6 @@ func (ge *GoEmitter) recEmit(n *Node) string {
 		output.WriteString(ge.recEmit(n.children[0]) +
 			ge.recEmit(n.children[1]) +
 			ge.recEmit(n.children[2]))
-	case N_ELEMENT_ASSIGNMENT:
-		output.WriteString(ge.recEmit(n.children[0]) + " " +
-			ge.recEmit(n.children[1]) +
-			ge.recEmit(n.children[2]) + "\n")
 	case N_STRUCT_DEF:
 		// First line
 		output.WriteString("type " + ge.recEmit(n.children[1]) + " struct {")

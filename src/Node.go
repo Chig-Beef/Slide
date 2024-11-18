@@ -47,41 +47,40 @@ const (
 	N_ILLEGAL NodeType = iota
 
 	// Higher level structures
-	N_PROGRAM            // Top level structure, holds everything
-	N_VAR_DECLARATION    // Declaration (or def) of a variable
-	N_ELEMENT_ASSIGNMENT // Assignment to an element in an array
-	N_IF_BLOCK           // If (elif else) block
-	N_FOREVER_LOOP       // Loop with no end
-	N_RANGE_LOOP         // Loop with fixed end
-	N_FOR_LOOP           // Boomer loop
-	N_WHILE_LOOP         // Loop with only a condition (can be recreated with for loops)
-	N_STRUCT_DEF         // Definition of a struct
-	N_FUNC_DEF           // Definition of a function
-	N_RET_STATE          // Return
-	N_BREAK_STATE        // Break
-	N_CONT_STATE         // Continue
-	N_ENUM_DEF           // Enum definition
-	N_CONDITION          // Expression that returns a bool
-	N_EXPRESSION         // Mathematical operation, etc
-	N_ASSIGNMENT         // An identifier being assigned a value
-	N_LONE_CALL          // A lone function call as a statement
-	N_FUNC_CALL          // Calling a functions
-	N_STRUCT_NEW         // Creating a new struct
-	N_BLOCK              // A bunch of statements
-	N_NEW_TYPE           // Typdef (the statement)
-	N_UNARY_OPERATION    // When you use a ref, deref, not, etc
-	N_BRACKETED_VALUE    // An expression in parens (for bedmas purposes)
-	N_MAKE_ARRAY         // The syntax of creating an array
-	N_COMPLEX_TYPE       // A node that can encompass any type
-	N_SWITCH_STATE       // A whole switch statement
-	N_CASE_STATE         // The case line in a switch
-	N_DEFAULT_STATE      // The default line in a switch
-	N_CASE_BLOCK         // The block that is contained within a switch statement
-	N_LONE_INC           // Can also be a lone decrement
-	N_METHOD_RECEIVER    // Brackets before a function name that shows that it's a method
-	N_EMPTY_BLOCK        // Empty block brackets for denoting slices
-	N_PROPERTY           // A chain of accesses
-	N_CONSTANT           // A constant variable declaration
+	N_PROGRAM         // Top level structure, holds everything
+	N_VAR_DECLARATION // Declaration (or def) of a variable
+	N_IF_BLOCK        // If (elif else) block
+	N_FOREVER_LOOP    // Loop with no end
+	N_RANGE_LOOP      // Loop with fixed end
+	N_FOR_LOOP        // Boomer loop
+	N_WHILE_LOOP      // Loop with only a condition (can be recreated with for loops)
+	N_STRUCT_DEF      // Definition of a struct
+	N_FUNC_DEF        // Definition of a function
+	N_RET_STATE       // Return
+	N_BREAK_STATE     // Break
+	N_CONT_STATE      // Continue
+	N_ENUM_DEF        // Enum definition
+	N_CONDITION       // Expression that returns a bool
+	N_EXPRESSION      // Mathematical operation, etc
+	N_ASSIGNMENT      // An identifier being assigned a value
+	N_LONE_CALL       // A lone function call as a statement
+	N_FUNC_CALL       // Calling a functions
+	N_STRUCT_NEW      // Creating a new struct
+	N_BLOCK           // A bunch of statements
+	N_NEW_TYPE        // Typdef (the statement)
+	N_UNARY_OPERATION // When you use a ref, deref, not, etc
+	N_BRACKETED_VALUE // An expression in parens (for bedmas purposes)
+	N_MAKE_ARRAY      // The syntax of creating an array
+	N_COMPLEX_TYPE    // A node that can encompass any type
+	N_SWITCH_STATE    // A whole switch statement
+	N_CASE_STATE      // The case line in a switch
+	N_DEFAULT_STATE   // The default line in a switch
+	N_CASE_BLOCK      // The block that is contained within a switch statement
+	N_LONE_INC        // Can also be a lone decrement
+	N_METHOD_RECEIVER // Brackets before a function name that shows that it's a method
+	N_EMPTY_BLOCK     // Empty block brackets for denoting slices
+	N_PROPERTY        // A chain of accesses
+	N_CONSTANT        // A constant variable declaration
 
 	// Keywords
 	N_FOR
@@ -169,8 +168,6 @@ func (n NodeType) String() string {
 		return "PROGRAM"
 	case N_VAR_DECLARATION:
 		return "VAR_DECLARATION"
-	case N_ELEMENT_ASSIGNMENT:
-		return "ELEMENT_ASSIGNMENT"
 	case N_IF_BLOCK:
 		return "IF_BLOCK"
 	case N_FOREVER_LOOP:

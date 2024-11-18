@@ -104,10 +104,13 @@ fun (ge GoEmitter^) prePass(n Node^) {
 			line int = n.line;
 
 			// Move the item into the correct position
-			fc.children = [:fc.children.len-1]fc.children;
-			fc.children.append(`new Node(line, N_SEP, ","));
-			fc.children.append([3]fc.children);
-			fc.children.append(`new Node(line, N_R_PAREN, ")"));
+			newChildren Node^[] = make [];
+			for i int = 0; i < fc.children.len-1; ++i {
+				call newChildren.append([i]fc.children);
+			}
+			call fc.children.append(`new Node(line, N_SEP, ","));
+			call fc.children.append([3]fc.children);
+			call fc.children.append(`new Node(line, N_R_PAREN, ")"));
 
 			// Move the list into the correct positino
 			[3]fc.children = `new Node(line, N_EXPRESSION, make [
@@ -127,7 +130,7 @@ fun (ge GoEmitter^) prePass(n Node^) {
 			assign.children = make [
 				[0]p.children,
 				`new Node(line, N_ASSIGN, "="),
-				`new Node(line, N_EXPRESSION, make [`fc]
+				`new Node(line, N_EXPRESSION, make [`fc])
 			];
 
 			// Apply the changes
@@ -212,7 +215,8 @@ fun (ge GoEmitter^) prePass(n Node^) {
 		// the end
 		if curr.data == "len" {
 			// Get rid of ".len"
-			parent.children = [:1]parent.children;
+			newChildren Node^[] = make [];
+			call newChildren.append([1]parent.children);
 			// Is a single identifier rather than a
 			// property, so just clean up the tree
 			// a bit
@@ -489,7 +493,7 @@ fun (ge GoEmitter^) recEmit(n Node^) string {
 				call ge.recEmit([1]n.children);
 		} else {
 			for i int = n.children.len-1; i >= 0; --i {
-				output = output + ge.recEmit([i]n.children);
+				output = output + call ge.recEmit([i]n.children);
 			}
 		}
 	case N_SWITCH_STATE:
@@ -699,7 +703,7 @@ fun (ge GoEmitter^) recEmit(n Node^) string {
 		call panic("Bad node in emitter?");
 	}
 
-	return call output.String();
+	return output;
 }
 
 fun (ge GoEmitter^) dump(emitted string) {

@@ -18,6 +18,10 @@ type Analyser struct {
 	// first, and then each variable is
 	// pushed and popped as needed
 	varStack *VarStack
+
+	// Checking whether we should be able to use certain statements
+	inFunc bool
+	inLoop int // Since you can nest loops, we are in a loop if inLoop is above 0
 }
 
 func (a *Analyser) analyse() {
@@ -33,9 +37,11 @@ func (a *Analyser) analyse() {
 		a.analyseConst(a.consts.children[i])
 	}
 
+	a.inFunc = true
 	for i := 0; i < len(a.funcs.children); i++ {
 		a.analyseFunc(a.funcs.children[i])
 	}
+	a.inFunc = false
 
 	a.analyseNode(a.ast)
 }
@@ -316,7 +322,11 @@ func (a *Analyser) checkIfBlock(n *Node) {
 func (a *Analyser) checkForeverLoop(n *Node) {
 	const FUNC_NAME = "check forever loop"
 
+	a.inLoop++
+
 	a.checkBlock(n.children[len(n.children)-1])
+
+	a.inLoop--
 }
 
 func (a *Analyser) checkRangeLoop(n *Node) {
@@ -324,7 +334,11 @@ func (a *Analyser) checkRangeLoop(n *Node) {
 
 	a.checkExpression(n.children[1])
 
+	a.inLoop++
+
 	a.checkBlock(n.children[len(n.children)-1])
+
+	a.inLoop--
 }
 
 func (a *Analyser) checkForLoop(n *Node) {
@@ -352,7 +366,11 @@ func (a *Analyser) checkForLoop(n *Node) {
 		}
 	}
 
+	a.inLoop++
+
 	a.checkBlock(n.children[len(n.children)-1])
+
+	a.inLoop--
 }
 
 func (a *Analyser) checkWhileLoop(n *Node) {
@@ -360,12 +378,20 @@ func (a *Analyser) checkWhileLoop(n *Node) {
 
 	a.checkCondition(n.children[1])
 
+	a.inLoop++
+
 	a.checkBlock(n.children[len(n.children)-1])
+
+	a.inLoop--
 }
 
 // TODO: Check in function
 func (a *Analyser) checkRetState(n *Node) {
 	const FUNC_NAME = "check ret state"
+
+	if !a.inFunc {
+		throwError(n.line, "return found outside of functions")
+	}
 
 	if n.children[1].kind != N_SEMICOLON {
 		a.checkExpression(n.children[1])
@@ -376,6 +402,10 @@ func (a *Analyser) checkRetState(n *Node) {
 func (a *Analyser) checkBreakState(n *Node) {
 	const FUNC_NAME = "check break state"
 
+	if a.inLoop == 0 {
+		throwError(n.line, "break found outside of loop")
+	}
+
 	if n.children[1].kind != N_SEMICOLON {
 		a.checkValue(n.children[1])
 	}
@@ -384,6 +414,10 @@ func (a *Analyser) checkBreakState(n *Node) {
 // TODO: Check in loop
 func (a *Analyser) checkContState(n *Node) {
 	const FUNC_NAME = "check cont state"
+
+	if a.inLoop == 0 {
+		throwError(n.line, "continue found outside of loop")
+	}
 
 	if n.children[1].kind != N_SEMICOLON {
 		a.checkValue(n.children[1])

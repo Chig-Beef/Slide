@@ -107,7 +107,6 @@ func (ge *GoEmitter) prePass(n *Node) {
 		// TODO: What if it's var.property.append?
 		if curr.data == "append" {
 			fc := *n.children[0]
-			p := *fc.children[1]
 
 			// Start constructing new tree
 			line := n.line
@@ -118,13 +117,15 @@ func (ge *GoEmitter) prePass(n *Node) {
 			fc.children = append(fc.children, fc.children[3])
 			fc.children = append(fc.children, &Node{line: line, kind: N_R_PAREN, data: ")"})
 
+			prop, app := ge.stripAppend(fc.children[1])
+
 			// Move the list into the correct positino
 			fc.children[3] = &Node{line: line, kind: N_EXPRESSION, children: []*Node{
-				fc.children[1].children[0],
+				prop,
 			}}
 
 			// Move the append into the correct position
-			fc.children[1] = fc.children[1].children[2]
+			fc.children[1] = app
 
 			finalParent := Node{line: line, kind: N_VAR_DECLARATION}
 			assign := Node{line: line, kind: N_ASSIGNMENT}
@@ -134,7 +135,7 @@ func (ge *GoEmitter) prePass(n *Node) {
 			}
 
 			assign.children = []*Node{
-				p.children[0],
+				prop,
 				{line: line, kind: N_ASSIGN, data: "="},
 				{line: line, kind: N_EXPRESSION, children: []*Node{
 					&fc,
@@ -708,6 +709,25 @@ func (ge *GoEmitter) recEmit(n *Node) string {
 	}
 
 	return output.String()
+}
+
+// Takes append from property and then
+// compresses that property to its
+// simplest form
+func (ge *GoEmitter) stripAppend(prop *Node) (*Node, *Node) {
+	// Get the append
+	curr := prop
+	parent := prop
+	for len(curr.children) == 3 {
+		parent = curr
+		curr = curr.children[2]
+	}
+
+	// Compress
+	*parent = *parent.children[0]
+
+	// prop is modified
+	return prop, curr
 }
 
 func (ge *GoEmitter) dump(emitted string) {

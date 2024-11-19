@@ -33,7 +33,7 @@ fun (p Parser^) peekToken() Token {
 
 // The main program
 fun (p Parser^) parse() Node^ {
-	program Node = new Node(N_PROGRAM);
+	program Node = new Node(N_PROGRAM, make []);
 
 	n Node^;
 
